@@ -1,0 +1,1219 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "EcoPoint API",
+    "description": "On-Demand Waste Collection & Recycling API. Built with Express + Supabase.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "JWT token from /api/login"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login via Supabase Auth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@test.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Test1234!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login success, returns JWT token"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "name"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@test.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Test1234!"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Budi"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "collector",
+                      "admin"
+                    ],
+                    "example": "user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/analyze-image": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Analyze waste image with AI Vision (no auth)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo_url"
+                ],
+                "properties": {
+                  "photo_url": {
+                    "type": "string",
+                    "example": "https://sys.mxflower.eu.org/stream/1577?hash=1e2853"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI analysis result"
+          }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "tags": [
+          "Upload"
+        ],
+        "summary": "Upload photo to S3 (returns public URL)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (max 10MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload success, returns photo URL"
+          },
+          "400": {
+            "description": "No file uploaded"
+          }
+        }
+      }
+    },
+    "/api/prices": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get waste catalog prices",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Price list"
+          }
+        }
+      }
+    },
+    "/api/wallet": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get wallet balance & eco points",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet info"
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get transaction history",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction list"
+          }
+        }
+      }
+    },
+    "/api/order": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Create waste pickup order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "item_type",
+                  "pickup_lng",
+                  "pickup_lat"
+                ],
+                "properties": {
+                  "item_type": {
+                    "type": "string",
+                    "example": "Cardboard"
+                  },
+                  "est_weight": {
+                    "type": "number",
+                    "example": 2
+                  },
+                  "pickup_lng": {
+                    "type": "number",
+                    "example": 106.8456
+                  },
+                  "pickup_lat": {
+                    "type": "number",
+                    "example": -6.2088
+                  },
+                  "pickup_address": {
+                    "type": "string",
+                    "example": "Jl. Asia Afrika, Jakarta"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created"
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get user's orders",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "en_route",
+                "completed",
+                "cancelled"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order list"
+          }
+        }
+      }
+    },
+    "/api/order/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get order by ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order detail"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/cancel": {
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Cancel pending order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order cancelled"
+          }
+        }
+      }
+    },
+    "/api/location": {
+      "put": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Update collector GPS location",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "lng",
+                  "lat"
+                ],
+                "properties": {
+                  "lng": {
+                    "type": "number",
+                    "example": 106.8456
+                  },
+                  "lat": {
+                    "type": "number",
+                    "example": -6.2088
+                  },
+                  "is_online": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Location updated"
+          }
+        }
+      }
+    },
+    "/api/nearby-orders": {
+      "get": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Get nearby pending orders (Haversine)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "radius",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 5000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nearby orders sorted by distance"
+          }
+        }
+      }
+    },
+    "/api/collector/orders": {
+      "get": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Get collector's assigned orders",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order list"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/accept": {
+      "post": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Accept an order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order accepted"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/en-route": {
+      "put": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Start en-route to pickup",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/route": {
+      "get": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Get OSRM driving route",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Route geometry + distance + duration"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/pay": {
+      "post": {
+        "tags": [
+          "Collector"
+        ],
+        "summary": "Complete order & process payment",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "actual_weight"
+                ],
+                "properties": {
+                  "actual_weight": {
+                    "type": "number",
+                    "example": 1.8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order completed & payment processed"
+          }
+        }
+      }
+    },
+    "/api/statistics": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get platform statistics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard statistics"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get all users (filter by role)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User list"
+          }
+        }
+      }
+    },
+    "/api/admin/orders": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get all orders (filter by status)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order list"
+          }
+        }
+      }
+    },
+    "/api/scrape-prices": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Scrape prices from banksampahindonesia.com",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scraped prices"
+          }
+        }
+      }
+    },
+    "/api/price": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update catalog price manually",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "item_name",
+                  "current_price"
+                ],
+                "properties": {
+                  "item_name": {
+                    "type": "string",
+                    "example": "Cardboard"
+                  },
+                  "current_price": {
+                    "type": "number",
+                    "example": 2100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Price updated"
+          }
+        }
+      }
+    },
+    "/api/admin/user/balance": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Add/subtract user wallet balance",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "amount",
+                  "operation"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 5000
+                  },
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "add",
+                      "subtract"
+                    ],
+                    "example": "add"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Balance updated"
+          }
+        }
+      }
+    },
+    "/api/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request password reset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@test.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset instructions sent"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "put": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Update user profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "avatar_url": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        }
+      }
+    },
+    "/api/addresses": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Get user addresses",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of addresses"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Add new address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "example": "Rumah"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "is_primary": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Address added"
+          }
+        }
+      }
+    },
+    "/api/addresses/{id}": {
+      "delete": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Delete an address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Address deleted"
+          }
+        }
+      }
+    },
+    "/api/wallet/topup": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Request wallet top up",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "example": 50000
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "example": "bank_transfer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Top up successful"
+          }
+        }
+      }
+    },
+    "/api/wallet/withdraw": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Request wallet withdrawal",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "example": 50000
+                  },
+                  "bank_name": {
+                    "type": "string",
+                    "example": "BCA"
+                  },
+                  "account_number": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Withdrawal requested"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/messages": {
+      "get": {
+        "tags": [
+          "Order Chat"
+        ],
+        "summary": "Get chat messages for an order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Order Chat"
+        ],
+        "summary": "Send a chat message",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          }
+        }
+      }
+    },
+    "/api/order/{id}/review": {
+      "post": {
+        "tags": [
+          "Order Review"
+        ],
+        "summary": "Add review and rating",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewee_id": {
+                    "type": "string"
+                  },
+                  "rating": {
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review added"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "User Profile"
+    },
+    {
+      "name": "Wallet"
+    },
+    {
+      "name": "Order Chat"
+    },
+    {
+      "name": "Order Review"
+    }
+  ]
+}

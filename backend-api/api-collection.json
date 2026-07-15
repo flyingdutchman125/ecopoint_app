@@ -1,0 +1,128 @@
+{
+  "name": "EcoPoint API Endpoints",
+  "requests": [
+    {
+      "name": "Health Check",
+      "method": "GET",
+      "url": "http://localhost:3000/health"
+    },
+    {
+      "name": "Analyze Waste Image",
+      "method": "POST",
+      "url": "http://localhost:3000/api/user/order/analyze-image",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "photo_url": "https://example.com/waste-image.jpg"
+      }
+    },
+    {
+      "name": "Create Order",
+      "method": "POST",
+      "url": "http://localhost:3000/api/user/order",
+      "headers": {
+        "Authorization": "Bearer YOUR_JWT_TOKEN",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "item_type": "PET Plastic",
+        "est_weight": 5.5,
+        "pickup_lng": 106.8456,
+        "pickup_lat": -6.2088,
+        "pickup_address": "Jl. Sudirman No. 123",
+        "notes": "Near the main gate"
+      }
+    },
+    {
+      "name": "Get User Orders",
+      "method": "GET",
+      "url": "http://localhost:3000/api/user/orders?status=pending",
+      "headers": {
+        "Authorization": "Bearer YOUR_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Get Prices",
+      "method": "GET",
+      "url": "http://localhost:3000/api/user/prices",
+      "headers": {
+        "Authorization": "Bearer YOUR_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Get Wallet",
+      "method": "GET",
+      "url": "http://localhost:3000/api/user/wallet",
+      "headers": {
+        "Authorization": "Bearer YOUR_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Get Nearby Orders (Collector)",
+      "method": "GET",
+      "url": "http://localhost:3000/api/collector/orders/nearby?radius=5000",
+      "headers": {
+        "Authorization": "Bearer COLLECTOR_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Accept Order (Collector)",
+      "method": "POST",
+      "url": "http://localhost:3000/api/collector/order/ORDER_ID/accept",
+      "headers": {
+        "Authorization": "Bearer COLLECTOR_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Update Location (Collector)",
+      "method": "PUT",
+      "url": "http://localhost:3000/api/collector/location",
+      "headers": {
+        "Authorization": "Bearer COLLECTOR_JWT_TOKEN",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "lng": 106.8500,
+        "lat": -6.2100,
+        "is_online": true
+      }
+    },
+    {
+      "name": "Get Route (Collector)",
+      "method": "GET",
+      "url": "http://localhost:3000/api/collector/order/ORDER_ID/route",
+      "headers": {
+        "Authorization": "Bearer COLLECTOR_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Complete Order (Collector)",
+      "method": "POST",
+      "url": "http://localhost:3000/api/collector/order/ORDER_ID/pay",
+      "headers": {
+        "Authorization": "Bearer COLLECTOR_JWT_TOKEN",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "actual_weight": 5.2
+      }
+    },
+    {
+      "name": "Scrape BSI Prices (Admin)",
+      "method": "POST",
+      "url": "http://localhost:3000/api/admin/scrape-prices",
+      "headers": {
+        "Authorization": "Bearer ADMIN_JWT_TOKEN"
+      }
+    },
+    {
+      "name": "Get Statistics (Admin)",
+      "method": "GET",
+      "url": "http://localhost:3000/api/admin/statistics",
+      "headers": {
+        "Authorization": "Bearer ADMIN_JWT_TOKEN"
+      }
+    }
+  ]
+}

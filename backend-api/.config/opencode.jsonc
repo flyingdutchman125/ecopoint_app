@@ -1,0 +1,48 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "xstresser": {
+      "name": "xstresser",
+      "api": "https://xstresser.eu.org/v1",
+      "options": {
+        "apiKey": "sk-62c3601c7b27c6c6-ieqxm0-6a269c2e",
+        "baseURL": "https://xstresser.eu.org/v1"
+      },
+      "models": {
+        "FREE": {
+          "id": "FREE",
+          "name": "FREE",
+          "tool_call": true,
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          }
+        }
+      }
+    }
+  },
+  "agent": {
+    "yolo": {
+      "model": "xstresser/FREE",
+      "mode": "all",
+      "description": "Agent with unrestricted access using FREE model",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "bash": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "task": "allow",
+        "external_directory": "allow",
+        "todowrite": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "lsp": "allow",
+        "doom_loop": "allow",
+        "skill": "allow"
+      }
+    }
+  }
+}

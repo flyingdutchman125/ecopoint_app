@@ -1,0 +1,9 @@
+.git
+node_modules
+.env
+test_*.js
+debug_*.js
+*.md
+TESTING_*
+BUILD_*
+FINAL_*
