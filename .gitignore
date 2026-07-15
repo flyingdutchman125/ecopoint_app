@@ -1,0 +1,38 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains configureation for the workspace
+# and it is safe to commit. Ignore it if you do not want it.
+.vscode/
+
+# Flutter/Dart/Pub
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Android
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# Node.js Backend
+backend/node_modules/
+backend/uploads/
+backend/.env
+backend/.env.local
+backend/mysql_data/
