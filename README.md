@@ -3,8 +3,9 @@
 Aplikasi Manajemen Sampah berbasis Ekonomi Sirkular. Memiliki fitur Warga (menyetorkan sampah untuk ditukar menjadi poin/uang) dan Mitra Pengepul (menjemput sampah dan memverifikasi timbangan).
 
 Project ini merupakan struktur **Monorepo**:
-- **Frontend:** Flutter (Mobile App)
-- **Backend:** Node.js (Express, MySQL)
+- **Frontend Web:** React + Vite (folder `frontend`)
+- **Backend:** Node.js (Express, MySQL/SQLite fallback)
+- **Mobile App:** Flutter (folder `lib`/`android`/`ios`, opsi lama)
 
 ---
 
@@ -31,11 +32,14 @@ Sebelum menjalankan project ini, pastikan kamu telah menginstal perangkat lunak 
    npm install
    ```
 3. Buat database MySQL dengan nama **`ecopoint`**. (Skema tabel `users` akan terbuat otomatis secara konsep, namun pastikan struktur SQL sudah sesuai).
+
+   Jika MySQL tidak tersedia di lingkungan Anda, backend akan otomatis menggunakan SQLite fallback di folder `backend/data`.
+
 4. Buat file `.env` di dalam folder `backend/` dan isi konfigurasi koneksi database:
    ```env
    DB_HOST=localhost
    DB_USER=root
-   DB_PASS=jacki123 # Sesuaikan dengan password MySQL kamu
+   DB_PASSWORD=jacki123 # Sesuaikan dengan password MySQL kamu
    DB_NAME=ecopoint
    JWT_SECRET=supersecretkey
    PORT=3000
@@ -51,7 +55,23 @@ Sebelum menjalankan project ini, pastikan kamu telah menginstal perangkat lunak 
 
 *(Opsional: Jalankan `node seedAdmin.js` di folder backend untuk membuat akun admin dummy: `admin@ecopoint.com` / `admin123`).*
 
-### 2. Konfigurasi Frontend (Flutter)
+### 2. Konfigurasi Frontend Web (React + Vite)
+
+1. Buka tab terminal baru dan masuk ke folder `frontend`.
+   ```bash
+   cd frontend
+   ```
+2. Instal dependensi NPM:
+   ```bash
+   npm install
+   ```
+3. Jalankan aplikasi web:
+   ```bash
+   npm run dev
+   ```
+4. Buka browser dan akses alamat yang ditampilkan oleh Vite. Frontend akan memanggil API backend di `http://localhost:3000/api`.
+
+### 3. Konfigurasi Frontend Mobile (Flutter)
 
 1. Buka tab terminal baru dan kembali ke root folder `ecopoint`.
 2. Download dependensi Flutter:

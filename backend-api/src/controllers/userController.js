@@ -1,7 +1,20 @@
 const crypto = require('crypto');
 const supabase = require('../config/supabase');
 const { analyzeWasteImage } = require('../services/aiVisionService');
+const { getRoute } = require('../services/osrmService');
 const { paginate } = require('../utils/paginate');
+
+function parseLocation(loc) {
+  if (!loc) return null;
+  if (loc.type === 'Point' && loc.coordinates) return { lng: loc.coordinates[0], lat: loc.coordinates[1] };
+  if (typeof loc === 'string' && loc.startsWith('01')) {
+    const buf = Buffer.from(loc, 'hex');
+    return { lng: buf.readDoubleLE(9), lat: buf.readDoubleLE(17) };
+  }
+  const m = String(loc).match(/POINT\(([^ ]+) ([^ ]+)\)/);
+  if (m) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
+  return null;
+}
 
 async function analyzeImage(req, res, next) {
   try {
@@ -62,9 +75,148 @@ async function cancelOrder(req, res, next) {
 
 async function getPrices(req, res, next) {
   try {
-    const { data, error } = await supabase.from('catalog_prices').select('*').order('item_name');
+    const { data: prices, error: priceError } = await supabase.from('catalog_prices').select('*').order('item_name');
+    if (priceError) throw priceError;
+
+    const itemNames = (prices || []).map(price => price.item_name);
+    let priceHistory = [];
+
+    if (itemNames.length) {
+      const { data: historyData, error: historyError } = await supabase
+        .from('catalog_price_history')
+        .select('item_name, price, created_at')
+        .in('item_name', itemNames)
+        .order('item_name', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (historyError) throw historyError;
+      priceHistory = historyData || [];
+    }
+
+    const groupedHistory = priceHistory.reduce((map, entry) => {
+      if (!map[entry.item_name]) map[entry.item_name] = [];
+      map[entry.item_name].push(entry);
+      return map;
+    }, {});
+
+    const enrichedPrices = (prices || []).map(price => {
+      const history = groupedHistory[price.item_name] || [];
+      const previous = history[1];
+      const change = previous ? parseFloat((parseFloat(price.current_price) - parseFloat(previous.price)).toFixed(2)) : 0;
+      const change_percent = previous && previous.price ? parseFloat(((change / parseFloat(previous.price)) * 100).toFixed(2)) : 0;
+      return {
+        ...price,
+        change,
+        change_percent,
+        trend: change > 0 ? 'up' : change < 0 ? 'down' : 'stable'
+      };
+    });
+
+    res.json({ success: true, data: enrichedPrices });
+  } catch (error) { next(error); }
+}
+
+async function getDashboard(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    const { data: walletData, error: walletError } = await supabase.from('users').select('wallet_balance, eco_points').eq('id', userId).single();
+    if (walletError) throw walletError;
+
+    const { data: reductionRows, error: reductionError } = await supabase
+      .from('orders')
+      .select('carbon_reduction')
+      .eq('user_id', userId)
+      .eq('status', 'completed');
+    if (reductionError) throw reductionError;
+
+    const { count: completedCount, error: completedCountError } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'completed');
+    if (completedCountError) throw completedCountError;
+
+    const totalCarbonReduction = (reductionRows || []).reduce((sum, row) => sum + parseFloat(row.carbon_reduction || 0), 0);
+    const { data: lastOrders, error: lastOrdersError } = await supabase
+      .from('orders')
+      .select('id, status, item_type, total_amount, completed_at, carbon_reduction')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(3);
+    if (lastOrdersError) throw lastOrdersError;
+
+    const { count: activeOrderCount, error: activeCountError } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .in('status', ['pending', 'accepted', 'en_route']);
+    if (activeCountError) throw activeCountError;
+
+    const { count: pendingOrderCount, error: pendingCountError } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'pending');
+    if (pendingCountError) throw pendingCountError;
+
+    const treeCount = Math.floor(totalCarbonReduction / 5);
+    const nextTreeAt = parseFloat(Math.max(0, (treeCount + 1) * 5 - totalCarbonReduction).toFixed(2));
+    const ecoTreeLevel = treeCount < 2 ? 'Eco Seedling' : treeCount < 5 ? 'Eco Sprout' : 'Eco Tree';
+
+    res.json({
+      success: true,
+      data: {
+        wallet_balance: parseFloat(walletData.wallet_balance || 0),
+        eco_points: walletData.eco_points || 0,
+        total_carbon_reduction: parseFloat(totalCarbonReduction.toFixed(2)),
+        completed_orders: completedCount || 0,
+        active_orders: activeOrderCount || 0,
+        pending_orders: pendingOrderCount || 0,
+        last_completed_orders: lastOrders || [],
+        eco_tree: {
+          level: ecoTreeLevel,
+          trees_planted: treeCount,
+          next_tree_in_kg: nextTreeAt
+        }
+      }
+    });
+  } catch (error) { next(error); }
+}
+
+async function getEcoBook(req, res, next) {
+  try {
+    const { data, error } = await supabase.from('eco_books').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     res.json({ success: true, data });
+  } catch (error) { next(error); }
+}
+
+async function getOrderRoute(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const orderQuery = supabase.from('orders').select('collector_id, pickup_location').eq('id', id);
+    if (req.user.role === 'user') {
+      orderQuery.eq('user_id', req.user.id);
+    } else {
+      orderQuery.eq('collector_id', req.user.id);
+    }
+
+    const { data: order, error: orderError } = await orderQuery.single();
+    if (orderError || !order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!order.collector_id) return res.status(400).json({ success: false, message: 'No collector assigned yet' });
+
+    const { data: collector, error: collectorError } = await supabase.from('users').select('location').eq('id', order.collector_id).single();
+    if (collectorError || !collector?.location) return res.status(400).json({ success: false, message: 'Collector location unavailable' });
+
+    const collectorPos = parseLocation(collector.location);
+    const pickupPos = parseLocation(order.pickup_location);
+    if (!collectorPos || !pickupPos) return res.status(400).json({ success: false, message: 'Invalid routing points' });
+
+    const route = await getRoute(collectorPos.lng, collectorPos.lat, pickupPos.lng, pickupPos.lat);
+    res.json({ success: true, data: route });
   } catch (error) { next(error); }
 }
 
@@ -117,4 +269,17 @@ async function redeemCoins(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { analyzeImage, createOrder, getUserOrders, getOrderById, cancelOrder, getPrices, getWallet, getTransactions, redeemCoins };
+module.exports = {
+  analyzeImage,
+  createOrder,
+  getUserOrders,
+  getOrderById,
+  cancelOrder,
+  getPrices,
+  getDashboard,
+  getEcoBook,
+  getOrderRoute,
+  getWallet,
+  getTransactions,
+  redeemCoins
+};

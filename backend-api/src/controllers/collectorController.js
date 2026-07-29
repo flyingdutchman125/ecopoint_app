@@ -2,6 +2,7 @@ const supabase = require('../config/supabase');
 const { getRoute } = require('../services/osrmService');
 const { transferBalance, addEcoPoints } = require('../services/walletService');
 const { getCatalogPrices } = require('../services/scraperService');
+const { estimateCarbonReduction } = require('../services/impactService');
 const { appendStatusHistory } = require('../services/trackingService');
 const { paginate } = require('../utils/paginate');
 
@@ -117,11 +118,16 @@ async function completeOrderWithPayment(req, res, next) {
     if (!price) return res.status(400).json({ success: false, message: `Price not found for ${order.item_type}` });
 
     const total = parseFloat((actual_weight * price.current_price).toFixed(2));
+    const reduction = estimateCarbonReduction(order.item_type, actual_weight);
     const payment = await transferBalance(req.user.id, order.user_id, total, id);
     await addEcoPoints(order.user_id, 10);
 
     const { data: updated, error } = await supabase.from('orders').update({
-      status: 'completed', actual_weight, total_amount: total, completed_at: new Date().toISOString()
+      status: 'completed',
+      actual_weight,
+      total_amount: total,
+      carbon_reduction: reduction,
+      completed_at: new Date().toISOString()
     }).eq('id', id).select().single();
     if (error) throw error;
 

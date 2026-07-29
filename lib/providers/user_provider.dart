@@ -46,6 +46,56 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> topUp({
+    required double amount,
+    required String paymentMethod,
+  }) async {
+    try {
+      final res = await ApiService.post(ApiConstants.walletTopup, {
+        'amount': amount,
+        'payment_method': paymentMethod,
+      });
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 201 && data['success'] == true) {
+        await fetchDashboardData();
+        return true;
+      }
+      _error = data['message'] ?? 'Failed to top up';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Error: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> withdraw({
+    required double amount,
+    required String bankName,
+    required String accountNumber,
+  }) async {
+    try {
+      final res = await ApiService.post(ApiConstants.walletWithdraw, {
+        'amount': amount,
+        'bank_name': bankName,
+        'account_number': accountNumber,
+      });
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 201 && data['success'] == true) {
+        await fetchDashboardData();
+        return true;
+      }
+      _error = data['message'] ?? 'Failed to withdraw';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Error: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> createOrder({
     required String photoUrl,
     required String category,

@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+// Router configuration — go_router re-exports Flutter types needed below
 import 'package:go_router/go_router.dart';
 import '../../views/splash_screen.dart';
 import '../../views/auth/login_screen.dart';
 import '../../views/auth/register_screen.dart';
+import '../../views/auth/collector_register_screen.dart';
 import '../../views/user/user_dashboard.dart';
 import '../../views/user/create_order_screen.dart';
 import '../../views/collector/collector_dashboard.dart';
@@ -16,8 +17,11 @@ class AppRouter {
       refreshListenable: authProvider,
       redirect: (context, state) {
         final isLoggedIn = authProvider.isAuthenticated;
-        final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-        final isSplash = state.matchedLocation == '/';
+        final location = state.matchedLocation;
+        final isAuthRoute = location == '/login' ||
+            location == '/register' ||
+            location.startsWith('/register/collector');
+        final isSplash = location == '/';
 
         // Wait for auth init
         if (authProvider.isLoading) return null;
@@ -50,6 +54,16 @@ class AppRouter {
           path: '/register',
           name: 'register',
           builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
+          path: '/register/collector',
+          name: 'register-collector',
+          builder: (context, state) => CollectorBusinessScreen(extra: state.extra as Map<String, dynamic>?),
+        ),
+        GoRoute(
+          path: '/register/collector/ktp',
+          name: 'register-collector-ktp',
+          builder: (context, state) => CollectorKtpScreen(extra: state.extra as Map<String, dynamic>?),
         ),
         GoRoute(
           path: '/user',

@@ -13,10 +13,21 @@ async function updatePrice(req, res, next) {
   try {
     const { item_name, current_price } = req.body;
     if (!item_name || !current_price) return res.status(400).json({ success: false, message: 'item_name and current_price are required' });
+    const parsedPrice = parseFloat(current_price);
     const { data, error } = await supabase.from('catalog_prices').upsert({
-      item_name, current_price: parseFloat(current_price), last_updated: new Date().toISOString()
+      item_name,
+      current_price: parsedPrice,
+      last_updated: new Date().toISOString()
     }, { onConflict: 'item_name' }).select().single();
     if (error) throw error;
+
+    const { error: historyError } = await supabase.from('catalog_price_history').insert({
+      item_name,
+      price: parsedPrice,
+      created_at: new Date().toISOString()
+    });
+    if (historyError) console.warn('Failed to insert price history:', historyError.message || historyError);
+
     res.json({ success: true, message: 'Price updated', data });
   } catch (error) { next(error); }
 }

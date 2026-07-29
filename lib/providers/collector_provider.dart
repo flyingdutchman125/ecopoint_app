@@ -89,7 +89,7 @@ class CollectorProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await ApiService.post('${ApiConstants.baseUrl}/order/$orderId/accept', {});
+      final res = await ApiService.post('${ApiConstants.order}/$orderId/accept', {});
       if (res.statusCode == 200) {
         await updateLocationAndFetchNearby();
         return true;
@@ -109,7 +109,7 @@ class CollectorProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await ApiService.post('${ApiConstants.baseUrl}/order/$orderId/pay', {
+      final res = await ApiService.post('${ApiConstants.order}/$orderId/pay', {
         'actual_weight': actualWeight
       });
       if (res.statusCode == 200) {

@@ -10,6 +10,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+const path = require('path');
+const fs = require('fs');
+const uploadsPath = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsPath));
+
 app.use('/api-docs', swaggerUi.serve, (req, res, next) => {
   const host = req.get('host');
   const protocol = req.get('x-forwarded-proto') || req.protocol;

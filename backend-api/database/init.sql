@@ -9,6 +9,10 @@ CREATE TABLE users (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   phone VARCHAR(50),
+  city VARCHAR(100),
+  address TEXT,
+  subdistrict VARCHAR(255),
+  consent_sorting_anorganic BOOLEAN DEFAULT false,
   wallet_balance NUMERIC(10, 2) DEFAULT 0 CHECK (wallet_balance >= 0),
   eco_points INTEGER DEFAULT 0 CHECK (eco_points >= 0),
   location GEOGRAPHY(Point, 4326),
@@ -32,6 +36,42 @@ CREATE TABLE catalog_prices (
 
 CREATE INDEX idx_catalog_prices_item_name ON catalog_prices(item_name);
 
+CREATE TABLE catalog_price_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  item_name VARCHAR(255) NOT NULL,
+  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+  unit VARCHAR(50) DEFAULT 'kg',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_catalog_price_history_item_name ON catalog_price_history(item_name);
+
+CREATE TABLE eco_books (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(255) NOT NULL UNIQUE,
+  summary TEXT,
+  content TEXT,
+  category VARCHAR(100),
+  image_url TEXT,
+  url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_eco_books_category ON eco_books(category);
+
+-- Table for collector-specific profile details
+CREATE TABLE IF NOT EXISTS collectors (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  business_name VARCHAR(255),
+  vehicle_type VARCHAR(255),
+  vehicle_plate VARCHAR(50),
+  ktp_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_collectors_user_id ON collectors(user_id);
+
 CREATE TABLE orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -45,6 +85,8 @@ CREATE TABLE orders (
   pickup_address TEXT,
   notes TEXT,
   total_amount NUMERIC(10, 2),
+  carbon_reduction NUMERIC(10, 2) DEFAULT 0,
+  status_history JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   completed_at TIMESTAMP WITH TIME ZONE
@@ -200,3 +242,9 @@ INSERT INTO catalog_prices (item_name, current_price, unit) VALUES
   ('Metal', 5000, 'kg'),
   ('Cooking Oil', 1500, 'liter')
 ON CONFLICT (item_name) DO NOTHING;
+
+INSERT INTO eco_books (title, summary, content, category, url) VALUES
+  ('Panduan Pemilahan Sampah Rumah Tangga', 'Langkah-langkah mudah memilah sampah anorganik dari rumah.', 'Pelajari cara memisahkan sampah organik, plastik, logam, dan kertas agar dapat didaur ulang dengan benar. Mulai dari ruang tamu hingga dapur.', 'Pemilahan Sampah', 'https://example.com/eco-book/1'),
+  ('Cara Menabung Eco Points', 'Strategi mengumpulkan Eco Points untuk ditukar kembali.', 'Dapatkan poin tambahan dengan menyerahkan sampah berkualitas, mengikuti program komunitas, dan menyelesaikan pesanan secara teratur.', 'Eco Points', 'https://example.com/eco-book/2'),
+  ('Manfaat Recycle bagi Lingkungan', 'Mengapa mendaur ulang membantu mengurangi emisi karbon.', 'Daur ulang mengurangi kebutuhan produksi material baru, menghemat energi, dan mengurangi sampah di TPA. Setiap kilogram sampah yang didaur ulang membantu bumi.', 'Lingkungan', 'https://example.com/eco-book/3')
+ON CONFLICT (title) DO NOTHING;

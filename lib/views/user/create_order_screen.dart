@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../core/utils/image_picker_helper.dart';
 import '../../providers/user_provider.dart';
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
@@ -25,46 +26,92 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   
   final List<String> _validCategories = ['PET Plastic', 'Cardboard', 'Metal', 'Cooking Oil'];
 
-  Future<void> _pickAndUploadImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (pickedFile != null) {
-      setState(() => _isAnalyzing = true);
-      
-      try {
-        final uploadRes = await ApiService.upload(ApiConstants.upload, pickedFile.path);
-        final uploadData = jsonDecode(uploadRes.body);
-        
-        if (uploadRes.statusCode == 200 && uploadData['success'] == true) {
-          final imageUrl = uploadData['data']['url'];
-          setState(() => _photoUrl = imageUrl);
+  Future<void> _doPickAndUpload(ImageSource source) async {
+    final pickedFile = await ImagePickerHelper.pickImage(source);
+    if (pickedFile == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Izin kamera/galeri ditolak atau foto tidak dipilih.')),
+        );
+      }
+      return;
+    }
 
-          final analyzeRes = await ApiService.post(ApiConstants.analyzeImage, {
-            'photo_url': imageUrl,
-          });
-          
-          final analyzeData = jsonDecode(analyzeRes.body);
-          if (analyzeRes.statusCode == 200 && analyzeData['success'] == true) {
-            setState(() {
-              _category = analyzeData['data']['category'];
-            });
-          } else {
-             // Fallback if AI fails (set default)
-             setState(() {
-              _category = _validCategories.first;
-            });
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AI Analysis unavailable. Please select category manually.')));
-            }
+    setState(() => _isAnalyzing = true);
+
+    try {
+      final uploadRes = await ApiService.upload(ApiConstants.upload, pickedFile.path);
+      final uploadData = jsonDecode(uploadRes.body);
+
+      if (uploadRes.statusCode == 200 && uploadData['success'] == true) {
+        // Replace localhost with 10.0.2.2 so the Android emulator can resolve the local server URL
+        String imageUrl = (uploadData['data']['url'] as String)
+            .replaceFirst('localhost', '10.0.2.2');
+        setState(() => _photoUrl = imageUrl);
+
+        final analyzeRes = await ApiService.post(ApiConstants.analyzeImage, {
+          'photo_url': imageUrl,
+        });
+
+        final analyzeData = jsonDecode(analyzeRes.body);
+        if (analyzeRes.statusCode == 200 && analyzeData['success'] == true) {
+          setState(() => _category = analyzeData['data']['category']);
+        } else {
+          setState(() => _category = _validCategories.first);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('AI tidak tersedia. Pilih kategori manual.')),
+            );
           }
         }
-      } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed. Please try again.')));
-      } finally {
-        if (mounted) setState(() => _isAnalyzing = false);
+      } else {
+        if (mounted) {
+          final msg = uploadData['message'] ?? 'Upload gagal. Coba lagi.';
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        }
       }
+    } catch (e) {
+      if (mounted) {
+        final message = e is ApiConnectionException
+            ? e.message
+            : 'Upload error: ${e.toString()}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAnalyzing = false);
     }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    if (_isAnalyzing) return;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Ambil foto dari kamera'),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _doPickAndUpload(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Pilih dari galeri'),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _doPickAndUpload(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _submitOrder() async {

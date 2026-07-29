@@ -1,0 +1,224 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f4f7fb;
+  color: #111827;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top left, #e1f0ff 0%, transparent 35%),
+    radial-gradient(circle at bottom right, #fef3c7 0%, transparent 30%),
+    #f4f7fb;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  background: #ffffffcc;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 20px rgba(15, 23, 42, 0.08);
+}
+
+.app-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.75rem, 2.1vw, 2.4rem);
+}
+
+.app-header p {
+  margin: 0;
+  max-width: 40rem;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.user-box {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.user-role {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.link-button {
+  border: none;
+  padding: 0.5rem 1rem;
+  color: #1d4ed8;
+  background: transparent;
+  text-decoration: underline;
+}
+
+.app-content {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.app-menu {
+  display: grid;
+  gap: 0.75rem;
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+.app-menu button {
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  padding: 0.95rem 1rem;
+  background: #fff;
+  text-align: left;
+  transition: all 0.2s ease;
+  color: #1f2937;
+}
+
+.app-menu button:hover,
+.app-menu button.active {
+  border-color: #bfdbfe;
+  background: #e0f2fe;
+}
+
+.app-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 1.25rem;
+  box-shadow: 0 15px 45px rgba(15, 23, 42, 0.08);
+  padding: 1.75rem;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+input,
+button,
+select {
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  padding: 0.9rem 1rem;
+  outline: none;
+}
+
+input:focus,
+button:focus,
+select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+}
+
+button[type='submit'] {
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+}
+
+.alert {
+  border-radius: 0.9rem;
+  padding: 1rem 1.1rem;
+}
+
+.alert.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.alert.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.alert.info {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.collector-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.collector-item {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.collector-item div {
+  color: #374151;
+}
+
+.collector-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.collector-actions button {
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  background: #2563eb;
+  color: white;
+}
+
+.collector-actions button.danger {
+  background: #dc2626;
+}
+
+@media (max-width: 900px) {
+  .app-content {
+    grid-template-columns: 1fr;
+  }
+
+  .app-header,
+  .app-panel,
+  .app-menu {
+    padding: 1rem;
+  }
+}
+

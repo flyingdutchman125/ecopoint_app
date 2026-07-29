@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
-
 class AuthProvider with ChangeNotifier {
   UserModel? _user;
   String? _token;
@@ -33,6 +32,28 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String _parseErrorMessage(Map<String, dynamic> data, String fallback) {
+    final message = data['message'];
+    if (message != null && message.toString().isNotEmpty) {
+      return message.toString();
+    }
+
+    final error = data['error'];
+    if (error is Map && error['message'] != null) {
+      return error['message'].toString();
+    }
+    if (error is String && error.isNotEmpty) {
+      return error;
+    }
+
+    return fallback;
+  }
+
+  String _connectionErrorMessage(Object e) {
+    if (e is ApiConnectionException) return e.message;
+    return 'Koneksi gagal. Pastikan backend API berjalan di ${ApiConstants.baseUrl}';
+  }
+
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     _clearError();
@@ -43,7 +64,7 @@ class AuthProvider with ChangeNotifier {
         'password': password,
       });
 
-      final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200 && data['success'] == true) {
         _token = data['data']['token'];
@@ -53,12 +74,12 @@ class AuthProvider with ChangeNotifier {
         _setLoading(false);
         return true;
       } else {
-        _error = data['message'] ?? 'Login failed';
+        _error = _parseErrorMessage(data, 'Login failed');
         _setLoading(false);
         return false;
       }
     } catch (e) {
-      _error = 'Connection error: ${e.toString()}';
+      _error = _connectionErrorMessage(e);
       _setLoading(false);
       return false;
     }
@@ -68,40 +89,58 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
     required String name,
+    required String phone,
+    required String city,
+    required String address,
+    required String subdistrict,
     required String role,
+    required bool consentSorting,
+    String? businessName,
+    String? vehicleType,
+    String? vehiclePlate,
+    String? ktpUrl,
   }) async {
-    _setLoading(true);
-    _clearError();
+   _setLoading(true);
+   _clearError();
 
-    try {
-      final response = await ApiService.post(ApiConstants.register, {
-        'email': email,
-        'password': password,
-        'name': name,
-        'role': role,
-      });
+   try {
+     final response = await ApiService.post(ApiConstants.register, {
+       'email': email,
+       'password': password,
+       'name': name,
+       'phone': phone,
+       'city': city,
+       'address': address,
+       'subdistrict': subdistrict,
+       'role': role,
+       'consent_sorting_anorganic': consentSorting,
+       if (businessName != null) 'business_name': businessName,
+       if (vehicleType != null) 'vehicle_type': vehicleType,
+       if (vehiclePlate != null) 'vehicle_plate': vehiclePlate,
+       if (ktpUrl != null) 'ktp_url': ktpUrl,
+     });
 
-      final data = jsonDecode(response.body);
+     final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (data['success'] == true) {
-           _setLoading(false);
-           return true;
-        } else {
-           _error = data['message'] ?? 'Registration failed';
-           _setLoading(false);
-           return false;
-        }
-      } else {
-        _error = data['message'] ?? 'Registration failed';
-        _setLoading(false);
-        return false;
-      }
-    } catch (e) {
-      _error = 'Connection error: ${e.toString()}';
-      _setLoading(false);
-      return false;
-    }
+     if (response.statusCode == 200 || response.statusCode == 201) {
+       if (data['success'] == true) {
+         _setLoading(false);
+         return true;
+       } else {
+         _error = _parseErrorMessage(data, 'Registration failed');
+         _setLoading(false);
+         return false;
+       }
+     } else {
+       _error = _parseErrorMessage(data, 'Registration failed');
+       _setLoading(false);
+       return false;
+     }
+   } catch (e) {
+     _error = _connectionErrorMessage(e);
+     _setLoading(false);
+     return false;
+   }
   }
 
   Future<void> logout() async {

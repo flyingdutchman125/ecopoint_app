@@ -99,6 +99,15 @@ async function scrapeBSIPrices() {
         throw error;
       }
 
+      const { error: historyError } = await supabase.from('catalog_price_history').insert({
+        item_name: itemName,
+        price,
+        created_at: new Date().toISOString()
+      });
+      if (historyError) {
+        console.warn(`Failed to insert price history for ${itemName}:`, historyError.message || historyError);
+      }
+
       return { itemName, price };
     });
 
