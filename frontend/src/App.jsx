@@ -91,7 +91,7 @@ function App() {
 
     try {
       setLoading(true)
-      const data = await apiFetch('/auth/login', {
+      const data = await apiFetch('/login', {
         method: 'POST',
         body: loginForm,
       })
@@ -113,9 +113,9 @@ function App() {
 
     try {
       setLoading(true)
-      await apiFetch('/auth/register/user', {
+      await apiFetch('/register', {
         method: 'POST',
-        body: registerUserForm,
+        body: { ...registerUserForm, role: 'user', consent_sorting_anorganic: true },
       })
       setMessage('Pendaftaran pengguna berhasil. Silakan login.')
       setRegisterUserForm(initialUserForm)
@@ -143,7 +143,10 @@ function App() {
           formData.append(key, value)
         }
       })
-      await apiFetch('/auth/register/collector', {
+      // Set role to collector
+      formData.append('role', 'collector')
+      formData.append('consent_sorting_anorganic', true)
+      await apiFetch('/register', {
         method: 'POST',
         formData,
       })

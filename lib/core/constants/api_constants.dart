@@ -1,6 +1,6 @@
 class ApiConstants {
-  // For Android emulator, use 10.0.2.2 to reach the host machine.
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  // Use live backend server to avoid local networking/credential issues
+  static const String baseUrl = 'https://ecopoint-api.fly.dev';
   static const String apiBase = '$baseUrl/api';
   
   // Auth
