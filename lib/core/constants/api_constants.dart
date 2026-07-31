@@ -6,6 +6,7 @@ class ApiConstants {
   // Auth
   static const String login = '$apiBase/login';
   static const String register = '$apiBase/register';
+  static const String forgotPassword = '$apiBase/forgot-password';
   
   // User
   static const String order = '$apiBase/order';
@@ -31,5 +32,19 @@ class ApiConstants {
   static const String adminOrders = '$apiBase/admin/orders';
   static const String scrapePrices = '$apiBase/scrape-prices';
   static const String adminPrice = '$apiBase/price';
+  // Profile
+  static const String profile = '$apiBase/profile';
+
+  // Auth & Profile Security
+  static const String changePassword = '$apiBase/change-password';
+  static const String deleteAccount = '$apiBase/account';
+  static String deleteMessage(String id) => '$apiBase/message/$id';
+  
+  // Collector Wallet
+  static const String collectorWallet = '$apiBase/collector/wallet';
+  
+  // Admin
   static const String adminUserBalance = '$apiBase/admin/user/balance';
+  static const String adminResetPassword = '$apiBase/admin/reset-password';
+  static String adminDeleteUser(String userId) => '$apiBase/admin/user/$userId';
 }

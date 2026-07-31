@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,6 +23,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (_emailCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan isi email dan kata sandi')),
+      );
+      return;
+    }
     final auth = context.read<AuthProvider>();
     final success = await auth.login(_emailCtrl.text.trim(), _passwordCtrl.text);
     if (!success && mounted && auth.error != null) {
@@ -29,6 +36,36 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(auth.error!)),
       );
     }
+  }
+
+  Future<void> _quickRegisterAdmin() async {
+    final auth = context.read<AuthProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    
+    // Auto register admin if not exists
+    final email = _emailCtrl.text.trim().isEmpty ? 'admin@ecopoint.id' : _emailCtrl.text.trim();
+    final password = _passwordCtrl.text.isEmpty ? 'password123' : _passwordCtrl.text;
+    
+    _emailCtrl.text = email;
+    _passwordCtrl.text = password;
+
+    final regSuccess = await auth.register(
+      email: email,
+      password: password,
+      name: 'Admin Master EcoPoint',
+      role: 'admin',
+      phone: '081299998888',
+      address: 'Jl. Admin No. 1',
+      city: 'Jakarta',
+      subdistrict: 'Gambir',
+      consentSorting: true,
+    );
+
+    if (regSuccess) {
+      messenger.showSnackBar(const SnackBar(content: Text('Akun Admin berhasil dibuat! Mencoba login...')));
+    }
+    // Attempt login regardless (if created or already exists)
+    await _login();
   }
 
   @override
@@ -60,66 +97,55 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          Positioned(
-            top: 100,
-            right: -50,
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                color: const Color(0xFFB2E468),
-                borderRadius: BorderRadius.circular(120),
-              ),
-            ),
-          ),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Text.rich(
                     TextSpan(
                       children: [
                         TextSpan(
                           text: 'ECO ',
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          style: GoogleFonts.outfit(
                             color: const Color(0xFF59B41C),
                             fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                            fontSize: 32,
                           ),
                         ),
                         TextSpan(
                           text: 'POINT',
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          style: GoogleFonts.outfit(
                             color: const Color(0xFF9CC63A),
                             fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                            fontSize: 32,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     'Ubah Sampah Jadi Berkah Finansial',
-                    style: theme.textTheme.headlineSmall?.copyWith(
+                    style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
+                      fontSize: 20,
                       color: const Color(0xFF22311F),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     'Kelola sampah bernilai jual Anda dengan dukungan kecerdasan buatan dinamis.',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green[900], height: 1.4),
+                    style: GoogleFonts.outfit(color: Colors.green[900], height: 1.4),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withAlpha(13),
@@ -133,14 +159,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           'Masuk Ke Akun',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         TextField(
                           controller: _emailCtrl,
                           decoration: const InputDecoration(
                             labelText: 'ALAMAT EMAIL',
-                            hintText: 'user@ecopoint.com',
+                            hintText: 'user@ecopoint.com / admin@ecopoint.id',
+                            border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.emailAddress,
                         ),
@@ -150,65 +177,63 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: const InputDecoration(
                             labelText: 'KATA SANDI',
                             hintText: '********',
+                            border: OutlineInputBorder(),
                           ),
                           obscureText: true,
                         ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Fitur lupa kata sandi akan segera tersedia.')),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: const Size(0, 0),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Lupa Kata Sandi?',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF4D9F09),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 20),
                         SizedBox(
-                          height: 56,
+                          height: 52,
                           child: ElevatedButton(
                             onPressed: auth.isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF59B41C),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
                             child: auth.isLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                : Text('Masuk', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: auth.isLoading ? null : _quickRegisterAdmin,
+                          icon: const Icon(Icons.admin_panel_settings, color: Colors.purple),
+                          label: Text('Masuk / Buat Akun Admin', style: GoogleFonts.outfit(color: Colors.purple, fontWeight: FontWeight.bold)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: Colors.purple),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   Center(
                     child: Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 16,
+                      runSpacing: 8,
                       alignment: WrapAlignment.center,
                       children: [
-                        Text(
-                          'Belum Punya Akun? ',
-                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
-                        ),
                         GestureDetector(
                           onTap: () => context.push('/register'),
                           child: Text(
                             'Daftar Warga',
-                            style: theme.textTheme.bodyMedium?.copyWith(
+                            style: GoogleFonts.outfit(
                               color: const Color(0xFF59B41C),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text('|', style: GoogleFonts.outfit(color: Colors.grey)),
+                        GestureDetector(
+                          onTap: () => context.push('/collector-register'),
+                          child: Text(
+                            'Daftar Kolektor',
+                            style: GoogleFonts.outfit(
+                              color: Colors.orange.shade800,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

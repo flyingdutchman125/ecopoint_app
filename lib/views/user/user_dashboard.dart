@@ -267,7 +267,7 @@ class _UserDashboardState extends State<UserDashboard> {
                   final provider = context.read<UserProvider>();
                   final navigator = Navigator.of(context);
                   final messenger = ScaffoldMessenger.of(context);
-                  final success = await provider.topUp(amount: amount, paymentMethod: 'bank_transfer');
+                  final success = await provider.topUp(amount, 'bank_transfer');
                   if (success && mounted) {
                     navigator.pop();
                     messenger.showSnackBar(const SnackBar(content: Text('Top up berhasil')));
@@ -345,9 +345,9 @@ class _UserDashboardState extends State<UserDashboard> {
                   final navigator = Navigator.of(context);
                   final messenger = ScaffoldMessenger.of(context);
                   final success = await provider.withdraw(
-                        amount: amount,
-                        bankName: bankName,
-                        accountNumber: accountNumber,
+                        amount,
+                        bankName,
+                        accountNumber,
                       );
                   if (success && mounted) {
                     navigator.pop();

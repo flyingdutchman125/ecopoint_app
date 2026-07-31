@@ -2,6 +2,17 @@
 
 These guidelines define the operational principles and capabilities of an AI agent (e.g., Gemini) interacting with Flutter projects within the Firebase Studio environment. The goal is to enable an efficient, automated, and error-resilient application design and development workflow.
 
+## **Project Rules Compliance (RULES.md)**
+
+* **Mandatory Project Rules:** In addition to these general Flutter guidelines, the AI **MUST ALWAYS** strictly follow the project-specific rules defined in [`RULES.md`](file:///home/user/myapp/RULES.md).
+* **Key Enforcement Requirements from RULES.md:**
+  1. **Build APK:** Always use `flutter build apk --release --split-per-abi` (target size ≤ 20MB ARM64 / ≤ 18MB ARMv7).
+  2. **APK Hosting:** Upload APK releases to `catbox.moe` or `0x0.st` and provide formatted download links.
+  3. **Static Analysis:** `flutter analyze lib/` must have 0 errors before release/build.
+  4. **ADB Emulator Testing:** Mandatory testing on the connected Android device/emulator (`emulator-5554` / `localhost:5555`).
+  5. **Interactive Testing & Screenshots:** Perform manual interactive testing (button clicks, form inputs, registration/login flow), capture screenshots at every step, and verify that the UI has no defects or layout bugs.
+  6. **Iterative Repair Loop:** If backend API issues are found, fix backend code and deploy immediately via `flyctl deploy`. If Flutter APK/UI issues are found, fix Flutter code. Run ADB testing and inspect screenshots. Loop this fix-deploy-test cycle until 100% successful with zero defects.
+
 ## **Environment & Context Awareness**
 
 The AI operates within the Firebase Studio development environment, which provides a Code OSS-based IDE with deep integration for Flutter and Firebase services.

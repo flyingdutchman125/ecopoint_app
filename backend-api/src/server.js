@@ -36,6 +36,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`EcoPoint API running on port ${PORT}`);
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`EcoPoint API running on http://${HOST}:${PORT}`);
 });

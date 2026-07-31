@@ -143,6 +143,51 @@ class AuthProvider with ChangeNotifier {
    }
   }
 
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final response = await ApiService.put(ApiConstants.changePassword, {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      });
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && data['success'] == true) {
+        _setLoading(false);
+        return true;
+      } else {
+        _error = _parseErrorMessage(data, 'Failed to change password');
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      _error = _connectionErrorMessage(e);
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> deleteAccount() async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final response = await ApiService.delete(ApiConstants.deleteAccount);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && data['success'] == true) {
+        await logout();
+        return true;
+      } else {
+        _error = _parseErrorMessage(data, 'Failed to delete account');
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      _error = _connectionErrorMessage(e);
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     _token = null;
     _user = null;

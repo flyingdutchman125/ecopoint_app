@@ -14,9 +14,13 @@
     pkgs.pkg-config
     pkgs.clang
     pkgs.gtk3
+    pkgs.flyctl
+    pkgs.htop
   ];
   # Sets environment variables in the workspace
-  env = {};
+  env = {
+    CLAUDE_CODE_OAUTH_TOKEN = "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";
+  };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
@@ -24,10 +28,12 @@
       "Dart-Code.dart-code"
     ];
     workspace = {
-      # Runs when a workspace is first created with this `dev.nix` file
-      onCreate = { };
+      onCreate = {
+        install-claude-code = "npm install -g @anthropic-ai/claude-code";
+      };
       # To run something each time the workspace is (re)started, use the `onStart` hook
       onStart = {
+        install-claude-code = "npm install -g @anthropic-ai/claude-code";
         start-backend = "cd backend && ./start_backend.sh";
       };
     };

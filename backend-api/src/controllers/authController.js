@@ -151,4 +151,23 @@ async function forgotPassword(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { login, register, forgotPassword };
+async function changePassword(req, res, next) {
+  try {
+    const { current_password, new_password } = req.body;
+    if (!new_password) {
+      return res.status(400).json({ success: false, message: 'New password is required' });
+    }
+
+    const { error } = await supabase.auth.admin.updateUserById(req.user.id, { password: new_password });
+    
+    if (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { login, register, forgotPassword, changePassword };

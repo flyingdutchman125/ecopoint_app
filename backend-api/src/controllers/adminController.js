@@ -97,4 +97,30 @@ async function updateUserBalance(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { scrapePrices, updatePrice, getAllOrders, getStatistics, getAllUsers, updateUserBalance };
+async function adminResetPassword(req, res, next) {
+  try {
+    const { user_id, new_password } = req.body;
+    if (!user_id || !new_password) {
+      return res.status(400).json({ success: false, message: 'user_id and new_password are required' });
+    }
+    const { error } = await supabase.auth.admin.updateUserById(user_id, { password: new_password });
+    if (error) throw error;
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) { next(error); }
+}
+
+async function adminDeleteUser(req, res, next) {
+  try {
+    const userId = req.params.userId || req.body.user_id;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'userId is required' });
+    }
+    const { error: dbError } = await supabase.from('users').delete().eq('id', userId);
+    if (dbError) throw dbError;
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+    if (authError) throw authError;
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) { next(error); }
+}
+
+module.exports = { scrapePrices, updatePrice, getAllOrders, getStatistics, getAllUsers, updateUserBalance, adminResetPassword, adminDeleteUser };

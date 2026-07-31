@@ -9,14 +9,74 @@ class CollectorProvider with ChangeNotifier {
   List<OrderModel> _nearbyOrders = [];
   List<OrderModel> _myOrders = [];
   double _earnings = 0.0;
+  double _walletBalance = 0.0;
   bool _isLoading = false;
   String? _error;
 
   List<OrderModel> get nearbyOrders => _nearbyOrders;
   List<OrderModel> get myOrders => _myOrders;
   double get earnings => _earnings;
+  double get totalEarnings => _earnings;
+  double get walletBalance => _walletBalance;
+  int get totalOrders => _myOrders.length;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Future<void> fetchCollectorWallet() async {
+    try {
+      final res = await ApiService.get(ApiConstants.collectorWallet);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['success'] == true) {
+          _walletBalance = (data['data']['wallet_balance'] as num?)?.toDouble() ?? 0.0;
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<bool> topUp(double amount, String paymentMethod) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final res = await ApiService.post(ApiConstants.walletTopup, {
+        'amount': amount,
+        'payment_method': paymentMethod,
+      });
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        await fetchCollectorWallet();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> withdraw(double amount, String bankName, String accountNumber) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final res = await ApiService.post(ApiConstants.walletWithdraw, {
+        'amount': amount,
+        'bank_name': bankName,
+        'account_number': accountNumber,
+      });
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        await fetchCollectorWallet();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> updateLocationAndFetchNearby() async {
     _isLoading = true;
@@ -98,6 +158,50 @@ class CollectorProvider with ChangeNotifier {
       return false;
     } catch(e) {
       _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchCollectorOrders() async {
+    try {
+      final res = await ApiService.get(ApiConstants.collectorOrders);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['success'] == true) {
+          _myOrders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> fetchEarnings() async {
+    try {
+      final res = await ApiService.get('${ApiConstants.earnings}?period=all');
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['success'] == true) {
+          _earnings = data['data']['total'] != null ? double.parse(data['data']['total'].toString()) : 0.0;
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<bool> enRouteOrder(String orderId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final res = await ApiService.put('${ApiConstants.order}/$orderId/en-route', {});
+      if (res.statusCode == 200) {
+        await updateLocationAndFetchNearby();
+        return true;
+      }
+      return false;
+    } catch (_) {
       return false;
     } finally {
       _isLoading = false;

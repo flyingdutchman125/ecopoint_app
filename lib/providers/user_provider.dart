@@ -2,19 +2,51 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/order_model.dart';
 import '../models/wallet_model.dart';
+import '../models/transaction_model.dart';
+import '../models/price_model.dart';
 import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
 
 class UserProvider with ChangeNotifier {
   List<OrderModel> _orders = [];
   WalletModel? _wallet;
+  List<TransactionModel> _transactions = [];
+  List<PriceModel> _prices = [];
   bool _isLoading = false;
   String? _error;
 
   List<OrderModel> get orders => _orders;
   WalletModel? get wallet => _wallet;
+  List<TransactionModel> get transactions => _transactions;
+  List<PriceModel> get prices => _prices;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Future<void> fetchPrices() async {
+    try {
+      final res = await ApiService.get(ApiConstants.prices);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['success'] == true) {
+          _prices = (data['data'] as List).map((p) => PriceModel.fromJson(p)).toList();
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> fetchTransactions() async {
+    try {
+      final res = await ApiService.get(ApiConstants.transactions);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['success'] == true) {
+          _transactions = (data['data'] as List).map((t) => TransactionModel.fromJson(t)).toList();
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
 
   Future<void> fetchDashboardData() async {
     _isLoading = true;
@@ -46,17 +78,14 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> topUp({
-    required double amount,
-    required String paymentMethod,
-  }) async {
+  Future<bool> topUp(double amount, String paymentMethod) async {
     try {
       final res = await ApiService.post(ApiConstants.walletTopup, {
         'amount': amount,
         'payment_method': paymentMethod,
       });
       final data = jsonDecode(res.body);
-      if (res.statusCode == 201 && data['success'] == true) {
+      if (res.statusCode == 200 || res.statusCode == 201) {
         await fetchDashboardData();
         return true;
       }
@@ -70,11 +99,7 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> withdraw({
-    required double amount,
-    required String bankName,
-    required String accountNumber,
-  }) async {
+  Future<bool> withdraw(double amount, String bankName, String accountNumber) async {
     try {
       final res = await ApiService.post(ApiConstants.walletWithdraw, {
         'amount': amount,
@@ -82,7 +107,7 @@ class UserProvider with ChangeNotifier {
         'account_number': accountNumber,
       });
       final data = jsonDecode(res.body);
-      if (res.statusCode == 201 && data['success'] == true) {
+      if (res.statusCode == 200 || res.statusCode == 201) {
         await fetchDashboardData();
         return true;
       }
@@ -96,6 +121,48 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile(String name, String phone) async {
+    try {
+      final res = await ApiService.put(ApiConstants.profile, {
+        'name': name,
+        'phone': phone,
+      });
+      if (res.statusCode == 200) {
+        await fetchDashboardData();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> cancelOrder(String orderId) async {
+    try {
+      final res = await ApiService.put('${ApiConstants.order}/$orderId/cancel', {});
+      if (res.statusCode == 200) {
+        await fetchDashboardData();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> redeemPoints(int points) async {
+    try {
+      final res = await ApiService.post(ApiConstants.redeem, {'points': points});
+      if (res.statusCode == 200) {
+        await fetchDashboardData();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> createOrder({
     required String photoUrl,
     required String category,
@@ -103,15 +170,22 @@ class UserProvider with ChangeNotifier {
     required double lat,
     required double lng,
     required String address,
+    String? itemType,
+    double? estWeight,
+    double? pickupLat,
+    double? pickupLng,
+    String? pickupAddress,
+    String? notes,
   }) async {
     try {
       final res = await ApiService.post(ApiConstants.order, {
         'photo_url': photoUrl,
-        'item_type': category,
-        'weight_kg': weightKg,
-        'pickup_lat': lat,
-        'pickup_lng': lng,
-        'pickup_address': address,
+        'item_type': itemType ?? category,
+        'weight_kg': weightKg != 0 ? weightKg : (estWeight ?? 0),
+        'pickup_lat': lat != 0 ? lat : (pickupLat ?? 0),
+        'pickup_lng': lng != 0 ? lng : (pickupLng ?? 0),
+        'pickup_address': pickupAddress ?? address,
+        if (notes != null) 'notes': notes,
       });
 
       final data = jsonDecode(res.body);

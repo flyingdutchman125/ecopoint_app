@@ -3,8 +3,8 @@ import './App.css'
 
 const API_BASE = '/api'
 const initialLoginForm = { email: '', password: '' }
-const initialUserForm = { name: '', email: '', password: '', phone: '' }
-const initialCollectorForm = { name: '', email: '', password: '', phone: '', vehicle_type: '', plate_number: '', ktp_photo: null }
+const initialUserForm = { name: '', email: '', password: '', phone: '', city: '', address: '', subdistrict: '' }
+const initialCollectorForm = { name: '', email: '', password: '', phone: '', city: '', address: '', subdistrict: '', vehicle_type: '', plate_number: '', ktp_photo: null }
 
 function App() {
   const [view, setView] = useState('login')
@@ -133,22 +133,27 @@ function App() {
 
     try {
       setLoading(true)
-      const formData = new FormData()
-      Object.entries(registerCollectorForm).forEach(([key, value]) => {
-        if (key === 'ktp_photo') {
-          if (value) {
-            formData.append(key, value)
-          }
-        } else {
-          formData.append(key, value)
+      let ktpUrl = null
+      if (registerCollectorForm.ktp_photo) {
+        const uploadData = new FormData()
+        uploadData.append('photo', registerCollectorForm.ktp_photo)
+        const uploadRes = await apiFetch('/upload', { method: 'POST', formData: uploadData })
+        if (uploadRes && uploadRes.data && uploadRes.data.url) {
+          ktpUrl = uploadRes.data.url
         }
-      })
-      // Set role to collector
-      formData.append('role', 'collector')
-      formData.append('consent_sorting_anorganic', true)
+      }
+
+      const payload = {
+        ...registerCollectorForm,
+        role: 'collector',
+        consent_sorting_anorganic: true,
+        ktp_url: ktpUrl
+      }
+      delete payload.ktp_photo
+
       await apiFetch('/register', {
         method: 'POST',
-        formData,
+        body: payload,
       })
       setMessage('Pendaftaran mitra berhasil. Tunggu verifikasi admin.')
       setRegisterCollectorForm(initialCollectorForm)
@@ -267,6 +272,18 @@ function App() {
                   Password
                   <input type="password" value={registerUserForm.password} onChange={(e) => setRegisterUserForm({ ...registerUserForm, password: e.target.value })} required />
                 </label>
+                <label>
+                  Kota
+                  <input type="text" value={registerUserForm.city} onChange={(e) => setRegisterUserForm({ ...registerUserForm, city: e.target.value })} required />
+                </label>
+                <label>
+                  Kecamatan
+                  <input type="text" value={registerUserForm.subdistrict} onChange={(e) => setRegisterUserForm({ ...registerUserForm, subdistrict: e.target.value })} required />
+                </label>
+                <label>
+                  Alamat Lengkap
+                  <textarea value={registerUserForm.address} onChange={(e) => setRegisterUserForm({ ...registerUserForm, address: e.target.value })} required />
+                </label>
                 <button type="submit">Daftar Pengguna</button>
               </form>
             </div>
@@ -291,6 +308,18 @@ function App() {
                 <label>
                   Password
                   <input type="password" value={registerCollectorForm.password} onChange={(e) => setRegisterCollectorForm({ ...registerCollectorForm, password: e.target.value })} required />
+                </label>
+                <label>
+                  Kota
+                  <input type="text" value={registerCollectorForm.city} onChange={(e) => setRegisterCollectorForm({ ...registerCollectorForm, city: e.target.value })} required />
+                </label>
+                <label>
+                  Kecamatan
+                  <input type="text" value={registerCollectorForm.subdistrict} onChange={(e) => setRegisterCollectorForm({ ...registerCollectorForm, subdistrict: e.target.value })} required />
+                </label>
+                <label>
+                  Alamat Lengkap
+                  <textarea value={registerCollectorForm.address} onChange={(e) => setRegisterCollectorForm({ ...registerCollectorForm, address: e.target.value })} required />
                 </label>
                 <label>
                   Jenis Kendaraan

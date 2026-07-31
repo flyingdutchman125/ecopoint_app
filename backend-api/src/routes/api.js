@@ -19,6 +19,8 @@ router.post('/upload', upload.single('photo'), uploadCtrl.uploadPhoto);
 
 // Profile & Addresses
 router.put('/profile', auth, mobileCtrl.updateProfile);
+router.put('/change-password', auth, authCtrl.changePassword);
+router.delete('/account', auth, mobileCtrl.deleteAccount);
 router.get('/addresses', auth, mobileCtrl.getAddresses);
 router.post('/addresses', auth, mobileCtrl.addAddress);
 router.delete('/addresses/:id', auth, mobileCtrl.deleteAddress);
@@ -43,6 +45,7 @@ router.post('/wallet/withdraw', auth, mobileCtrl.requestWithdrawal);
 // Chat & Review (For both User & Collector)
 router.post('/order/:id/messages', auth, mobileCtrl.sendMessage);
 router.get('/order/:id/messages', auth, mobileCtrl.getMessages);
+router.delete('/message/:messageId', auth, mobileCtrl.deleteMessage);
 router.post('/order/:id/review', auth, mobileCtrl.addReview);
 
 router.put('/location', auth, role('collector'), collectorCtrl.updateLocation);
@@ -52,6 +55,7 @@ router.put('/order/:id/en-route', auth, role('collector'), collectorCtrl.startEn
 router.post('/order/:id/pay', auth, role('collector'), collectorCtrl.completeOrderWithPayment);
 router.get('/collector/orders', auth, role('collector'), collectorCtrl.getCollectorOrders);
 router.get('/collector/earnings', auth, role('collector'), collectorCtrl.getEarnings);
+router.get('/collector/wallet', auth, role('collector'), mobileCtrl.getCollectorWallet);
 
 router.post('/scrape-prices', auth, role('admin'), adminCtrl.scrapePrices);
 router.post('/price', auth, role('admin'), adminCtrl.updatePrice);
@@ -59,5 +63,6 @@ router.get('/statistics', auth, role('admin'), adminCtrl.getStatistics);
 router.get('/admin/users', auth, role('admin'), adminCtrl.getAllUsers);
 router.get('/admin/orders', auth, role('admin'), adminCtrl.getAllOrders);
 router.post('/admin/user/balance', auth, role('admin'), adminCtrl.updateUserBalance);
-
+router.post('/admin/reset-password', auth, role('admin'), adminCtrl.adminResetPassword);
+router.delete('/admin/user/:userId', auth, role('admin'), adminCtrl.adminDeleteUser);
 module.exports = router;

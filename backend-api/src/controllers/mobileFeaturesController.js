@@ -169,10 +169,42 @@ async function requestTopup(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function deleteAccount(req, res, next) {
+  try {
+    const { error: dbError } = await supabase.from('users').delete().eq('id', req.user.id);
+    if (dbError) return res.status(400).json({ success: false, message: dbError.message });
+    
+    const { error: authError } = await supabase.auth.admin.deleteUser(req.user.id);
+    if (authError) return res.status(400).json({ success: false, message: authError.message });
+
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) { next(error); }
+}
+
+async function deleteMessage(req, res, next) {
+  try {
+    const { messageId } = req.params;
+    const { error } = await supabase.from('order_messages').delete().eq('id', messageId);
+    if (error) return res.status(400).json({ success: false, message: error.message });
+
+    res.json({ success: true, message: 'Message deleted successfully' });
+  } catch (error) { next(error); }
+}
+
+async function getCollectorWallet(req, res, next) {
+  try {
+    const { data, error } = await supabase.from('users').select('wallet_balance').eq('id', req.user.id).single();
+    if (error) return res.status(400).json({ success: false, message: error.message });
+
+    res.json({ success: true, data });
+  } catch (error) { next(error); }
+}
+
 module.exports = {
   updateProfile,
   getAddresses, addAddress, deleteAddress,
-  sendMessage, getMessages,
+  sendMessage, getMessages, deleteMessage,
   addReview,
-  requestWithdrawal, requestTopup
+  requestWithdrawal, requestTopup,
+  deleteAccount, getCollectorWallet
 };

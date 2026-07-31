@@ -8,6 +8,8 @@ class UserModel {
   final String? address;
   final String? subdistrict;
   final String? avatarUrl;
+  final double walletBalance;
+  final int ecoPoints;
 
   UserModel({
     required this.id,
@@ -19,6 +21,8 @@ class UserModel {
     this.address,
     this.subdistrict,
     this.avatarUrl,
+    this.walletBalance = 0.0,
+    this.ecoPoints = 0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,8 @@ class UserModel {
       address: json['address'],
       subdistrict: json['subdistrict'],
       avatarUrl: json['avatar_url'],
+      walletBalance: (json['wallet_balance'] as num?)?.toDouble() ?? 0.0,
+      ecoPoints: (json['eco_points'] as num?)?.toInt() ?? 0,
     );
   }
 
