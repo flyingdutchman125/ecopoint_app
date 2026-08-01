@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-// TODO: Jika menggunakan Opsi 2 (Widget Routing), import file halaman login kamu di sini:
-// import 'package:ecopoint/views/auth/login_page.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -27,6 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isEditing = false;
   bool _isPendingApproval = false; // Status menunggu ACC Admin
   bool _isLoading = false; // Status simulasi kirim data ke backend
+  bool _isInitialized = false;
 
   // Controller untuk menampung data inputan
   late TextEditingController _nameController;
@@ -36,10 +37,27 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Inisialisasi data awal akun
-    _nameController = TextEditingController(text: 'Ahmad Syifa’ul Falakhul K.');
-    _whatsappController = TextEditingController(text: '895333222130'); 
-    _emailController = TextEditingController(text: 'syifaul@email.com');
+    _nameController = TextEditingController();
+    _whatsappController = TextEditingController();
+    _emailController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        _nameController.text = user.name ?? 'Ahmad Syifa’ul Falakhul K.';
+        _whatsappController.text = user.phone ?? '895333222130';
+        _emailController.text = user.email;
+      } else {
+        _nameController.text = 'Ahmad Syifa’ul Falakhul K.';
+        _whatsappController.text = '895333222130';
+        _emailController.text = 'syifaul@email.com';
+      }
+      _isInitialized = true;
+    }
   }
 
   @override
@@ -84,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       barrierDismissible: false, // User wajib memilih salah satu tombol
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
@@ -97,34 +115,27 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'Batal', 
                 style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
               ),
             ),
             TextButton(
-              onPressed: () {
-                // Tampilkan snackbar pemberitahuan keluar sebelum pindah screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Berhasil keluar dari akun', style: _jakarta(color: Colors.white)),
-                    backgroundColor: const Color(0xFFBA2525),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-
-                // --- PROSES NAVIGASI KELUAR (Pilih salah satu sesuai arsitektur projectmu) ---
-                
-                // OPSI 1: Jika menggunakan Nama Route / Named Routes (Misal route login di main.dart dinamai '/login')
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-                
-                // OPSI 2: Jika menggunakan Widget Routing langsung tanpa nama (Aktifkan baris di bawah dan sesuaikan nama classnya)
-                // Navigator.pushAndRemoveUntil(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => const LoginPage()), // Ganti LoginPage dengan nama class login kamu
-                //   (route) => false, // Menghapus seluruh history halaman sebelumnya
-                // );
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                final authProvider = context.read<AuthProvider>();
+                await authProvider.logout();
+                if (mounted) {
+                  context.go('/login');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Berhasil keluar dari akun', style: _jakarta(color: Colors.white)),
+                      backgroundColor: const Color(0xFFBA2525),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               },
               child: Text(
                 'Keluar', 
