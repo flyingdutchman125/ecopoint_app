@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart'; // Ditambahkan untuk navigasi go_router
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -159,19 +160,20 @@ class _StorePageState extends State<StorePage> {
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         children: [
-          Expanded(child: _quickActionItem(Icons.front_hand_outlined, 'Withdraw')),
+          Expanded(child: _quickActionItem(Icons.front_hand_outlined, 'Withdraw', onTap: () {})),
           const SizedBox(height: 34, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEDEDED))),
-          Expanded(child: _quickActionItem(Icons.monetization_on_outlined, 'Points')),
+          // INTEGRASI: Tombol Points diarahkan ke route /points
+          Expanded(child: _quickActionItem(Icons.monetization_on_outlined, 'Points', onTap: () => context.push('/points'))),
           const SizedBox(height: 34, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEDEDED))),
-          Expanded(child: _quickActionItem(Icons.eco_outlined, 'EcoTree')),
+          Expanded(child: _quickActionItem(Icons.eco_outlined, 'EcoTree', onTap: () {})),
         ],
       ),
     );
   }
 
-  Widget _quickActionItem(IconData icon, String label) {
+  Widget _quickActionItem(IconData icon, String label, {required VoidCallback onTap}) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

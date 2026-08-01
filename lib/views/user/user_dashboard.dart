@@ -331,9 +331,11 @@ class _UserDashboardState extends State<UserDashboard> {
               return _MenuItemCard(
                 data: item,
                 onTap: () {
-                  // MENGHUBUNGKAN NAVIGASI TOMBOL JEMPUT
+                  // MENGHUBUNGKAN NAVIGASI TOMBOL JEMPUT DAN POINTS
                   if (item.label == 'Jemput') {
                     context.push('/create-order');
+                  } else if (item.label == 'Points') {
+                    context.push('/points'); // INTEGRASI: Arahkan langsung ke halaman Points
                   } else {
                     _showSnack('Fitur ${item.label} sedang dalam pengembangan');
                   }

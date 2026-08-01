@@ -12,6 +12,7 @@ import '../../providers/auth_provider.dart';
 import '../../views/user/address_page.dart';
 import '../../views/user/notification_page.dart'; 
 import '../../views/user/ai_price_page.dart'; 
+import '../../views/user/points_page.dart'; // INTEGRASI: Import halaman Points
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -98,11 +99,16 @@ class AppRouter {
           name: 'admin',
           builder: (context, state) => const AdminDashboard(),
         ),
-        // TAMBAHAN: Route ke halaman AI Price
         GoRoute(
           path: '/ai-price',
           name: 'ai-price',
           builder: (context, state) => const AiPricePage(),
+        ),
+        // INTEGRASI: Jalur Route baru untuk halaman Points
+        GoRoute(
+          path: '/points',
+          name: 'points',
+          builder: (context, state) => const PointsPage(),
         ),
       ],
     );
