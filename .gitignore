@@ -30,6 +30,10 @@
 # Android
 **/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 
+# Local Backup & Zip Files
+backup/
+*.zip
+
 # Node.js Backend
 backend/node_modules/
 backend/uploads/
@@ -37,3 +41,4 @@ backend/data/
 backend/.env
 backend/.env.local
 backend/mysql_data/
+

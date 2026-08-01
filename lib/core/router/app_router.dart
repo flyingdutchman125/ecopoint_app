@@ -4,11 +4,14 @@ import '../../views/splash_screen.dart';
 import '../../views/auth/login_screen.dart';
 import '../../views/auth/register_screen.dart';
 import '../../views/auth/collector_register_screen.dart';
-import '../../views/user/user_dashboard.dart';
+import '../../views/user/main_shell.dart'; 
 import '../../views/user/create_order_screen.dart';
 import '../../views/collector/collector_dashboard.dart';
 import '../../views/admin/admin_dashboard.dart';
 import '../../providers/auth_provider.dart';
+import '../../views/user/address_page.dart';
+import '../../views/user/notification_page.dart'; 
+import '../../views/user/ai_price_page.dart'; 
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -51,6 +54,16 @@ class AppRouter {
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
+          path: '/address',
+          name: 'address',
+          builder: (context, state) => const AddressPage(),
+        ),
+        GoRoute(
+          path: '/notification', 
+          name: 'notification',
+          builder: (context, state) => const NotificationPage(),
+        ),
+        GoRoute(
           path: '/register',
           name: 'register',
           builder: (context, state) => const RegisterScreen(),
@@ -68,7 +81,7 @@ class AppRouter {
         GoRoute(
           path: '/user',
           name: 'user',
-          builder: (context, state) => const UserDashboard(),
+          builder: (context, state) => const MainShell(),
         ),
         GoRoute(
           path: '/create-order',
@@ -84,6 +97,12 @@ class AppRouter {
           path: '/admin',
           name: 'admin',
           builder: (context, state) => const AdminDashboard(),
+        ),
+        // TAMBAHAN: Route ke halaman AI Price
+        GoRoute(
+          path: '/ai-price',
+          name: 'ai-price',
+          builder: (context, state) => const AiPricePage(),
         ),
       ],
     );

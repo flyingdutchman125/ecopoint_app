@@ -1,9 +1,24 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/user_provider.dart';
+
+TextStyle _jakarta({
+  double fontSize = 14,
+  FontWeight fontWeight = FontWeight.w400,
+  Color color = Colors.black,
+  FontStyle? fontStyle,
+  double? letterSpacing,
+}) {
+  return GoogleFonts.plusJakartaSans(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    color: color,
+    fontStyle: fontStyle,
+    letterSpacing: letterSpacing,
+  );
+}
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});
@@ -13,216 +28,371 @@ class UserDashboard extends StatefulWidget {
 }
 
 class _UserDashboardState extends State<UserDashboard> {
-  final TextEditingController _topUpAmountController = TextEditingController();
-  final TextEditingController _withdrawAmountController = TextEditingController();
-  final TextEditingController _bankNameController = TextEditingController();
-  final TextEditingController _accountNumberController = TextEditingController();
+  Timer? _priceTicker;
+  final _random = Random();
+
+  final List<_MenuItemData> _menuItems = const [
+    _MenuItemData(Icons.local_shipping, 'Jemput', Color(0xFFE53935)),
+    _MenuItemData(Icons.attach_money, 'Points', Color(0xFFFFC107)),
+    _MenuItemData(Icons.chat_bubble_outline, 'Chat', Color(0xFFFFC107)),
+    _MenuItemData(Icons.star, 'Rating', Color(0xFFFFC107)),
+    _MenuItemData(Icons.alt_route, 'Rute Map', Color(0xFF4CAF50)),
+    _MenuItemData(Icons.eco, 'EcoTree', Color(0xFF4CAF50)),
+    _MenuItemData(Icons.receipt_long, 'Order', Color(0xFFFF9800)),
+    _MenuItemData(Icons.menu_book, 'EcoBook', Color(0xFF3F51B5)),
+  ];
+
+  List<_PriceData> _prices = [
+    _PriceData(name: 'Logam/Besi', pricePerKg: 8900, change: 1.2),
+    _PriceData(name: 'Minyak Jelantah', pricePerKg: 9600, change: 0.9),
+    _PriceData(name: 'Kardus', pricePerKg: 4900, change: -1.1),
+    _PriceData(name: 'Botol Plastik', pricePerKg: 3900, change: 1.4),
+  ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<UserProvider>().fetchDashboardData();
+    _priceTicker = Timer.periodic(const Duration(seconds: 4), (_) {
+      setState(() {
+        _prices = _prices.map((p) {
+          if (p.locked) return p;
+          final deltaPercent = (_random.nextDouble() * 4) - 2;
+          final newPrice = (p.pricePerKg * (1 + deltaPercent / 100)).roundToDouble();
+          return p.copyWith(pricePerKg: newPrice, change: deltaPercent);
+        }).toList();
+      });
     });
   }
 
   @override
   void dispose() {
-    _topUpAmountController.dispose();
-    _withdrawAmountController.dispose();
-    _bankNameController.dispose();
-    _accountNumberController.dispose();
+    _priceTicker?.cancel();
     super.dispose();
+  }
+
+  Future<void> _onLockTap(int index) async {
+    final item = _prices[index];
+
+    if (item.locked) {
+      final remaining = item.lockedUntil!.difference(DateTime.now());
+      _showSnack('Price lock aktif. Menunggu ${_formatDuration(remaining)} lagi.');
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Kunci Harga', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: Text('Konfirmasi penguncian harga selama 24 jam?', style: _jakarta(fontSize: 14, color: Colors.black87)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Batal', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.black54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF358C16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Ya, Kunci', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _prices[index] = item.copyWith(lockedUntil: DateTime.now().add(const Duration(hours: 24)));
+      });
+      _showSnack('Harga "${item.name}" berhasil dikunci selama 24 jam.');
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+        backgroundColor: const Color(0xFF1B3A1B),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inHours >= 1) return '${d.inHours} jam';
+    if (d.inMinutes >= 1) return '${d.inMinutes} menit';
+    return '${d.inSeconds} detik';
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final userProv = context.watch<UserProvider>();
-    final theme = Theme.of(context);
-
     return Scaffold(
-      body: Stack(
+      backgroundColor: const Color(0xFF358C16), 
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF7F9FA),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildMenuUtama(),
+                    const SizedBox(height: 24),
+                    _buildLivePriceFeed(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF8EE33F), Color(0xFF358C16)],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  children: [
+                    TextSpan(text: 'ECO ', style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                    TextSpan(text: 'POINT', style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFFFFEB3B))),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.location_on, color: Colors.white, size: 24),
+                    onPressed: () {
+                      context.push('/address');
+                    },
+                  ),
+                  const SizedBox(width: 18),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.notifications, color: Colors.white, size: 24),
+                    onPressed: () {
+                      context.push('/notification'); 
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          RichText(
+            text: TextSpan(
+              style: _jakarta(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w400),
+              children: [
+                const TextSpan(text: 'Hai, '),
+                TextSpan(text: 'Ahmad Syifa\'ul', style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildEcoWargaCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEcoWargaCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 4))],
+      ),
+      child: Column(
         children: [
           Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFE7F9D9), Color(0xFFF8FFF5)],
-              ),
+              color: Color(0xFFEAD247),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+            ),
+            child: Text(
+              'Eco Warga Card',
+              textAlign: TextAlign.center,
+              style: _jakarta(color: Colors.white, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
-          Positioned(
-            top: -60,
-            left: -60,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                color: const Color(0xFFDAF4B5),
-                borderRadius: BorderRadius.circular(160),
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            child: Row(
+              children: [
+                Expanded(child: _saldoPointItem('Saldo Aktif', 'Rp 200,000')),
+                const SizedBox(height: 36, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5))),
+                Expanded(child: _saldoPointItem('Point Aktif', '20.000 Pts')),
+              ],
             ),
           ),
-          Positioned(
-            top: 120,
-            right: -50,
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                color: const Color(0xFFB7E69C),
-                borderRadius: BorderRadius.circular(140),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: RefreshIndicator(
-              onRefresh: () => userProv.fetchDashboardData(),
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Halo, ${auth.user?.name ?? 'Warga'}',
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF225A0F),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Kelola sampahmu, kumpulkan eco point, dan tukarkan hadiah.',
-                              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700], height: 1.5),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.logout_rounded, color: Color(0xFF225A0F)),
-                        onPressed: () => context.read<AuthProvider>().logout(),
-                        tooltip: 'Keluar',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  _buildSummaryCard(theme, userProv),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => context.push('/create-order'),
-                          icon: const Icon(Icons.document_scanner_rounded, size: 20),
-                          label: const Text('Buat Pesanan'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF59B41C),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.local_shipping_rounded, size: 20),
-                          label: const Text('Riwayat'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF225A0F),
-                            side: const BorderSide(color: Color(0xFF225A0F)),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _showTopUpSheet,
-                          icon: const Icon(Icons.account_balance_wallet_rounded, size: 20),
-                          label: const Text('Top Up'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E8E3E),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _showWithdrawSheet,
-                          icon: const Icon(Icons.south_east_rounded, size: 20),
-                          label: const Text('Tarik Dana'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF225A0F),
-                            side: const BorderSide(color: Color(0xFF225A0F)),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Pesanan Terbaru',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 16),
-                  if (userProv.isLoading) ...[
-                    _buildShimmerBox(height: 120),
-                    const SizedBox(height: 16),
-                    _buildShimmerBox(height: 120),
-                  ] else if (userProv.orders.isEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 20, offset: const Offset(0, 8)),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.eco_rounded, size: 72, color: Color.fromRGBO(76, 175, 80, 0.25)),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Belum ada pesanan',
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Silakan buat pesanan sampah untuk mendapatkan eco point dan hadiah.',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700], height: 1.5),
-                          ),
-                        ],
-                      ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: _jakarta(fontSize: 12.5, color: Colors.black87, fontStyle: FontStyle.italic),
+                      children: [
+                        const TextSpan(text: 'Level Pertumbuhan Tunas : '),
+                        TextSpan(text: 'Level 1', style: _jakarta(fontSize: 12.5, color: const Color(0xFF5CB82B), fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
+                      ],
                     ),
-                  ] else ...userProv.orders.asMap().entries.map((entry) {
-                    final order = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildOrderCard(theme, order),
-                    );
-                  }),
-                  const SizedBox(height: 24),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(border: Border.all(color: const Color(0xFFCCCCCC)), borderRadius: BorderRadius.circular(6)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Lihat Perkembangan ', style: _jakarta(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.black54)),
+                      const Icon(Icons.arrow_forward_ios, size: 8, color: Colors.black54),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _saldoPointItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: _jakarta(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w400)),
+          const SizedBox(height: 4),
+          Text(value, style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuUtama() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Menu Utama', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _menuItems.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              mainAxisExtent: 71,
+            ),
+            itemBuilder: (context, index) {
+              final item = _menuItems[index];
+              return _MenuItemCard(
+                data: item,
+                onTap: () {
+                  // MENGHUBUNGKAN NAVIGASI TOMBOL JEMPUT
+                  if (item.label == 'Jemput') {
+                    context.push('/create-order');
+                  } else {
+                    _showSnack('Fitur ${item.label} sedang dalam pengembangan');
+                  }
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLivePriceFeed() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('AI Live Dynamic Price Feed', style: _jakarta(fontSize: 14.5, fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  const CircleAvatar(radius: 4, backgroundColor: Colors.green),
+                  const SizedBox(width: 4),
+                  Text('Live Market', style: _jakarta(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _prices.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 2.3,
+            ),
+            itemBuilder: (context, index) => _PriceCard(data: _prices[index], onLockTap: () => _onLockTap(index)),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () {
+              context.push('/ai-price'); 
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFEDEDED))),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Lihat Selengkapnya', style: _jakarta(fontSize: 12.5, color: Colors.black45)),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward, size: 14, color: Colors.black38),
                 ],
               ),
             ),
@@ -231,266 +401,131 @@ class _UserDashboardState extends State<UserDashboard> {
       ),
     );
   }
+}
 
-  void _showTopUpSheet() {
-    _topUpAmountController.clear();
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Top Up Saldo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _topUpAmountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Jumlah (Rp)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  final amount = double.tryParse(_topUpAmountController.text.replaceAll(',', '').trim()) ?? 0;
-                  if (amount <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Masukkan jumlah top up yang valid')));
-                    return;
-                  }
-                  final provider = context.read<UserProvider>();
-                  final navigator = Navigator.of(context);
-                  final messenger = ScaffoldMessenger.of(context);
-                  final success = await provider.topUp(amount, 'bank_transfer');
-                  if (success && mounted) {
-                    navigator.pop();
-                    messenger.showSnackBar(const SnackBar(content: Text('Top up berhasil')));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF225A0F),
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Lanjutkan Top Up'),
-              ),
-            ],
+class _MenuItemData {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _MenuItemData(this.icon, this.label, this.color);
+}
+
+class _MenuItemCard extends StatelessWidget {
+  final _MenuItemData data;
+  final VoidCallback? onTap;
+  const _MenuItemCard({required this.data, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 0.5,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(data.icon, color: data.color, size: 26),
+                const SizedBox(height: 8),
+                Text(data.label, textAlign: TextAlign.center, style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.w500)),
+              ],
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+}
 
-  void _showWithdrawSheet() {
-    _withdrawAmountController.clear();
-    _bankNameController.clear();
-    _accountNumberController.clear();
+class _PriceData {
+  final String name;
+  final double pricePerKg;
+  final double change; 
+  final DateTime? lockedUntil;
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Tarik Dana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _withdrawAmountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Jumlah (Rp)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _bankNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Bank',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _accountNumberController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor Rekening',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  final amount = double.tryParse(_withdrawAmountController.text.replaceAll(',', '').trim()) ?? 0;
-                  final bankName = _bankNameController.text.trim();
-                  final accountNumber = _accountNumberController.text.trim();
-                  if (amount <= 0 || bankName.isEmpty || accountNumber.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lengkapi semua data penarikan')));
-                    return;
-                  }
-                  final provider = context.read<UserProvider>();
-                  final navigator = Navigator.of(context);
-                  final messenger = ScaffoldMessenger.of(context);
-                  final success = await provider.withdraw(
-                        amount,
-                        bankName,
-                        accountNumber,
-                      );
-                  if (success && mounted) {
-                    navigator.pop();
-                    messenger.showSnackBar(const SnackBar(content: Text('Permintaan tarik dana terkirim')));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF225A0F),
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Kirim Permintaan'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  const _PriceData({required this.name, required this.pricePerKg, required this.change, this.lockedUntil});
+
+  bool get locked => lockedUntil != null && DateTime.now().isBefore(lockedUntil!);
+  bool get isUp => change >= 0;
+
+  String get formattedPrice {
+    final priceStr = pricePerKg.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+    return 'Rp $priceStr/kg';
   }
 
-  Widget _buildSummaryCard(ThemeData theme, UserProvider userProv) {
+  String get formattedChange {
+    final sign = change >= 0 ? '+' : '';
+    return '$sign${change.toStringAsFixed(1)}%';
+  }
+
+  String? get lockedUntilLabel {
+    if (!locked) return null;
+    final t = lockedUntil!;
+    return 'Terkunci s.d. ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  }
+
+  _PriceData copyWith({String? name, double? pricePerKg, double? change, DateTime? lockedUntil}) {
+    return _PriceData(
+      name: name ?? this.name,
+      pricePerKg: pricePerKg ?? this.pricePerKg,
+      change: change ?? this.change,
+      lockedUntil: lockedUntil ?? this.lockedUntil,
+    );
+  }
+}
+
+class _PriceCard extends StatelessWidget {
+  final _PriceData data;
+  final VoidCallback onLockTap;
+  const _PriceCard({required this.data, required this.onLockTap});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 20, offset: const Offset(0, 12)),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: data.locked ? Border.all(color: const Color(0xFF358C16), width: 1.2) : null,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Dompet Anda', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Rp ${userProv.wallet?.balance ?? 0}',
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF225A0F)),
-              ),
-              const SizedBox(width: 8),
-              Text('saldo', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
-            ],
-          ),
-          const SizedBox(height: 22),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSummaryChip(theme, 'Eco Points', '${userProv.wallet?.ecoPoints ?? 0} pts', Icons.emoji_events_rounded),
-              const SizedBox(width: 12),
-              _buildSummaryChip(theme, 'Pesanan', '${userProv.orders.length}', Icons.history_rounded),
+              Expanded(child: Text(data.name, style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w600))),
+              GestureDetector(
+                onTap: onLockTap,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(data.locked ? Icons.lock : Icons.lock_open, size: 14, color: data.locked ? const Color(0xFF358C16) : Colors.black38),
+                ),
+              ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryChip(ThemeData theme, String title, String value, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F9ED),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: const Color(0xFF225A0F), size: 20),
-            const SizedBox(height: 12),
-            Text(title, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[800])),
-            const SizedBox(height: 8),
-            Text(value, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF225A0F))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderCard(ThemeData theme, order) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 20, offset: const Offset(0, 12)),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        leading: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF59B41C), Color(0xFF8CD663)]),
-            borderRadius: BorderRadius.circular(16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(data.formattedPrice, style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w400)),
+              Text(data.formattedChange, style: _jakarta(fontSize: 12, fontWeight: FontWeight.bold, color: data.isUp ? Colors.green : Colors.red)),
+            ],
           ),
-          child: const Icon(Icons.recycling_rounded, color: Colors.white),
-        ),
-        title: Text(order.category ?? 'Sampah', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            Text('${order.weightKg ?? 0} kg � ${order.status.toUpperCase()}', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
+          if (data.locked) ...[
             const SizedBox(height: 4),
-            Text(order.address, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+            Text(data.lockedUntilLabel!, style: _jakarta(fontSize: 9.5, color: const Color(0xFF358C16), fontWeight: FontWeight.w500)),
           ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text('+ Rp ${order.totalPrice ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF225A0F))),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F7DF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(order.status, style: const TextStyle(fontSize: 12, color: Color(0xFF225A0F), fontWeight: FontWeight.bold)),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerBox({required double height, double width = double.infinity}) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
-      child: Container(
-        height: height,
-        width: width,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        ],
       ),
     );
   }

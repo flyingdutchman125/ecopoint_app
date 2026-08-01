@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final String role;
+  const RegisterScreen({super.key, this.role = 'user'});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -36,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _goToNextStep() {
     if (_nameCtrl.text.trim().isEmpty || _phoneCtrl.text.trim().isEmpty || _emailCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan lengkapi nama, nomor WhatsApp, dan email.')),
+        SnackBar(content: Text('Silakan lengkapi nama, nomor WhatsApp, dan email.', style: GoogleFonts.outfit())),
       );
       return;
     }
@@ -55,14 +57,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _submitRegistration() async {
     if (_addressCtrl.text.trim().isEmpty || _subdistrictCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.')),
+        SnackBar(content: Text('Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.', style: GoogleFonts.outfit())),
       );
       return;
     }
 
     if (!_agreeSorting) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan setujui pernyataan penyortiran sampah anorganik.')),
+        SnackBar(content: Text('Silakan setujui pernyataan penyortiran sampah anorganik.', style: GoogleFonts.outfit())),
       );
       return;
     }
@@ -76,19 +78,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
       city: _selectedCity,
       address: _addressCtrl.text.trim(),
       subdistrict: _subdistrictCtrl.text.trim(),
-      role: 'user',
+      role: widget.role,
       consentSorting: _agreeSorting,
     );
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pendaftaran berhasil. Silakan login.')),
+        SnackBar(content: Text('Pendaftaran berhasil. Silakan login.', style: GoogleFonts.outfit())),
       );
       context.go('/login');
     } else if (mounted && auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!)),
+        SnackBar(content: Text(auth.error!, style: GoogleFonts.outfit())),
       );
+    }
+  }
+
+  void _handleStep2Submit() {
+    if (_addressCtrl.text.trim().isEmpty || _subdistrictCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.', style: GoogleFonts.outfit())),
+      );
+      return;
+    }
+
+    if (!_agreeSorting) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Silakan setujui pernyataan penyortiran sampah anorganik.', style: GoogleFonts.outfit())),
+      );
+      return;
+    }
+
+    if (widget.role == 'collector') {
+      context.push('/register/collector', extra: {
+        'name': _nameCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'email': _emailCtrl.text.trim(),
+        'city': _selectedCity,
+        'address': _addressCtrl.text.trim(),
+        'subdistrict': _subdistrictCtrl.text.trim(),
+        'password': _passwordCtrl.text,
+        'consentSorting': _agreeSorting,
+      });
+    } else {
+      _submitRegistration();
     }
   }
 
@@ -98,8 +131,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            color: const Color(0xFF4D9F09),
+          style: GoogleFonts.outfit(
+            color: const Color(0xFF59B41C),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -134,167 +167,143 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9F6),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(26)),
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (_step == 1) {
-                        context.pop();
-                      } else {
-                        _goBack();
-                      }
-                    },
-                    child: const Icon(Icons.arrow_back_ios_new, size: 22, color: Colors.black54),
-                  ),
-                  const Spacer(),
-                  Text(
-                                      'Daftar',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  const SizedBox(width: 82),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _step == 1 ? 'LANGKAH 1 DARI 2 : IDENTITAS' : 'LANGKAH 2 DARI 2 : ALAMAT & SANDI',
-                    style: theme.textTheme.labelLarge?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 14),
-                  _buildStepIndicator(_step == 1 ? 'Identitas' : 'Alamat & Sandi'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _step == 1 ? _buildIdentityStep(theme) : _buildAddressStep(theme),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-              child: _step == 2
-                  ? Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('Daftarkan Sebagai', style: TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: auth.isLoading ? null : _submitRegistration,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF59B41C),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                  ),
-                                  child: auth.isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                        )
-                                      : const Text('Akun Warga', style: TextStyle(color: Colors.white)),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: auth.isLoading
-                                      ? null
-                                      : () {
-                                          if (_addressCtrl.text.trim().isEmpty ||
-                                              _subdistrictCtrl.text.trim().isEmpty ||
-                                              _passwordCtrl.text.isEmpty) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.'),
-                                              ),
-                                            );
-                                            return;
-                                          }
-
-                                          if (!_agreeSorting) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Silakan setujui pernyataan penyortiran sampah anorganik.'),
-                                              ),
-                                            );
-                                            return;
-                                          }
-
-                                          context.push('/register/collector', extra: {
-                                            'name': _nameCtrl.text.trim(),
-                                            'phone': _phoneCtrl.text.trim(),
-                                            'email': _emailCtrl.text.trim(),
-                                            'city': _selectedCity,
-                                            'address': _addressCtrl.text.trim(),
-                                            'subdistrict': _subdistrictCtrl.text.trim(),
-                                            'password': _passwordCtrl.text,
-                                            'consentSorting': _agreeSorting,
-                                          });
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFEBD74A),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                  ),
-                                  child: const Text('Akun Kolektor', style: TextStyle(color: Colors.white)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                  : SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: auth.isLoading ? null : _goToNextStep,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF59B41C),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE7F9D9), Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.4],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        if (_step == 1) {
+                          context.pop();
+                        } else {
+                          _goBack();
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(13),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: auth.isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                'Lanjut Ke alamat',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
+                        child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
                       ),
                     ),
-            ),
-          ],
+                    const Spacer(),
+                    Text(
+                      widget.role == 'collector' ? 'Daftar Kolektor' : 'Daftar Warga',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Spacer(),
+                    const SizedBox(width: 36),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(13),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _step == 1 ? 'LANGKAH 1 DARI 2 : IDENTITAS' : 'LANGKAH 2 DARI 2 : ALAMAT & SANDI',
+                            style: GoogleFonts.outfit(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStepIndicator(_step == 1 ? 'Identitas' : 'Alamat & Sandi'),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: _step == 1 ? _buildIdentityStep() : _buildAddressStep(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: auth.isLoading
+                              ? null
+                              : (_step == 1 ? _goToNextStep : _handleStep2Submit),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF59B41C),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                          child: auth.isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : Text(
+                                  _step == 1 ? 'Lanjut Ke alamat' : (widget.role == 'collector' ? 'Lanjutkan' : 'Daftar Sekarang'),
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildIdentityStep(ThemeData theme) {
+  Widget _buildIdentityStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -309,12 +318,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Text(
                 'EKONOMI SIRKULAR',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF225A0F)),
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF225A0F),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Satu akun untuk menikmati tabungan penjemputan sampah digital, klaim e-wallet, & tracker emisi karbon.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: const Color(0xFF3E5933), height: 1.5),
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: const Color(0xFF3E5933),
+                  height: 1.5,
+                ),
               ),
             ],
           ),
@@ -328,12 +345,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             Container(
               width: 72,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(18),
               ),
-              child: const Text('+62', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Center(
+                child: Text(
+                  '+62',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -341,8 +363,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        Text('Digunakan kurir untuk konfirmasi kedatangan', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+        const SizedBox(height: 8),
+        Text(
+          'Digunakan kurir untuk konfirmasi kedatangan',
+          style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey[600]),
+        ),
         const SizedBox(height: 18),
         _buildLabel('ALAMAT EMAIL'),
         _buildTextField(controller: _emailCtrl, hintText: 'nama@email.com', keyboardType: TextInputType.emailAddress),
@@ -351,12 +376,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Container(
           decoration: BoxDecoration(
             color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
           child: DropdownButtonFormField<String>(
             initialValue: _selectedCity,
             decoration: const InputDecoration(border: InputBorder.none),
+            icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
+            style: GoogleFonts.outfit(color: Colors.black87, fontSize: 16),
             items: const [
               DropdownMenuItem(value: 'Lamongan', child: Text('Lamongan')),
               DropdownMenuItem(value: 'Surabaya', child: Text('Surabaya')),
@@ -372,12 +399,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildAddressStep(ThemeData theme) {
+  Widget _buildAddressStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildLabel('ALAMAT LENGKAP RUMAH'),
-        _buildTextField(controller: _addressCtrl, hintText: 'Nama jalan, Blok, No. Rumah, RT/RW, Ciri Gerbang/Pagar ...', maxLines: 4),
+        _buildTextField(controller: _addressCtrl, hintText: 'Nama jalan, Blok, No. Rumah, RT/RW...', maxLines: 4),
         const SizedBox(height: 18),
         _buildLabel('KECAMATAN/KELURAHAN'),
         _buildTextField(controller: _subdistrictCtrl, hintText: 'Contoh : Lamongan, Sukorejo'),
@@ -388,16 +415,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Checkbox(
-              value: _agreeSorting,
-              onChanged: (value) => setState(() => _agreeSorting = value ?? false),
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Checkbox(
+                value: _agreeSorting,
+                activeColor: const Color(0xFF59B41C),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                onChanged: (value) => setState(() => _agreeSorting = value ?? false),
+              ),
             ),
-            const Expanded(
-              child: Text('Saya bersedia menyortir sampah anorganik secara bersih sebelum kurir tiba'),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Saya bersedia menyortir sampah anorganik secara bersih sebelum kurir tiba',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Colors.black87,
+                  height: 1.4,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 28),
       ],
     );
   }
@@ -407,7 +448,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
       ),
     );
   }
@@ -424,8 +465,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       keyboardType: keyboardType,
       obscureText: obscureText,
       maxLines: maxLines,
+      style: GoogleFonts.outfit(fontSize: 16, color: Colors.black87),
       decoration: InputDecoration(
         hintText: hintText,
+        hintStyle: GoogleFonts.outfit(color: Colors.grey[400]),
         filled: true,
         fillColor: Colors.grey[100],
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
