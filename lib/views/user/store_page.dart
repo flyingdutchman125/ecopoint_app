@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart'; // Ditambahkan untuk navigasi go_router
+import 'package:go_router/go_router.dart';
+import '../../core/eco_tree_state.dart';
+import '../../core/wallet_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -79,13 +81,14 @@ class _StorePageState extends State<StorePage> {
   }
 
   Widget _buildHeader() {
+    final wallet = WalletState.instance;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: const Color.fromRGBO(0,0,0,0.05), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,25 +104,51 @@ class _StorePageState extends State<StorePage> {
           const SizedBox(height: 16),
           Row(
             children: [
+              // Saldo Aktif – live data, tap to go to Withdraw
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Saldo Aktif', style: _jakarta(fontSize: 12, color: Colors.black54)),
-                    const SizedBox(height: 4),
-                    Text('Rp 200,000', style: _jakarta(fontSize: 17, fontWeight: FontWeight.bold)),
-                  ],
+                child: InkWell(
+                  onTap: () => context.push('/withdraw'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Saldo Aktif', style: _jakarta(fontSize: 12, color: Colors.black54)),
+                      const SizedBox(height: 4),
+                      ListenableBuilder(
+                        listenable: wallet.activeBalance,
+                        builder: (context, _) {
+                          final val = wallet.activeBalance.value.toInt();
+                          final str = val.toString().replaceAllMapped(
+                            RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                          return Text('Rp $str', style: _jakarta(fontSize: 17, fontWeight: FontWeight.bold));
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 36, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE0E0E0))),
               const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Point Aktif', style: _jakarta(fontSize: 12, color: Colors.black54)),
-                  const SizedBox(height: 4),
-                  Text('20.000', style: _jakarta(fontSize: 17, fontWeight: FontWeight.bold)),
-                ],
+              // Point Aktif – live data, tap to go to Convert
+              InkWell(
+                onTap: () => context.push('/convert'),
+                borderRadius: BorderRadius.circular(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Point Aktif', style: _jakarta(fontSize: 12, color: Colors.black54)),
+                    const SizedBox(height: 4),
+                    ListenableBuilder(
+                      listenable: wallet.points,
+                      builder: (context, _) {
+                        final val = wallet.points.value;
+                        final str = val.toString().replaceAllMapped(
+                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                        return Text(str, style: _jakarta(fontSize: 17, fontWeight: FontWeight.bold));
+                      },
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
               _convertButton(),
@@ -139,7 +168,7 @@ class _StorePageState extends State<StorePage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {},
+          onTap: () => context.push('/convert'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
             child: Text('Convert', style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white)),
@@ -155,17 +184,17 @@ class _StorePageState extends State<StorePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFECECEC)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: const Color.fromRGBO(0,0,0,0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         children: [
-          Expanded(child: _quickActionItem(Icons.front_hand_outlined, 'Withdraw', onTap: () {})),
+          Expanded(child: _quickActionItem(Icons.front_hand_outlined, 'Withdraw', onTap: () => context.push('/withdraw'))),
           const SizedBox(height: 34, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEDEDED))),
           // INTEGRASI: Tombol Points diarahkan ke route /points
           Expanded(child: _quickActionItem(Icons.monetization_on_outlined, 'Points', onTap: () => context.push('/points'))),
           const SizedBox(height: 34, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEDEDED))),
-          Expanded(child: _quickActionItem(Icons.eco_outlined, 'EcoTree', onTap: () {})),
+          Expanded(child: _quickActionItem(Icons.eco_outlined, 'EcoTree', onTap: () => context.push('/eco-tree'))),
         ],
       ),
     );
@@ -186,31 +215,42 @@ class _StorePageState extends State<StorePage> {
   }
 
   Widget _buildStoreLevelSection(String title, List<_StoreItemData> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold)),
-              InkWell(onTap: () {}, child: Text('Lihat Semua', style: _jakarta(fontSize: 12.5, color: const Color(0xFF4C8C2B), fontWeight: FontWeight.w600))),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...items.map((item) => Padding(
+      final isLevel2 = title.toLowerCase().contains('level 2');
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(title, style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold)),
+                InkWell(onTap: () {}, child: Text('Lihat Semua', style: _jakarta(fontSize: 12.5, color: const Color(0xFF4C8C2B), fontWeight: FontWeight.w600))),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Jika ini adalah Level 2, cek EcoTreeState untuk menentukan apakah item terkunci
+            ...items.map((item) {
+              final itemToShow = isLevel2
+                  ? _StoreItemData(icon: item.icon, title: item.title, description: item.description, price: item.price, locked: EcoTreeState.instance.level < 2)
+                  : item;
+              return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _StoreItemCard(
-                  data: item,
-                  onTukarPoint: () => _onTukarPoint(item),
-                  onLockedTap: () {},
+                  data: itemToShow,
+                  onTukarPoint: () => _onTukarPoint(itemToShow),
+                  onLockedTap: () {
+                    if (EcoTreeState.instance.level < 2) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reach EcoTree Level 2 to unlock Store Level 2', style: _jakarta(color: Colors.white)), backgroundColor: const Color(0xFF2E7D32)));
+                    }
+                  },
                 ),
-              )),
-        ],
-      ),
-    );
-  }
+              );
+            }),
+          ],
+        ),
+      );
+    }
 }
 
 class _StoreItemData {
@@ -240,7 +280,7 @@ class _StoreItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: const Color.fromRGBO(0,0,0,0.05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

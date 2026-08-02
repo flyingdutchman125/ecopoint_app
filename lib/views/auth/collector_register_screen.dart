@@ -17,7 +17,8 @@ class CollectorBusinessScreen extends StatefulWidget {
   const CollectorBusinessScreen({super.key, this.extra});
 
   @override
-  State<CollectorBusinessScreen> createState() => _CollectorBusinessScreenState();
+  State<CollectorBusinessScreen> createState() =>
+      _CollectorBusinessScreenState();
 }
 
 class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
@@ -34,9 +35,16 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
   }
 
   void _goNext() {
-    if (_businessCtrl.text.trim().isEmpty || _vehicleCtrl.text.trim().isEmpty || _plateCtrl.text.trim().isEmpty) {
+    if (_businessCtrl.text.trim().isEmpty ||
+        _vehicleCtrl.text.trim().isEmpty ||
+        _plateCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan lengkapi nama usaha, jenis kendaraan, dan nomor plat.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Silakan lengkapi nama usaha, jenis kendaraan, dan nomor plat.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       return;
     }
@@ -49,7 +57,7 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
     };
     context.push('/register/collector/ktp', extra: extra);
   }
-  
+
   Widget _buildStepIndicator(String label) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +114,10 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -124,7 +135,11 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          size: 20,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -148,7 +163,9 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withAlpha(13),
@@ -181,13 +198,22 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _buildLabel('NAMA USAHA'),
-                              _buildTextField(controller: _businessCtrl, hintText: 'Pak tejo Pengepul Hits'),
+                              _buildTextField(
+                                controller: _businessCtrl,
+                                hintText: 'Pak tejo Pengepul Hits',
+                              ),
                               const SizedBox(height: 18),
                               _buildLabel('JENIS KENDARAAN'),
-                              _buildTextField(controller: _vehicleCtrl, hintText: 'Contoh : Mobil Pick up, Becak'),
+                              _buildTextField(
+                                controller: _vehicleCtrl,
+                                hintText: 'Contoh : Mobil Pick up, Becak',
+                              ),
                               const SizedBox(height: 18),
                               _buildLabel('NO PLAT KENDARAAN'),
-                              _buildTextField(controller: _plateCtrl, hintText: 'S 1234 JZ'),
+                              _buildTextField(
+                                controller: _plateCtrl,
+                                hintText: 'S 1234 JZ',
+                              ),
                               const SizedBox(height: 24),
                             ],
                           ),
@@ -201,7 +227,9 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
                           onPressed: _goNext,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF59B41C),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             elevation: 0,
                           ),
                           child: Text(
@@ -230,12 +258,20 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+          fontSize: 13,
+        ),
       ),
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String hintText, int maxLines = 1}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    int maxLines = 1,
+  }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
@@ -245,8 +281,14 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
         hintStyle: GoogleFonts.outfit(color: Colors.grey[400]),
         filled: true,
         fillColor: Colors.grey[100],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
+        ),
       ),
     );
   }
@@ -271,7 +313,12 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     if (picked == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Izin kamera/galeri ditolak atau foto tidak dipilih.', style: GoogleFonts.outfit())),
+          SnackBar(
+            content: Text(
+              'Izin kamera/galeri ditolak atau foto tidak dipilih.',
+              style: GoogleFonts.outfit(),
+            ),
+          ),
         );
       }
       return;
@@ -283,19 +330,38 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     });
 
     try {
-      final uploadRes = await ApiService.upload(ApiConstants.upload, picked.path);
+      final uploadRes = await ApiService.upload(
+        ApiConstants.upload,
+        picked.path,
+      );
       final uploadData = jsonDecode(uploadRes.body);
       if (uploadRes.statusCode == 200 && uploadData['success'] == true) {
         setState(() {
-          _uploadedKtpUrl = (uploadData['data']['url'] as String)
-              .replaceFirst('localhost', '10.0.2.2');
+          _uploadedKtpUrl = (uploadData['data']['url'] as String).replaceFirst(
+            'localhost',
+            '10.0.2.2',
+          );
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Foto KTP berhasil diunggah.', style: GoogleFonts.outfit())));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Foto KTP berhasil diunggah.',
+                style: GoogleFonts.outfit(),
+              ),
+            ),
+          );
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengunggah KTP. Silakan coba lagi.', style: GoogleFonts.outfit())));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Gagal mengunggah KTP. Silakan coba lagi.',
+                style: GoogleFonts.outfit(),
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
@@ -303,7 +369,9 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
         final message = e is ApiConnectionException
             ? e.message
             : 'Error unggah KTP: ${e.toString()}';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: GoogleFonts.outfit())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message, style: GoogleFonts.outfit())),
+        );
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -313,7 +381,9 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
   Future<void> _showImageSourceOptions() async {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -322,15 +392,24 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFF59B41C)),
-                title: Text('Ambil foto dari kamera', style: GoogleFonts.outfit(fontSize: 16)),
+                title: Text(
+                  'Ambil foto dari kamera',
+                  style: GoogleFonts.outfit(fontSize: 16),
+                ),
                 onTap: () {
                   Navigator.of(context).pop();
                   _pickKtpPhoto(ImageSource.camera);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF59B41C)),
-                title: Text('Pilih dari galeri', style: GoogleFonts.outfit(fontSize: 16)),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Color(0xFF59B41C),
+                ),
+                title: Text(
+                  'Pilih dari galeri',
+                  style: GoogleFonts.outfit(fontSize: 16),
+                ),
                 onTap: () {
                   Navigator.of(context).pop();
                   _pickKtpPhoto(ImageSource.gallery);
@@ -357,18 +436,41 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     final vehicle = widget.extra?['vehicle'] ?? '';
     final plate = widget.extra?['plate'] ?? '';
 
-    if (address.trim().isEmpty || subdistrict.trim().isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lengkapi alamat, kecamatan, dan kata sandi sebelum melanjutkan.', style: GoogleFonts.outfit())));
+    if (address.trim().isEmpty ||
+        subdistrict.trim().isEmpty ||
+        password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lengkapi alamat, kecamatan, dan kata sandi sebelum melanjutkan.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
+      );
       return;
     }
 
     if (!_agree) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Silakan setujui pernyataan sebelum melanjutkan.', style: GoogleFonts.outfit())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Silakan setujui pernyataan sebelum melanjutkan.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
+      );
       return;
     }
 
     if (_uploadedKtpUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Silakan unggah foto KTP.', style: GoogleFonts.outfit())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Silakan unggah foto KTP.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
+      );
       return;
     }
 
@@ -389,10 +491,19 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     );
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pendaftaran kolektor dikirim. Tunggu verifikasi admin.', style: GoogleFonts.outfit())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pendaftaran kolektor dikirim. Tunggu verifikasi admin.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
+      );
       context.go('/login');
     } else if (mounted && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.error!, style: GoogleFonts.outfit())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error!, style: GoogleFonts.outfit())),
+      );
     }
   }
 
@@ -453,7 +564,10 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -471,7 +585,11 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          size: 20,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -495,7 +613,9 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withAlpha(13),
@@ -529,68 +649,111 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
                             children: [
                               _buildLabel('FOTO KTP'),
                               InkWell(
-                                onTap: _isUploading ? null : _showImageSourceOptions,
+                                onTap: _isUploading
+                                    ? null
+                                    : _showImageSourceOptions,
                                 borderRadius: BorderRadius.circular(18),
                                 child: Container(
                                   height: 220,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(color: Colors.transparent),
+                                    border: Border.all(
+                                      color: Colors.transparent,
+                                    ),
                                     color: Colors.grey[100],
-                                    image: (_pickedKtpFile != null || _uploadedKtpUrl != null)
+                                    image:
+                                        (_pickedKtpFile != null ||
+                                            _uploadedKtpUrl != null)
                                         ? DecorationImage(
                                             image: _pickedKtpFile != null
-                                                ? FileImage(File(_pickedKtpFile!.path)) as ImageProvider
-                                                : NetworkImage(_uploadedKtpUrl!),
+                                                ? FileImage(
+                                                        File(
+                                                          _pickedKtpFile!.path,
+                                                        ),
+                                                      )
+                                                      as ImageProvider
+                                                : NetworkImage(
+                                                    _uploadedKtpUrl!,
+                                                  ),
                                             fit: BoxFit.cover,
                                           )
                                         : null,
                                   ),
                                   child: _isUploading
-                                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF59B41C)))
-                                      : (_pickedKtpFile != null || _uploadedKtpUrl != null)
-                                          ? Align(
-                                              alignment: Alignment.bottomCenter,
-                                              child: Container(
-                                                width: double.infinity,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black.withAlpha(128),
-                                                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
-                                                ),
-                                                padding: const EdgeInsets.all(12),
-                                                child: Text(
-                                                  'KTP siap digunakan',
-                                                  textAlign: TextAlign.center,
-                                                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
-                                                ),
+                                      ? const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Color(0xFF59B41C),
+                                          ),
+                                        )
+                                      : (_pickedKtpFile != null ||
+                                            _uploadedKtpUrl != null)
+                                      ? Align(
+                                          alignment: Alignment.bottomCenter,
+                                          child: Container(
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withAlpha(
+                                                128,
                                               ),
-                                            )
-                                          : Center(
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(Icons.camera_alt_outlined, size: 42, color: Colors.black38),
-                                                  const SizedBox(height: 12),
-                                                  Text(
-                                                    'Ambil Foto KTP anda dengan jelas',
-                                                    style: GoogleFonts.outfit(color: Colors.black54, fontSize: 14),
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                    bottom: Radius.circular(18),
                                                   ),
-                                                  const SizedBox(height: 12),
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      border: Border.all(color: Colors.grey.shade300),
-                                                    ),
-                                                    child: Text(
-                                                      'Upload Foto KTP',
-                                                      style: GoogleFonts.outfit(color: Colors.black87, fontWeight: FontWeight.w600),
-                                                    ),
-                                                  ),
-                                                ],
+                                            ),
+                                            padding: const EdgeInsets.all(12),
+                                            child: Text(
+                                              'KTP siap digunakan',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
+                                          ),
+                                        )
+                                      : Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.camera_alt_outlined,
+                                                size: 42,
+                                                color: Colors.black38,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                'Ambil Foto KTP anda dengan jelas',
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.black54,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 10,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: Colors.grey.shade300,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Upload Foto KTP',
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.black87,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                 ),
                               ),
                               const SizedBox(height: 24),
@@ -603,15 +766,22 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
                                     child: Checkbox(
                                       value: _agree,
                                       activeColor: const Color(0xFF59B41C),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                      onChanged: (v) => setState(() => _agree = v ?? false),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      onChanged: (v) =>
+                                          setState(() => _agree = v ?? false),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
                                       'Saya menyetujui pernyataan dan berjanji melaksanakan tugas dengan sebaik mungkin dan sejujur - jujurnya',
-                                      style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87, height: 1.4),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                        height: 1.4,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -629,14 +799,19 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
                           onPressed: auth.isLoading ? null : _submitCollector,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF59B41C),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             elevation: 0,
                           ),
                           child: auth.isLoading
                               ? const SizedBox(
                                   height: 24,
                                   width: 24,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : Text(
                                   'Selesaikan Daftar',
@@ -664,7 +839,11 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+          fontSize: 13,
+        ),
       ),
     );
   }

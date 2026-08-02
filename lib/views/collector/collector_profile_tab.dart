@@ -1,371 +1,349 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/collector_provider.dart';
-import '../../core/utils/currency_formatter.dart';
 
 class CollectorProfileTab extends StatelessWidget {
   const CollectorProfileTab({super.key});
 
-  void _showEditProfileDialog(BuildContext context, String currentPhone) {
-    final phoneCtrl = TextEditingController(text: currentPhone);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Edit Nomor Telepon', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: phoneCtrl,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(labelText: 'Nomor Telepon'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Usually calls an update profile API method for collector
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(content: Text('Nomor telepon diperbarui')),
-              );
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showChangePasswordDialog(BuildContext context) {
-    final currentCtrl = TextEditingController();
-    final newCtrl = TextEditingController();
-    final confirmCtrl = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Ganti Password', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password Saat Ini'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: newCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password Baru'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Password baru dan konfirmasi tidak cocok')),
-                );
-                return;
-              }
-              if (newCtrl.text.isNotEmpty && currentCtrl.text.isNotEmpty) {
-                Navigator.pop(ctx);
-                final success = await ctx.read<AuthProvider>().changePassword(
-                  currentCtrl.text,
-                  newCtrl.text,
-                );
-                if (success && ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Password berhasil diubah')),
-                  );
-                }
-              }
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTopUpDialog(BuildContext context) {
-    final amountCtrl = TextEditingController();
-    final paymentMethodCtrl = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Top Up Dompet', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Jumlah Top Up (Rp)'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: paymentMethodCtrl,
-              decoration: const InputDecoration(labelText: 'Metode Pembayaran (ex: BCA)'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(amountCtrl.text);
-              if (amount != null && amount > 0 && paymentMethodCtrl.text.isNotEmpty) {
-                Navigator.pop(ctx);
-                final success = await ctx.read<CollectorProvider>().topUp(amount, paymentMethodCtrl.text);
-                if (success && ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Top up berhasil')),
-                  );
-                }
-              }
-            },
-            child: const Text('Top Up'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showWithdrawDialog(BuildContext context) {
-    final amountCtrl = TextEditingController();
-    final bankCtrl = TextEditingController();
-    final accountCtrl = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Tarik Dana', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Jumlah Tarik (Rp)'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: bankCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Bank'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: accountCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Nomor Rekening'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(amountCtrl.text);
-              if (amount != null && amount > 0 && bankCtrl.text.isNotEmpty && accountCtrl.text.isNotEmpty) {
-                Navigator.pop(ctx);
-                final success = await ctx.read<CollectorProvider>().withdraw(amount, bankCtrl.text, accountCtrl.text);
-                if (success && ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Penarikan dana berhasil')),
-                  );
-                }
-              }
-            },
-            child: const Text('Tarik'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final authProvider = context.watch<AuthProvider>();
-    final collectorProvider = context.watch<CollectorProvider>();
-    final user = authProvider.user;
+    final authProv = context.watch<AuthProvider>();
+    final user = authProv.user;
 
-    if (user == null) return const Center(child: CircularProgressIndicator());
+    // Menggunakan variabel lokal agar Dart type promotion bekerja dengan baik (bebas error null-safety)
+    final String? userName = user?.name;
+    final String? userEmail = user?.email;
+
+    // Fallback data sesuai gambar mockup jika data user kosong
+    final String displayName = (userName != null && userName.trim().isNotEmpty)
+        ? userName
+        : "Ahmad Syifa’ul Falakhul K.";
+    
+    final String displayEmail = (userEmail != null && userEmail.trim().isNotEmpty)
+        ? userEmail
+        : "syi*****@email.com";
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: Text('Profil Kolektor', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(Icons.person, size: 50, color: theme.colorScheme.onPrimaryContainer),
-            ).animate().scale(),
-            const SizedBox(height: 16),
-            Text(
-              user.name ?? 'Kolektor',
-              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
-            ).animate().fadeIn(),
-            Text(
-              user.email,
-              style: GoogleFonts.inter(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
-            ).animate().fadeIn(delay: const Duration(milliseconds: 100)),
-            const SizedBox(height: 8),
-            Text(
-              user.phone ?? 'Nomor belum diatur',
-              style: GoogleFonts.inter(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
-            ).animate().fadeIn(delay: const Duration(milliseconds: 150)),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-              ),
+            // 1. TOP PROFILE HEADER CARD
+            _buildProfileHeader(displayName),
+            
+            // 2. FORM FIELDS CONTAINER
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildProfileRow(theme, 'Saldo Dompet', CurrencyFormatter.formatRupiah(collectorProvider.walletBalance), Icons.account_balance_wallet),
-                  const Divider(height: 32),
-                  _buildProfileRow(theme, 'Total Pendapatan', CurrencyFormatter.formatRupiah(collectorProvider.totalEarnings), Icons.monetization_on),
-                  const Divider(height: 32),
-                  _buildProfileRow(theme, 'Total Pesanan', '${collectorProvider.totalOrders}', Icons.list_alt),
+                  // NAMA LENGKAP
+                  _buildFieldLabel('NAMA LENGKAP (SESUAI KTP)'),
+                  const SizedBox(height: 8),
+                  _buildDefaultTextField(displayName),
+                  const SizedBox(height: 20),
+
+                  // NOMOR WHATSAPP
+                  _buildFieldLabel('NOMOR WHATSAPP AKTIF'),
+                  const SizedBox(height: 8),
+                  _buildWhatsAppField("895******130"),
+                  const SizedBox(height: 20),
+
+                  // ALAMAT EMAIL
+                  _buildFieldLabel('ALAMAT EMAIL'),
+                  const SizedBox(height: 8),
+                  _buildFilledTextField(displayEmail),
+                  const SizedBox(height: 20),
+
+                  // SANDI AKUN
+                  _buildFieldLabel('SANDI AKUN'),
+                  const SizedBox(height: 8),
+                  _buildDefaultTextField('*********', isPassword: true),
+                  const SizedBox(height: 20),
+
+                  // PLAT KENDARAAN
+                  _buildFieldLabel('PLAT KENDARAAN'),
+                  const SizedBox(height: 8),
+                  _buildDefaultTextField('S 1928 JZ'),
+                  const SizedBox(height: 32),
+
+                  // 3. ACTION BUTTONS
+                  _buildOutlinedButton(
+                    label: 'Ubah Data Pribadi?',
+                    onPressed: () {
+                      // Aksi navigasi ke halaman ubah profil
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  _buildSolidRedButton(
+                    label: 'Keluar dari akun',
+                    onPressed: () async {
+                      await authProv.logout();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
-            ).animate().slideY(begin: 0.2, end: 0).fadeIn(delay: const Duration(milliseconds: 200)),
-            
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showTopUpDialog(context),
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Top Up'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- WIDGET BUILDERS ---
+
+  Widget _buildProfileHeader(String name) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar dengan Icon Kamera kecil
+          Stack(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/profile_placeholder.png'),
+                    fit: BoxFit.cover,
+                    onError: _handleImageError,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showWithdrawDialog(context),
-                    icon: const Icon(Icons.money_off),
-                    label: const Text('Tarik Dana'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: theme.colorScheme.secondary,
-                      foregroundColor: theme.colorScheme.onSecondary,
-                    ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    size: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          // Nama & ID Kolektor
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111827),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'ID : 0005090',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ],
-            ).animate().fadeIn(delay: const Duration(milliseconds: 250)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showEditProfileDialog(context, user.phone ?? ''),
-                icon: const Icon(Icons.edit),
-                label: const Text('Edit Telepon'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ).animate().fadeIn(delay: const Duration(milliseconds: 300)),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showChangePasswordDialog(context),
-                icon: const Icon(Icons.lock),
-                label: const Text('Ganti Password'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ).animate().fadeIn(delay: const Duration(milliseconds: 350)),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => authProvider.logout(),
-                icon: const Icon(Icons.logout, color: Colors.red),
-                label: const Text('Keluar', style: TextStyle(color: Colors.red)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ).animate().fadeIn(delay: const Duration(milliseconds: 400)),
-          ],
+  Widget _buildFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: const Color(0xFF757575),
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  // Textfield Standar (Putih dengan Border Halus)
+  Widget _buildDefaultTextField(String value, {bool isPassword = false}) {
+    // Menyensor karakter dengan bullet jika field ini merupakan password
+    final String displayedText = isPassword ? '•' * value.length : value;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
+      ),
+      child: Text(
+        displayedText,
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          color: const Color(0xFF424242),
         ),
       ),
     );
   }
 
-  Widget _buildProfileRow(ThemeData theme, String label, String value, IconData icon) {
+  // Textfield Khusus WhatsApp (Ada Kotak Prefix +62 Terpisah)
+  Widget _buildWhatsAppField(String numberBody) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFEEEEEE),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(14),
+              bottomLeft: Radius.circular(14),
+            ),
+            border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
           ),
-          child: Icon(icon, color: theme.colorScheme.primary),
+          child: Text(
+            '+62',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: const Color(0xFF424242),
+            ),
+          ),
         ),
-        const SizedBox(width: 16),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: GoogleFonts.inter(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
-              const SizedBox(height: 4),
-              Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface)),
-            ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(14),
+                bottomRight: Radius.circular(14),
+              ),
+              border: Border.all(
+                color: const Color(0xFFE0E0E0),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              numberBody,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: const Color(0xFF424242),
+                letterSpacing: 0.5,
+              ),
+            ),
           ),
         ),
       ],
     );
+  }
+
+  // Textfield Berwarna Abu-Abu Penuh
+  Widget _buildFilledTextField(String value) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0E0E0), width: 0.5),
+      ),
+      child: Text(
+        value,
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          color: const Color(0xFF616161),
+        ),
+      ),
+    );
+  }
+
+  // Tombol Putih Border Hijau ("Ubah Data Pribadi?")
+  Widget _buildOutlinedButton({required String label, required VoidCallback onPressed}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFF7CB342), width: 1.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.white,
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            color: const Color(0xFF7CB342),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Tombol Merah Solid ("Keluar dari akun")
+  Widget _buildSolidRedButton({required String label, required VoidCallback onPressed}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFB71C1C),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  static void _handleImageError(Object exception, StackTrace? stackTrace) {
+    // Handler eror gambar jika diperlukan
   }
 }

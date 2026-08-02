@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/user_provider.dart';
 import '../../core/utils/currency_formatter.dart';
 
@@ -87,159 +88,6 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  void _showWithdrawSheet() {
-    final amountCtrl = TextEditingController();
-    final bankCtrl = TextEditingController();
-    final accCtrl = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 24,
-          right: 24,
-          top: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Tarik Dana',
-              style: GoogleFonts.outfit(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: amountCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Jumlah Penarikan',
-                prefixText: 'Rp ',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: bankCtrl,
-              decoration: InputDecoration(
-                labelText: 'Nama Bank (contoh: BCA)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: accCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Nomor Rekening',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () async {
-                final amount = double.tryParse(amountCtrl.text);
-                if (amount != null && amount > 0 && bankCtrl.text.isNotEmpty && accCtrl.text.isNotEmpty) {
-                  Navigator.pop(ctx);
-                  await context.read<UserProvider>().withdraw(
-                    amount,
-                    bankCtrl.text,
-                    accCtrl.text,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Tarik Dana', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRedeemDialog() {
-    int pointsToRedeem = 1000;
-    
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Tukar Poin', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Setiap 1000 Eco Points bernilai Rp 5.000'),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: pointsToRedeem > 1000 ? () => setState(() => pointsToRedeem -= 1000) : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    '$pointsToRedeem',
-                    style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 16),
-                  IconButton(
-                    onPressed: () => setState(() => pointsToRedeem += 1000),
-                    icon: const Icon(Icons.add_circle_outline),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Nilai: ${CurrencyFormatter.formatRupiah(pointsToRedeem * 5.0)}',
-                style: GoogleFonts.inter(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                await context.read<UserProvider>().redeemPoints(pointsToRedeem);
-              },
-              child: const Text('Tukar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +177,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         ),
                         const SizedBox(width: 16),
                         ElevatedButton.icon(
-                          onPressed: _showWithdrawSheet,
+                          onPressed: () => context.push('/withdraw'),
                           icon: const Icon(Icons.account_balance_rounded, size: 18),
                           label: const Text('Tarik'),
                           style: ElevatedButton.styleFrom(
@@ -393,7 +241,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: (wallet?.ecoPoints ?? 0) >= 1000 ? _showRedeemDialog : null,
+                      onPressed: () => context.push('/convert'),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),

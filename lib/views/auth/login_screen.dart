@@ -30,22 +30,29 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     final auth = context.read<AuthProvider>();
-    final success = await auth.login(_emailCtrl.text.trim(), _passwordCtrl.text);
+    final success = await auth.login(
+      _emailCtrl.text.trim(),
+      _passwordCtrl.text,
+    );
     if (!success && mounted && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.error!)));
     }
   }
 
   Future<void> _quickRegisterAdmin() async {
     final auth = context.read<AuthProvider>();
     final messenger = ScaffoldMessenger.of(context);
-    
+
     // Auto register admin if not exists
-    final email = _emailCtrl.text.trim().isEmpty ? 'admin@ecopoint.id' : _emailCtrl.text.trim();
-    final password = _passwordCtrl.text.isEmpty ? 'password123' : _passwordCtrl.text;
-    
+    final email = _emailCtrl.text.trim().isEmpty
+        ? 'admin@ecopoint.id'
+        : _emailCtrl.text.trim();
+    final password = _passwordCtrl.text.isEmpty
+        ? 'password123'
+        : _passwordCtrl.text;
+
     _emailCtrl.text = email;
     _passwordCtrl.text = password;
 
@@ -62,7 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (regSuccess) {
-      messenger.showSnackBar(const SnackBar(content: Text('Akun Admin berhasil dibuat! Mencoba login...')));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Akun Admin berhasil dibuat! Mencoba login...'),
+        ),
+      );
     }
     // Attempt login regardless (if created or already exists)
     await _login();
@@ -137,7 +148,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Kelola sampah bernilai jual Anda dengan dukungan kecerdasan buatan dinamis.',
-                    style: GoogleFonts.outfit(color: Colors.green[900], height: 1.4),
+                    style: GoogleFonts.outfit(
+                      color: Colors.green[900],
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Container(
@@ -158,7 +172,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           'Masuk Ke Akun',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         TextField(
@@ -188,22 +205,45 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF59B41C),
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
                             child: auth.isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : Text('Masuk', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    'Masuk',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         OutlinedButton.icon(
-                          onPressed: auth.isLoading ? null : _quickRegisterAdmin,
-                          icon: const Icon(Icons.admin_panel_settings, color: Colors.purple),
-                          label: Text('Masuk / Buat Akun Admin', style: GoogleFonts.outfit(color: Colors.purple, fontWeight: FontWeight.bold)),
+                          onPressed: auth.isLoading
+                              ? null
+                              : _quickRegisterAdmin,
+                          icon: const Icon(
+                            Icons.admin_panel_settings,
+                            color: Colors.purple,
+                          ),
+                          label: Text(
+                            'Masuk / Buat Akun Admin',
+                            style: GoogleFonts.outfit(
+                              color: Colors.purple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             side: const BorderSide(color: Colors.purple),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ],
@@ -226,9 +266,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        Text('|', style: GoogleFonts.outfit(color: Colors.grey)),
+                        Text(
+                          '|',
+                          style: GoogleFonts.outfit(color: Colors.grey),
+                        ),
                         GestureDetector(
-                          onTap: () => context.push('/collector-register'),
+                          onTap: () => context.push('/register/collector'),
                           child: Text(
                             'Daftar Kolektor',
                             style: GoogleFonts.outfit(

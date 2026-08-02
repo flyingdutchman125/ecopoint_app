@@ -44,6 +44,25 @@ class OrderModel {
   double? get totalAmount => totalPrice;
   bool get canCancel => status == 'pending';
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'collector_id': collectorId,
+      'status': status,
+      'photo_url': photoUrl,
+      'category': category,
+      'weight_kg': weightKg,
+      'total_price': totalPrice,
+      'lat': lat,
+      'lng': lng,
+      'address': address,
+      'status_history': statusHistory,
+      'created_at': createdAt.toIso8601String(),
+      'distance_meters': distanceMeters,
+    };
+  }
+
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'] ?? '',
@@ -52,13 +71,25 @@ class OrderModel {
       status: json['status'] ?? 'pending',
       photoUrl: json['photo_url'],
       category: json['category'] ?? json['item_type'],
-      weightKg: (json['weight_kg'] ?? json['est_weight']) != null ? double.parse((json['weight_kg'] ?? json['est_weight']).toString()) : null,
-      totalPrice: (json['total_price'] ?? json['total_amount']) != null ? double.parse((json['total_price'] ?? json['total_amount']).toString()) : null,
-      lat: (json['lat'] ?? json['pickup_lat']) != null ? double.parse((json['lat'] ?? json['pickup_lat']).toString()) : 0.0,
-      lng: (json['lng'] ?? json['pickup_lng']) != null ? double.parse((json['lng'] ?? json['pickup_lng']).toString()) : 0.0,
+      weightKg: (json['weight_kg'] ?? json['est_weight']) != null
+          ? double.parse((json['weight_kg'] ?? json['est_weight']).toString())
+          : null,
+      totalPrice: (json['total_price'] ?? json['total_amount']) != null
+          ? double.parse(
+              (json['total_price'] ?? json['total_amount']).toString(),
+            )
+          : null,
+      lat: (json['lat'] ?? json['pickup_lat']) != null
+          ? double.parse((json['lat'] ?? json['pickup_lat']).toString())
+          : 0.0,
+      lng: (json['lng'] ?? json['pickup_lng']) != null
+          ? double.parse((json['lng'] ?? json['pickup_lng']).toString())
+          : 0.0,
       address: json['address'] ?? json['pickup_address'] ?? '',
       statusHistory: json['status_history'] ?? [],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'user_dashboard.dart';
 import 'store_page.dart';
 import 'history_page.dart';
@@ -68,7 +69,7 @@ class _MainShellState extends State<MainShell> {
             Positioned(
               top: -26,
               child: GestureDetector(
-                onTap: () {},
+                onTap: () => context.push('/ai-vision'),
                 child: Container(
                   width: 56,
                   height: 56,

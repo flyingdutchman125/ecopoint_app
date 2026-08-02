@@ -25,7 +25,8 @@ class ApiConstants {
   static const String nearbyOrders = '$apiBase/nearby-orders';
   static const String collectorOrders = '$apiBase/collector/orders';
   static const String earnings = '$apiBase/collector/earnings';
-  
+  static const String nearbyCollectors = '$apiBase/map/nearby-collectors';
+   
   // Admin
   static const String statistics = '$apiBase/statistics';
   static const String adminUsers = '$apiBase/admin/users';

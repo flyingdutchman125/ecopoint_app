@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
@@ -9,7 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/collector_provider.dart';
 import '../../models/order_model.dart';
 import '../../core/utils/currency_formatter.dart';
-import 'collector_wallet_tab.dart';
+import 'collector_earnings_page.dart'; //  Ubah import ke halaman pendapatan baru
 import 'collector_profile_tab.dart';
 
 class CollectorDashboard extends StatefulWidget {
@@ -43,7 +44,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           children: [
             _buildBerandaTab(),
             _buildChatTab(),
-            const CollectorWalletTab(),
+            const CollectorEarningsPage(), //  Sudah diganti dari CollectorWalletTab() ke halaman baru
             const CollectorProfileTab(),
           ],
         ),
@@ -90,13 +91,16 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   // --- 1. TOP HEADER ---
   Widget _buildTopHeader(dynamic user) {
     final String rawName = user?.name ?? '';
-    final String emailPrefix = (user?.email != null && user!.email.contains('@'))
+    final String emailPrefix =
+        (user?.email != null && user!.email.contains('@'))
         ? user.email.split('@')[0]
         : 'Anto';
     final String formattedEmailPrefix = emailPrefix.isNotEmpty
         ? (emailPrefix[0].toUpperCase() + emailPrefix.substring(1))
         : 'Anto';
-    final String name = rawName.trim().isNotEmpty ? rawName : formattedEmailPrefix;
+    final String name = rawName.trim().isNotEmpty
+        ? rawName
+        : formattedEmailPrefix;
 
     final city = (user?.city != null && user!.city.toString().isNotEmpty)
         ? user.city
@@ -129,7 +133,10 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD54F),
                       borderRadius: BorderRadius.circular(12),
@@ -189,7 +196,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                 Text(
                   _isOnline ? 'Online' : 'Offline',
                   style: GoogleFonts.outfit(
-                    color: _isOnline ? const Color(0xFF4CAF50) : const Color(0xFF666666),
+                    color: _isOnline
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFF666666),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -201,12 +210,16 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   height: 20,
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: _isOnline ? const Color(0xFF4CAF50) : const Color(0xFFCCCCCC),
+                    color: _isOnline
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFCCCCCC),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: AnimatedAlign(
                     duration: const Duration(milliseconds: 200),
-                    alignment: _isOnline ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: _isOnline
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       width: 16,
                       height: 16,
@@ -214,10 +227,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 2,
-                          ),
+                          BoxShadow(color: Colors.black12, blurRadius: 2),
                         ],
                       ),
                     ),
@@ -235,20 +245,25 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   Widget _buildEstimasiSaldoCard(CollectorProvider collectorProv) {
     final earningsText = collectorProv.earnings > 0
         ? CurrencyFormatter.formatRupiah(collectorProv.earnings)
-        : 'Rp 200,000';
+        : 'Rp 2,000,000';
 
     final completedOrders = collectorProv.myOrders
         .where((o) => o.status == 'completed')
         .toList();
     final completedCount = completedOrders.length;
-    final displayCompletedCount = completedCount > 0 ? completedCount : 7;
+    final displayCompletedCount = completedCount > 0 ? completedCount : 72;
 
     final double realWeightSum = completedOrders.fold(
-        0.0, (sum, order) => sum + (order.weightKg ?? 0.0));
-    final String displayWeightText =
-        realWeightSum > 0 ? '${realWeightSum.toStringAsFixed(1)} Kg' : '84.5 Kg';
+      0.0,
+      (sum, order) => sum + (order.weightKg ?? 0.0),
+    );
+    final String displayWeightText = realWeightSum > 0
+        ? '${realWeightSum.toStringAsFixed(1)} Kg'
+        : '284.5 Kg';
 
-    final double realHoursSum = completedCount > 0 ? (completedCount * 0.6) : 4.20;
+    final double realHoursSum = completedCount > 0
+        ? (completedCount * 0.6)
+        : 90.20;
     final String displayHoursText = '${realHoursSum.toStringAsFixed(2)} Jam';
 
     return Container(
@@ -268,7 +283,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Estimasi Saldo yang didapatkan hari ini',
+            'Estimasi Saldo yang didapatkan Minggu Ini',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: Colors.grey.shade700,
@@ -290,16 +305,15 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           Row(
             children: [
               Expanded(
-                child: _buildStatPill('Selesai', '$displayCompletedCount Order'),
+                child: _buildStatPill(
+                  'Selesai',
+                  '$displayCompletedCount Order',
+                ),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: _buildStatPill('Total Berat', displayWeightText),
-              ),
+              Expanded(child: _buildStatPill('Total Berat', displayWeightText)),
               const SizedBox(width: 8),
-              Expanded(
-                child: _buildStatPill('Jam Kerja', displayHoursText),
-              ),
+              Expanded(child: _buildStatPill('Jam Kerja', displayHoursText)),
             ],
           ),
         ],
@@ -472,7 +486,6 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
         else if (collectorProv.nearbyOrders.isNotEmpty)
           ...collectorProv.nearbyOrders.map((order) => _buildPickupCard(order))
         else
-          // Display screenshot sample order card if no real active nearby orders exist
           _buildSamplePickupCard(collectorProv),
       ],
     ).animate().fadeIn(duration: 300.ms);
@@ -480,8 +493,13 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   Widget _buildPickupCard(OrderModel order) {
     const String displayName = "Ahmad Syifa'ul Falakhul K.";
-    final String displayAddress = order.address.isNotEmpty ? order.address : "Jl. Andansari Mojo";
-    final String displayCategory = (order.category != null && order.category!.isNotEmpty) ? order.category! : "Plastik PET Bening";
+    final String displayAddress = order.address.isNotEmpty
+        ? order.address
+        : "Jl. Andansari Mojo";
+    final String displayCategory =
+        (order.category != null && order.category!.isNotEmpty)
+        ? order.category!
+        : "Plastik PET Bening";
     final double weight = order.weightKg ?? 10.0;
     final int price = (order.totalPrice ?? 39000).toInt();
     final double dist = (order.distanceMeters ?? 1200) / 1000;
@@ -616,8 +634,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
-                        child: const Icon(Icons.image_outlined,
-                            size: 22, color: Colors.grey),
+                        child: const Icon(
+                          Icons.image_outlined,
+                          size: 22,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -802,8 +823,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
-                        child: const Icon(Icons.image_outlined,
-                            size: 24, color: Colors.grey),
+                        child: const Icon(
+                          Icons.image_outlined,
+                          size: 24,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -865,6 +889,156 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveOrderCard(OrderModel order) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: const Color(0xFF7CB342),
+                child: const Icon(Icons.person, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.userId.isNotEmpty
+                          ? 'Pelanggan Aktif'
+                          : 'Order Aktif',
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${order.address}',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7CB342).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  order.status.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF388E3C),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Berat Estimasi',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${order.weightKg?.toStringAsFixed(1) ?? '-'} Kg',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Estimasi Harga',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    order.totalPrice != null
+                        ? CurrencyFormatter.formatRupiah(
+                            order.totalPrice!.toInt(),
+                          )
+                        : '-',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoActiveOrderCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFF7CB342)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Belum ada order aktif. Silakan terima penjemputan di halaman Radar Order.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: Colors.grey.shade700,
+              ),
             ),
           ),
         ],
@@ -937,8 +1111,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                                     color: Color(0xFFFACC15),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.directions_car,
-                                      color: Colors.black, size: 20),
+                                  child: const Icon(
+                                    Icons.directions_car,
+                                    color: Colors.black,
+                                    size: 20,
+                                  ),
                                 ),
                               ],
                             ),
@@ -948,8 +1125,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                             point: const LatLng(-7.1198, 112.4175),
                             width: 50,
                             height: 50,
-                            child: const Icon(Icons.location_on,
-                                color: Color(0xFF7CB342), size: 36),
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Color(0xFF7CB342),
+                              size: 36,
+                            ),
                           ),
                           // Warga Marker 2 (Active callout pin)
                           Marker(
@@ -960,16 +1140,19 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.15),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         blurRadius: 4,
-                                      )
+                                      ),
                                     ],
                                   ),
                                   child: Column(
@@ -993,8 +1176,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                                     ],
                                   ),
                                 ),
-                                const Icon(Icons.location_on,
-                                    color: Color(0xFF7CB342), size: 32),
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Color(0xFF7CB342),
+                                  size: 32,
+                                ),
                               ],
                             ),
                           ),
@@ -1006,8 +1192,10 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
               ),
               // Map Legend Section
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1061,8 +1249,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                             color: const Color(0xFFFACC15),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Icon(Icons.directions_car,
-                              size: 14, color: Colors.black),
+                          child: const Icon(
+                            Icons.directions_car,
+                            size: 14,
+                            color: Colors.black,
+                          ),
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -1076,8 +1267,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.location_on,
-                            color: Color(0xFF7CB342), size: 16),
+                        const Icon(
+                          Icons.location_on,
+                          color: Color(0xFF7CB342),
+                          size: 16,
+                        ),
                         Text(
                           'User Warga',
                           style: GoogleFonts.inter(
@@ -1105,52 +1299,16 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           ),
         ),
         const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: Colors.grey.shade300,
-                child: const Icon(Icons.person, color: Colors.grey),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Ahmad Syifa'ul Falakhul K.",
-                      style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '1.2 Km - Jl. Andansari Mojo',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: Colors.black, size: 28),
-            ],
-          ),
-        ),
+        if (collectorProv.myOrders.any(
+          (o) => o.status == 'accepted' || o.status == 'en_route',
+        ))
+          _buildActiveOrderCard(
+            collectorProv.myOrders.firstWhere(
+              (o) => o.status == 'accepted' || o.status == 'en_route',
+            ),
+          )
+        else
+          _buildNoActiveOrderCard(),
         const SizedBox(height: 14),
         // Lihat Selengkapnya Button
         SizedBox(
@@ -1164,9 +1322,31 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
               ),
             ),
             onPressed: () {
-              setState(() {
-                _bottomNavIndex = 2; // Navigate to earnings/tasks or details
-              });
+              final activeOrder = collectorProv.myOrders.firstWhere(
+                (o) => o.status == 'accepted' || o.status == 'en_route',
+                orElse: () => OrderModel(
+                  id: '',
+                  userId: '',
+                  status: 'pending',
+                  lat: 0.0,
+                  lng: 0.0,
+                  address: '',
+                  statusHistory: [],
+                  createdAt: DateTime.now(),
+                ),
+              );
+              if (activeOrder.id.isNotEmpty) {
+                context.push(
+                  '/collector/order-detail',
+                  extra: activeOrder.toJson(),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tidak ada order aktif untuk ditampilkan'),
+                  ),
+                );
+              }
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1190,6 +1370,21 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   // --- TAB 1: CHAT ---
   Widget _buildChatTab() {
+    final chatThreads = [
+      {
+        'name': 'Bu Kris',
+        'lastMessage': 'Sudah sampai depan rumah bapak?',
+        'timestamp': '09:41',
+        'preview': 'Iya dik, sebentar lagi sampai',
+      },
+      {
+        'name': 'Pak Dedi',
+        'lastMessage': 'Apakah barangnya sudah dipisahkan?',
+        'timestamp': '08:25',
+        'preview': 'Sudah, tinggal dijemput saja.',
+      },
+    ];
+
     return Container(
       color: Colors.white,
       child: Column(
@@ -1205,31 +1400,40 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
             automaticallyImplyLeading: false,
           ),
           Expanded(
-            child: ListView(
+            child: ListView.separated(
               padding: const EdgeInsets.all(16),
-              children: [
-                ListTile(
+              itemCount: chatThreads.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final thread = chatThreads[index];
+                return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: const Color(0xFF7CB342),
-                    child: const Icon(Icons.person, color: Colors.white),
+                    child: Text(
+                      thread['name']![0],
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
                   title: Text(
-                    "Ahmad Syifa'ul Falakhul K.",
+                    thread['name']!,
                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: const Text('Halo bang, penjemputan jam berapa ya?'),
+                  subtitle: Text(thread['preview']!),
                   trailing: Text(
-                    '09:41',
+                    thread['timestamp']!,
                     style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
                   ),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Membuka percakapan chat...')),
+                    context.push(
+                      '/collector/chat-detail',
+                      extra: {
+                        'name': thread['name'],
+                        'preview': thread['preview'],
+                      },
                     );
                   },
-                ),
-                const Divider(),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -1300,8 +1504,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           content: const Text('Order Accepted successfully!'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -1322,4 +1527,3 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
     );
   }
 }
-

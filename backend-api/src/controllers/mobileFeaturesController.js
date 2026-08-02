@@ -191,6 +191,36 @@ async function deleteMessage(req, res, next) {
   } catch (error) { next(error); }
 }
 
+// --- MAP / ROUTE ---
+async function getNearbyCollectors(req, res, next) {
+  try {
+    // For frontend development provide dummy nearby collectors relative to a sample point
+    // In real app this would use user's location and spatial query in the DB
+    const collectors = [
+      {
+        id: 'c1',
+        name: 'Hendra Pengepul gantenk',
+        rating: 4.8,
+        lat: -7.2575,
+        lng: 112.7521,
+        distance_km: 1.8,
+        status: 'online',
+      },
+      {
+        id: 'c2',
+        name: 'Bapak Sutarjo Sangar',
+        rating: 4.6,
+        lat: -7.2590,
+        lng: 112.7540,
+        distance_km: 2.2,
+        status: 'offline',
+      }
+    ];
+
+    res.json({ success: true, data: collectors });
+  } catch (error) { next(error); }
+}
+
 async function getCollectorWallet(req, res, next) {
   try {
     const { data, error } = await supabase.from('users').select('wallet_balance').eq('id', req.user.id).single();
@@ -206,5 +236,6 @@ module.exports = {
   sendMessage, getMessages, deleteMessage,
   addReview,
   requestWithdrawal, requestTopup,
-  deleteAccount, getCollectorWallet
+  deleteAccount, getCollectorWallet,
+  getNearbyCollectors
 };

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/wallet_state.dart';
+import '../../core/eco_tree_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -227,11 +229,13 @@ class _UserDashboardState extends State<UserDashboard> {
   }
 
   Widget _buildEcoWargaCard() {
+    final wallet = WalletState.instance;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: const Color.fromRGBO(0, 0, 0, 0.06), blurRadius: 8, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
@@ -252,41 +256,78 @@ class _UserDashboardState extends State<UserDashboard> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             child: Row(
               children: [
-                Expanded(child: _saldoPointItem('Saldo Aktif', 'Rp 200,000')),
+                // Saldo Aktif -> Click to Withdraw
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => context.push('/withdraw'),
+                    child: ListenableBuilder(
+                      listenable: wallet.activeBalance,
+                      builder: (context, _) {
+                        final val = wallet.activeBalance.value.toInt();
+                        final valStr = val.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                        return _saldoPointItem('Saldo Aktif', 'Rp $valStr');
+                      },
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 36, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5))),
-                Expanded(child: _saldoPointItem('Point Aktif', '20.000 Pts')),
+                // Point Aktif -> Click to Convert
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => context.push('/convert'),
+                    child: ListenableBuilder(
+                      listenable: wallet.points,
+                      builder: (context, _) {
+                        final val = wallet.points.value;
+                        final valStr = val.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                        return _saldoPointItem('Point Aktif', '$valStr Pts');
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: _jakarta(fontSize: 12.5, color: Colors.black87, fontStyle: FontStyle.italic),
+          InkWell(
+            onTap: () => context.push('/eco-tree'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ListenableBuilder(
+                      listenable: EcoTreeState.instance.notifier,
+                      builder: (context, _) {
+                        final currentLvl = EcoTreeState.instance.level;
+                        return RichText(
+                          text: TextSpan(
+                            style: _jakarta(fontSize: 12.5, color: Colors.black87, fontStyle: FontStyle.italic),
+                            children: [
+                              const TextSpan(text: 'Level Pertumbuhan Tunas : '),
+                              TextSpan(text: 'Level $currentLvl', style: _jakarta(fontSize: 12.5, color: const Color(0xFF5CB82B), fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(border: Border.all(color: const Color(0xFFCCCCCC)), borderRadius: BorderRadius.circular(6)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const TextSpan(text: 'Level Pertumbuhan Tunas : '),
-                        TextSpan(text: 'Level 1', style: _jakarta(fontSize: 12.5, color: const Color(0xFF5CB82B), fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
+                        Text('Lihat Perkembangan ', style: _jakarta(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.black54)),
+                        const Icon(Icons.arrow_forward_ios, size: 8, color: Colors.black54),
                       ],
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(border: Border.all(color: const Color(0xFFCCCCCC)), borderRadius: BorderRadius.circular(6)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Lihat Perkembangan ', style: _jakarta(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.black54)),
-                      const Icon(Icons.arrow_forward_ios, size: 8, color: Colors.black54),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -331,14 +372,26 @@ class _UserDashboardState extends State<UserDashboard> {
               return _MenuItemCard(
                 data: item,
                 onTap: () {
-                  // MENGHUBUNGKAN NAVIGASI TOMBOL JEMPUT DAN POINTS
+                  // MENGHUBUNGKAN NAVIGASI TOMBOL JEMPUT, POINTS, CHAT, RATING
                   if (item.label == 'Jemput') {
                     context.push('/create-order');
                   } else if (item.label == 'Points') {
                     context.push('/points'); // INTEGRASI: Arahkan langsung ke halaman Points
-                  } else {
-                    _showSnack('Fitur ${item.label} sedang dalam pengembangan');
-                  }
+                  } else if (item.label == 'Chat') {
+                    context.push('/warga/chats');
+                  } else if (item.label == 'Rute Map') {
+                    context.push('/route-map');
+                                    } else if (item.label == 'EcoTree') {
+                                      context.push('/eco-tree');
+                                    } else if (item.label == 'Rating') {
+                                      context.push('/rating');
+                                    } else if (item.label == 'EcoBook') {
+                                      context.push('/eco-book');
+                                    } else if (item.label == 'Order') {
+                                      context.push('/orders');
+                                    } else {
+                                      _showSnack('Fitur ${item.label} sedang dalam pengembangan');
+                                    }
                 },
               );
             },
@@ -496,7 +549,7 @@ class _PriceCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: data.locked ? Border.all(color: const Color(0xFF358C16), width: 1.2) : null,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: const Color.fromRGBO(0, 0, 0, 0.04), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

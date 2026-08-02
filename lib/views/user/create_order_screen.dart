@@ -24,7 +24,8 @@ TextStyle _jakarta({
 }
 
 class CreateOrderScreen extends StatefulWidget {
-  const CreateOrderScreen({super.key});
+  final Map<String, dynamic>? extra;
+  const CreateOrderScreen({super.key, this.extra});
 
   @override
   State<CreateOrderScreen> createState() => _CreateOrderScreenState();
@@ -39,6 +40,21 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   final _weightCtrl = TextEditingController(text: '5'); 
   
   final List<String> _validCategories = ['Logam/Besi', 'Botol Plastik', 'Kardus', 'Minyak Jelantah'];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.extra != null) {
+      final initialCat = widget.extra!['category']?.toString();
+      final initialPhoto = widget.extra!['photo_url']?.toString();
+      if (initialCat != null && _validCategories.contains(initialCat)) {
+        _category = initialCat;
+      }
+      if (initialPhoto != null && initialPhoto.isNotEmpty) {
+        _photoUrl = initialPhoto;
+      }
+    }
+  }
 
   Future<void> _doPickAndUpload(ImageSource source) async {
     final pickedFile = await ImagePickerHelper.pickImage(source);
@@ -156,6 +172,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aktifkan GPS Anda untuk mencari koordinat.')));
       return;
     }
@@ -164,20 +181,23 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Izin akses lokasi diperlukan.')));
         return;
       }
     }
     
     if (permission == LocationPermission.deniedForever) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Izin lokasi ditolak permanen di pengaturan HP.')));
       return;
     } 
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menentukan lokasi & memproses jemputan...')));
     
     try {
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
 
       if (!mounted) return;
       final success = await context.read<UserProvider>().createOrder(
@@ -201,6 +221,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         context.pop();
       }
     } catch(e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mendapatkan titik GPS: $e')));
     }
   }

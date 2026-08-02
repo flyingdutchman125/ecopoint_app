@@ -35,6 +35,9 @@ router.get('/order/:id', auth, role('user'), userCtrl.getOrderById);
 router.put('/order/:id/cancel', auth, role('user'), userCtrl.cancelOrder);
 router.get('/order/:id/route', auth, role('user','collector'), userCtrl.getOrderRoute);
 router.get('/wallet', auth, role('user'), userCtrl.getWallet);
+
+// Map & Route (User-facing)
+router.get('/map/nearby-collectors', auth, role('user'), mobileCtrl.getNearbyCollectors);
 router.get('/transactions', auth, role('user'), userCtrl.getTransactions);
 router.post('/redeem', auth, role('user'), userCtrl.redeemCoins);
 

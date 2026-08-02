@@ -36,9 +36,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _goToNextStep() {
-    if (_nameCtrl.text.trim().isEmpty || _phoneCtrl.text.trim().isEmpty || _emailCtrl.text.trim().isEmpty) {
+    if (_nameCtrl.text.trim().isEmpty ||
+        _phoneCtrl.text.trim().isEmpty ||
+        _emailCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan lengkapi nama, nomor WhatsApp, dan email.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Silakan lengkapi nama, nomor WhatsApp, dan email.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       return;
     }
@@ -55,16 +62,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _submitRegistration() async {
-    if (_addressCtrl.text.trim().isEmpty || _subdistrictCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
+    if (_addressCtrl.text.trim().isEmpty ||
+        _subdistrictCtrl.text.trim().isEmpty ||
+        _passwordCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       return;
     }
 
     if (!_agreeSorting) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan setujui pernyataan penyortiran sampah anorganik.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Silakan setujui pernyataan penyortiran sampah anorganik.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       return;
     }
@@ -84,7 +103,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pendaftaran berhasil. Silakan login.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Pendaftaran berhasil. Silakan login.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       context.go('/login');
     } else if (mounted && auth.error != null) {
@@ -95,31 +119,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _handleStep2Submit() {
-    if (_addressCtrl.text.trim().isEmpty || _subdistrictCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
+    if (_addressCtrl.text.trim().isEmpty ||
+        _subdistrictCtrl.text.trim().isEmpty ||
+        _passwordCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       return;
     }
 
     if (!_agreeSorting) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan setujui pernyataan penyortiran sampah anorganik.', style: GoogleFonts.outfit())),
+        SnackBar(
+          content: Text(
+            'Silakan setujui pernyataan penyortiran sampah anorganik.',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
       );
       return;
     }
 
     if (widget.role == 'collector') {
-      context.push('/register/collector', extra: {
-        'name': _nameCtrl.text.trim(),
-        'phone': _phoneCtrl.text.trim(),
-        'email': _emailCtrl.text.trim(),
-        'city': _selectedCity,
-        'address': _addressCtrl.text.trim(),
-        'subdistrict': _subdistrictCtrl.text.trim(),
-        'password': _passwordCtrl.text,
-        'consentSorting': _agreeSorting,
-      });
+      context.push(
+        '/register/collector',
+        extra: {
+          'name': _nameCtrl.text.trim(),
+          'phone': _phoneCtrl.text.trim(),
+          'email': _emailCtrl.text.trim(),
+          'city': _selectedCity,
+          'address': _addressCtrl.text.trim(),
+          'subdistrict': _subdistrictCtrl.text.trim(),
+          'password': _passwordCtrl.text,
+          'consentSorting': _agreeSorting,
+        },
+      );
     } else {
       _submitRegistration();
     }
@@ -143,7 +182,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Container(
                 height: 6,
                 decoration: BoxDecoration(
-                  color: _step >= 1 ? const Color(0xFF59B41C) : const Color(0xFFE7F9D9),
+                  color: _step >= 1
+                      ? const Color(0xFF59B41C)
+                      : const Color(0xFFE7F9D9),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -153,7 +194,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Container(
                 height: 6,
                 decoration: BoxDecoration(
-                  color: _step >= 2 ? const Color(0xFF59B41C) : const Color(0xFFE7F9D9),
+                  color: _step >= 2
+                      ? const Color(0xFF59B41C)
+                      : const Color(0xFFE7F9D9),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -183,7 +226,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -207,12 +253,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          size: 20,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                     const Spacer(),
                     Text(
-                      widget.role == 'collector' ? 'Daftar Kolektor' : 'Daftar Warga',
+                      widget.role == 'collector'
+                          ? 'Daftar Kolektor'
+                          : 'Daftar Warga',
                       style: GoogleFonts.outfit(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -231,7 +283,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withAlpha(13),
@@ -246,7 +300,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _step == 1 ? 'LANGKAH 1 DARI 2 : IDENTITAS' : 'LANGKAH 2 DARI 2 : ALAMAT & SANDI',
+                            _step == 1
+                                ? 'LANGKAH 1 DARI 2 : IDENTITAS'
+                                : 'LANGKAH 2 DARI 2 : ALAMAT & SANDI',
                             style: GoogleFonts.outfit(
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w600,
@@ -254,13 +310,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _buildStepIndicator(_step == 1 ? 'Identitas' : 'Alamat & Sandi'),
+                          _buildStepIndicator(
+                            _step == 1 ? 'Identitas' : 'Alamat & Sandi',
+                          ),
                           const SizedBox(height: 24),
                         ],
                       ),
                       Expanded(
                         child: SingleChildScrollView(
-                          child: _step == 1 ? _buildIdentityStep() : _buildAddressStep(),
+                          child: _step == 1
+                              ? _buildIdentityStep()
+                              : _buildAddressStep(),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -270,20 +330,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: ElevatedButton(
                           onPressed: auth.isLoading
                               ? null
-                              : (_step == 1 ? _goToNextStep : _handleStep2Submit),
+                              : (_step == 1
+                                    ? _goToNextStep
+                                    : _handleStep2Submit),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF59B41C),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             elevation: 0,
                           ),
                           child: auth.isLoading
                               ? const SizedBox(
                                   height: 24,
                                   width: 24,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : Text(
-                                  _step == 1 ? 'Lanjut Ke alamat' : (widget.role == 'collector' ? 'Lanjutkan' : 'Daftar Sekarang'),
+                                  _step == 1
+                                      ? 'Lanjut Ke alamat'
+                                      : (widget.role == 'collector'
+                                            ? 'Lanjutkan'
+                                            : 'Daftar Sekarang'),
                                   style: GoogleFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -338,7 +409,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         const SizedBox(height: 24),
         _buildLabel('NAMA LENGKAP (SESUAI KTP)'),
-        _buildTextField(controller: _nameCtrl, hintText: 'Contoh : Mochammad Zacki'),
+        _buildTextField(
+          controller: _nameCtrl,
+          hintText: 'Contoh : Mochammad Zacki',
+        ),
         const SizedBox(height: 18),
         _buildLabel('NOMOR WHATSAPP AKTIF'),
         Row(
@@ -353,13 +427,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Center(
                 child: Text(
                   '+62',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildTextField(controller: _phoneCtrl, hintText: '895341381130', keyboardType: TextInputType.phone),
+              child: _buildTextField(
+                controller: _phoneCtrl,
+                hintText: '895341381130',
+                keyboardType: TextInputType.phone,
+              ),
             ),
           ],
         ),
@@ -370,7 +452,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         const SizedBox(height: 18),
         _buildLabel('ALAMAT EMAIL'),
-        _buildTextField(controller: _emailCtrl, hintText: 'nama@email.com', keyboardType: TextInputType.emailAddress),
+        _buildTextField(
+          controller: _emailCtrl,
+          hintText: 'nama@email.com',
+          keyboardType: TextInputType.emailAddress,
+        ),
         const SizedBox(height: 18),
         _buildLabel('KOTA OPERASIONAL'),
         Container(
@@ -404,13 +490,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildLabel('ALAMAT LENGKAP RUMAH'),
-        _buildTextField(controller: _addressCtrl, hintText: 'Nama jalan, Blok, No. Rumah, RT/RW...', maxLines: 4),
+        _buildTextField(
+          controller: _addressCtrl,
+          hintText: 'Nama jalan, Blok, No. Rumah, RT/RW...',
+          maxLines: 4,
+        ),
         const SizedBox(height: 18),
         _buildLabel('KECAMATAN/KELURAHAN'),
-        _buildTextField(controller: _subdistrictCtrl, hintText: 'Contoh : Lamongan, Sukorejo'),
+        _buildTextField(
+          controller: _subdistrictCtrl,
+          hintText: 'Contoh : Lamongan, Sukorejo',
+        ),
         const SizedBox(height: 18),
         _buildLabel('BUAT KATA SANDI AKUN'),
-        _buildTextField(controller: _passwordCtrl, hintText: '********', obscureText: true),
+        _buildTextField(
+          controller: _passwordCtrl,
+          hintText: '********',
+          obscureText: true,
+        ),
         const SizedBox(height: 18),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,8 +518,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Checkbox(
                 value: _agreeSorting,
                 activeColor: const Color(0xFF59B41C),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                onChanged: (value) => setState(() => _agreeSorting = value ?? false),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                onChanged: (value) =>
+                    setState(() => _agreeSorting = value ?? false),
               ),
             ),
             const SizedBox(width: 12),
@@ -448,7 +548,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+          fontSize: 13,
+        ),
       ),
     );
   }
@@ -471,8 +575,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintStyle: GoogleFonts.outfit(color: Colors.grey[400]),
         filled: true,
         fillColor: Colors.grey[100],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
+        ),
       ),
     );
   }
