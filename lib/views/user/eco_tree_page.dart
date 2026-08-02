@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/eco_tree_state.dart';
+import '../../core/wallet_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -33,7 +34,6 @@ class _EcoTreePageState extends State<EcoTreePage> {
   void initState() {
     super.initState();
   }
-
 
   int _nextThreshold() {
     final lv = state.level;
@@ -131,7 +131,7 @@ class _EcoTreePageState extends State<EcoTreePage> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Expanded(child: Text('Level$lvl', style: _jakarta(fontSize: 12, color: isCurrent ? Colors.green : Colors.black54))),
-                                                                                        Text('$thresh XP', style: _jakarta(fontSize: 12, color: Colors.black45)),
+                                            Text('$thresh XP', style: _jakarta(fontSize: 12, color: Colors.black45)),
                                           ],
                                         ),
                                       );
@@ -200,7 +200,7 @@ class _EcoTreePageState extends State<EcoTreePage> {
                                     state.setName(result);
                                   }
                                 },
-                                child: Icon(Icons.edit, size: 16, color: Colors.black45),
+                                child: const Icon(Icons.edit, size: 16, color: Colors.black45),
                               ),
                             ],
                           ),
@@ -234,7 +234,21 @@ class _EcoTreePageState extends State<EcoTreePage> {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          Text('Siram Menggunakan', style: _jakarta(fontSize: 13, fontWeight: FontWeight.w600)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Siram Menggunakan', style: _jakarta(fontSize: 13, fontWeight: FontWeight.w600)),
+                              ValueListenableBuilder<int>(
+                                valueListenable: WalletState.instance.points,
+                                builder: (context, userPts, _) {
+                                  return Text(
+                                    'Sisa Point: $userPts',
+                                    style: _jakarta(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF2F7A2F)),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 10),
                           Wrap(
                             spacing: 10,
@@ -248,7 +262,7 @@ class _EcoTreePageState extends State<EcoTreePage> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Center(child: Text('Konvers Point 2 : 1XP', style: _jakarta(fontSize: 12, color: Colors.black45))),
+                          Center(child: Text('Konversi Point 1 : 1 XP', style: _jakarta(fontSize: 12, color: Colors.black45))),
                         ],
                       ),
                     ),
@@ -266,10 +280,28 @@ class _EcoTreePageState extends State<EcoTreePage> {
   Widget _waterOption(int points) {
     return GestureDetector(
       onTap: () {
-        // Convert points to XP: 2 points -> 1 XP as note; so points/2 XP
-        final xpGain = (points / 2).round();
-        state.addXp(xpGain);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('+$xpGain XP', style: _jakarta(color: Colors.white)), backgroundColor: const Color(0xFF2E7D32)));
+        final wallet = WalletState.instance;
+        if (wallet.points.value < points) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Point tidak cukup! (Sisa: ${wallet.points.value} Points)', style: _jakarta(color: Colors.white)),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+          return;
+        }
+
+        // 1 Point = 1 XP gained
+        wallet.points.value -= points;
+        state.addXp(points);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('+$points XP (Tunas Tersiram!)', style: _jakarta(color: Colors.white)),
+            backgroundColor: const Color(0xFF2E7D32),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       },
       child: Container(
         width: 84,

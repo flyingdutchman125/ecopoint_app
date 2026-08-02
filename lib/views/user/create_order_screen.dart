@@ -10,6 +10,7 @@ import '../../core/utils/image_picker_helper.dart';
 import '../../providers/user_provider.dart';
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/address_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -44,6 +45,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUserAddress();
     if (widget.extra != null) {
       final initialCat = widget.extra!['category']?.toString();
       final initialPhoto = widget.extra!['photo_url']?.toString();
@@ -53,6 +55,16 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       if (initialPhoto != null && initialPhoto.isNotEmpty) {
         _photoUrl = initialPhoto;
       }
+    }
+  }
+
+  Future<void> _loadUserAddress() async {
+    await AddressState.instance.init();
+    final active = AddressState.instance.activeAddress;
+    if (active != null && mounted) {
+      setState(() {
+        _addressCtrl.text = '${active['label']}: ${active['detail']}';
+      });
     }
   }
 

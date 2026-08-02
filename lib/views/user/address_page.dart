@@ -1,6 +1,6 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/address_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -25,19 +25,17 @@ class _AddressPageState extends State<AddressPage> {
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
-  int _selectedAddressIndex = 0; 
-  
-  // Daftar alamat dibuat non-konstan agar bisa ditambah dan dihapus secara dinamis
-  final List<Map<String, String>> _savedAddresses = [
-    {
-      'label': 'Rumah Admin',
-      'detail': 'Jln. Andansari Mojo GG duku No. 3, RT 001/ RW 003, Kelurahan Sukorejo (Rumah Cat Hijau)',
-    },
-    {
-      'label': 'Rumah Si mbah',
-      'detail': 'Jl. Kali utik di walik dadi batagor enak nyam nyam no 3 Gerobak abu abu dan blue',
-    },
-  ];
+  final AddressState _addressState = AddressState.instance;
+
+  String? _detectedLat;
+  String? _detectedLng;
+  bool _isDetectingLocation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _addressState.init();
+  }
 
   @override
   void dispose() {
@@ -46,8 +44,34 @@ class _AddressPageState extends State<AddressPage> {
     super.dispose();
   }
 
-  // Fungsi Fitur Tambah Alamat
-  void _addAddress() {
+  // Real GPS location detection handler
+  Future<void> _detectLocation() async {
+    setState(() {
+      _isDetectingLocation = true;
+    });
+
+    try {
+      final loc = await _addressState.detectCurrentLocation();
+      setState(() {
+        _labelController.text = loc['label'] ?? 'Lokasi GPS Saya';
+        _addressController.text = loc['detail'] ?? '';
+        _detectedLat = loc['lat'];
+        _detectedLng = loc['lng'];
+      });
+      _showSnack('Lokasi saat ini berhasil terdeteksi!');
+    } catch (e) {
+      _showSnack('Gagal mendeteksi lokasi: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDetectingLocation = false;
+        });
+      }
+    }
+  }
+
+  // Fungsi Tambah Alamat Baru dengan simpan nyata ke SharedPreferences
+  Future<void> _addAddress() async {
     final label = _labelController.text.trim();
     final detail = _addressController.text.trim();
 
@@ -56,36 +80,38 @@ class _AddressPageState extends State<AddressPage> {
       return;
     }
 
+    await _addressState.addAddress(
+      label: label,
+      detail: detail,
+      lat: _detectedLat,
+      lng: _detectedLng,
+    );
+
     setState(() {
-      _savedAddresses.add({
-        'label': label,
-        'detail': detail,
-      });
       _labelController.clear();
       _addressController.clear();
+      _detectedLat = null;
+      _detectedLng = null;
     });
 
-    _showSnack('Alamat baru berhasil ditambahkan!');
-    FocusScope.of(context).unfocus(); // Menutup keyboard setelah submit
+    _showSnack('Alamat baru berhasil disimpan secara nyata!');
+    FocusScope.of(context).unfocus();
   }
 
-  // Fungsi Fitur Hapus Alamat
-  void _deleteAddress(int index) {
-    setState(() {
-      _savedAddresses.removeAt(index);
-      
-      // Amankan indeks pilihan agar tidak crash jika item yang aktif dihapus
-      if (_savedAddresses.isEmpty) {
-        _selectedAddressIndex = -1;
-      } else if (_selectedAddressIndex >= _savedAddresses.length) {
-        _selectedAddressIndex = max(0, _savedAddresses.length - 1);
-      }
-    });
-
+  // Fungsi Hapus Alamat dengan simpan nyata ke SharedPreferences
+  Future<void> _deleteAddress(int index) async {
+    await _addressState.deleteAddress(index);
     _showSnack('Alamat berhasil dihapus!');
   }
 
+  // Fungsi Pilih Alamat Utama
+  Future<void> _selectAddress(int index) async {
+    await _addressState.selectAddress(index);
+    _showSnack('Alamat utama berhasil dipilih!');
+  }
+
   void _showSnack(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
@@ -127,7 +153,33 @@ class _AddressPageState extends State<AddressPage> {
                     'Tambah Alamat Baru',
                     style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  
+                  // Tombol Deteksi Lokasi Real (GPS)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isDetectingLocation ? null : _detectLocation,
+                      icon: _isDetectingLocation
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.my_location, size: 20, color: Colors.white),
+                      label: Text(
+                        _isDetectingLocation ? 'Mendeteksi Lokasi Real (GPS)...' : 'Deteksi Lokasi Saya Saat Ini (GPS)',
+                        style: _jakarta(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
                   _buildInputField(
                     label: 'Label Alamat',
                     hint: 'Kantor, Rumah, dan lain-lain',
@@ -144,7 +196,7 @@ class _AddressPageState extends State<AddressPage> {
                   GestureDetector(
                     onTap: _addAddress,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
                         color: const Color(0xFF82C139),
                         borderRadius: BorderRadius.circular(8),
@@ -159,89 +211,114 @@ class _AddressPageState extends State<AddressPage> {
               ),
             ),
             
-            // --- SEKSI DAFTAR ALAMAT TERSIMPAN ---
+            // --- SEKSI DAFTAR ALAMAT TERSIMPAN (PERSISTENT & SELECTABLE) ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: _savedAddresses.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _savedAddresses.length,
-                      itemBuilder: (context, index) {
-                        final isSelected = _selectedAddressIndex == index;
-                        final address = _savedAddresses[index];
+              child: ValueListenableBuilder<List<Map<String, String>>>(
+                valueListenable: _addressState.addresses,
+                builder: (context, addresses, _) {
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _addressState.selectedIndex,
+                    builder: (context, selectedIndex, _) {
+                      if (addresses.isEmpty) {
+                        return _buildEmptyState();
+                      }
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: addresses.length,
+                        itemBuilder: (context, index) {
+                          final isSelected = selectedIndex == index;
+                          final address = addresses[index];
 
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedAddressIndex = index;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 14),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected ? const Color(0xFF82C139) : Colors.transparent,
-                                width: 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
+                          return GestureDetector(
+                            onTap: () => _selectAddress(index),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected ? const Color(0xFF82C139) : Colors.transparent,
+                                  width: 1.5,
                                 ),
-                              ],
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        address['label']!,
-                                        style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        address['detail']!,
-                                        style: _jakarta(fontSize: 11, color: Colors.black45),
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.03),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (isSelected) ...[
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF82C139),
-                                      shape: BoxShape.circle,
+                                ],
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              address['label'] ?? 'Alamat',
+                                              style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                                            ),
+                                            if (isSelected) ...[
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFE8F5E9),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  'Utama',
+                                                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          address['detail'] ?? '',
+                                          style: _jakarta(fontSize: 11, color: Colors.black54),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: 8),
+                                  if (isSelected) ...[
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF82C139),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  // Tombol Hapus Alamat
+                                  IconButton(
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
+                                    onPressed: () => _deleteAddress(index),
+                                  ),
                                 ],
-                                // Tombol Aksi Hapus Alamat
-                                IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
-                                  onPressed: () => _deleteAddress(index),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
