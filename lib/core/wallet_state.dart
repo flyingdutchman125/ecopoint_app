@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'notification_state.dart';
+import 'history_state.dart';
 
 /// Simple in-memory state for wallet/balance management
 /// Tracks: active balance (saldo aktif), points, conversion & withdrawal history
@@ -34,6 +36,10 @@ class WalletState {
 
   double get currentBalance => activeBalance.value;
   int get currentPoints => points.value;
+
+  void addPoints(int amount) {
+    points.value = (points.value + amount).clamp(0, 99999999);
+  }
 
   bool get canWithdraw {
     if (lastWithdrawalDate == null) return true;
@@ -91,6 +97,19 @@ class WalletState {
       'ratioUsed': '2:1',
     });
 
+    NotificationState.instance.addNotification(
+      category: 'Convert',
+      title: 'Konversi Point Berhasil!',
+      subtitle: 'Kamu berhasil menukar $pointsToConvert Point menjadi Saldo Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}.',
+    );
+
+    HistoryState.instance.addHistory(
+      title: 'Tukar Point ke Saldo',
+      description: 'Menukar $pointsToConvert Point menjadi Saldo Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+      category: 'Tukar Point',
+      valueChange: '+Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+    );
+
     return true;
   }
 
@@ -112,6 +131,19 @@ class WalletState {
       'status': 'pending',
       'id': 'WD${DateTime.now().millisecondsSinceEpoch}',
     });
+
+    NotificationState.instance.addNotification(
+      category: 'Withdraw',
+      title: 'Penarikan Saldo Berhasil!',
+      subtitle: 'Penarikan Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ke akun ${bankAccount['bank']} berhasil diproses.',
+    );
+
+    HistoryState.instance.addHistory(
+      title: 'Penarikan Saldo',
+      description: 'Penarikan Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ke rekening ${bankAccount['bank']} (${bankAccount['phone']})',
+      category: 'Withdraw',
+      valueChange: '-Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+    );
 
     return true;
   }

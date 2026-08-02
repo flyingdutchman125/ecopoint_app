@@ -197,6 +197,36 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateUserProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? address,
+    String? avatarUrl,
+  }) async {
+    if (_user == null) {
+      _user = UserModel(
+        id: '5505090',
+        email: email ?? 'warga@ecopoint.com',
+        name: name ?? 'Pengguna EcoPoint',
+        role: 'user',
+        phone: phone ?? '08123456789',
+        address: address,
+        avatarUrl: avatarUrl,
+      );
+    } else {
+      _user = _user!.copyWith(
+        name: name ?? _user!.name,
+        phone: phone ?? _user!.phone,
+        email: email ?? _user!.email,
+        address: address ?? _user!.address,
+        avatarUrl: avatarUrl ?? _user!.avatarUrl,
+      );
+    }
+    await _saveAuthData();
+    notifyListeners();
+  }
+
   Future<void> _saveAuthData() async {
     final prefs = await SharedPreferences.getInstance();
     if (_token != null) {

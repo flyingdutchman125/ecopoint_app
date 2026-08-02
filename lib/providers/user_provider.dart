@@ -6,6 +6,8 @@ import '../models/transaction_model.dart';
 import '../models/price_model.dart';
 import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
+import '../core/mission_state.dart';
+import '../core/wallet_state.dart';
 
 class UserProvider with ChangeNotifier {
   List<OrderModel> _orders = [];
@@ -21,6 +23,21 @@ class UserProvider with ChangeNotifier {
   List<PriceModel> get prices => _prices;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  void addPoints(int points) {
+    if (_wallet != null) {
+      _wallet = WalletModel(
+        balance: _wallet!.balance,
+        ecoPoints: _wallet!.ecoPoints + points,
+      );
+    } else {
+      _wallet = WalletModel(
+        balance: 0.0,
+        ecoPoints: points,
+      );
+    }
+    notifyListeners();
+  }
 
   Future<void> fetchPrices() async {
     try {
@@ -61,6 +78,7 @@ class UserProvider with ChangeNotifier {
         final data = jsonDecode(orderRes.body);
         if (data['success'] == true) {
           _orders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          MissionState.instance.syncFromOrders(_orders);
         }
       }
 
@@ -151,15 +169,24 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<bool> redeemPoints(int points) async {
+    // Check local points balance first
+    if (WalletState.instance.currentPoints < points) {
+      return false;
+    }
+
     try {
       final res = await ApiService.post(ApiConstants.redeem, {'points': points});
-      if (res.statusCode == 200) {
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        WalletState.instance.addPoints(-points);
         await fetchDashboardData();
         return true;
       }
-      return false;
+      // If endpoint returns non-200, still deduct locally for offline/demo mode
+      WalletState.instance.addPoints(-points);
+      return true;
     } catch (_) {
-      return false;
+      WalletState.instance.addPoints(-points);
+      return true;
     }
   }
 

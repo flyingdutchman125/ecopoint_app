@@ -28,6 +28,8 @@ router.delete('/addresses/:id', auth, mobileCtrl.deleteAddress);
 router.get('/prices', auth, role('user'), userCtrl.getPrices);
 router.get('/dashboard', auth, role('user'), userCtrl.getDashboard);
 router.get('/ecobook', auth, role('user'), userCtrl.getEcoBook);
+router.get('/user/missions', auth, role('user'), userCtrl.getMissions);
+router.post('/user/missions/claim', auth, role('user'), userCtrl.claimMission);
 
 router.post('/order', auth, role('user'), userCtrl.createOrder);
 router.get('/orders', auth, role('user'), userCtrl.getUserOrders);

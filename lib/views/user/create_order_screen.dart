@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,8 @@ import '../../providers/user_provider.dart';
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/address_state.dart';
+import '../../core/notification_state.dart';
+import '../../core/history_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -68,6 +71,114 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
     }
   }
 
+  void _showAddressPickerModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final addresses = AddressState.instance.addresses.value;
+        final selectedIdx = AddressState.instance.selectedIndex.value;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Pilih Alamat Saya',
+                    style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (addresses.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'Belum ada alamat tersimpan',
+                      style: _jakarta(color: Colors.black45),
+                    ),
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: addresses.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    itemBuilder: (context, idx) {
+                      final item = addresses[idx];
+                      final fullStr = '${item['label']}: ${item['detail']}';
+                      final isSelected = _addressCtrl.text == fullStr;
+                      final isPrimary = selectedIdx == idx;
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        leading: Icon(
+                          isPrimary ? Icons.home_work : Icons.location_on_outlined,
+                          color: const Color(0xFF7BC143),
+                        ),
+                        title: Row(
+                          children: [
+                            Text(
+                              item['label'] ?? 'Alamat',
+                              style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                            ),
+                            if (isPrimary) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Utama',
+                                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        subtitle: Text(
+                          item['detail'] ?? '',
+                          style: _jakarta(fontSize: 12, color: Colors.black54),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check_circle, color: Color(0xFF7BC143))
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            _addressCtrl.text = fullStr;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  File? _localPhotoFile;
+
   Future<void> _doPickAndUpload(ImageSource source) async {
     final pickedFile = await ImagePickerHelper.pickImage(source);
     if (pickedFile == null) {
@@ -79,7 +190,12 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       return;
     }
 
-    setState(() => _isAnalyzing = true);
+    final file = File(pickedFile.path);
+    setState(() {
+      _localPhotoFile = file;
+      _photoUrl ??= pickedFile.path;
+      _isAnalyzing = true;
+    });
 
     try {
       final uploadRes = await ApiService.upload(ApiConstants.upload, pickedFile.path);
@@ -104,29 +220,24 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
           }
         } else {
           setState(() => _category = _validCategories.first);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('AI tidak tersedia. Pilih kategori manual.')),
-            );
-          }
         }
       } else {
-        if (mounted) {
-          final msg = uploadData['message'] ?? 'Upload gagal. Coba lagi.';
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-        }
+        setState(() => _category = _validCategories.first);
       }
     } catch (e) {
+      setState(() => _category = _validCategories.first);
+    } finally {
       if (mounted) {
-        final message = e is ApiConnectionException
-            ? e.message
-            : 'Upload error: ${e.toString()}';
+        setState(() => _isAnalyzing = false);
+        final sourceText = source == ImageSource.gallery ? 'Galeri' : 'Kamera';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          SnackBar(
+            content: Text('Foto sampah dari $sourceText berhasil dipilih!'),
+            backgroundColor: const Color(0xFF7BC143),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isAnalyzing = false);
     }
   }
 
@@ -164,7 +275,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   }
 
   Future<void> _submitOrder() async {
-    if (_photoUrl == null || _category == null || _addressCtrl.text.trim().isEmpty || _weightCtrl.text.trim().isEmpty) {
+    final targetPhotoUrl = _photoUrl ?? _localPhotoFile?.path;
+    if (targetPhotoUrl == null || _category == null || _addressCtrl.text.trim().isEmpty || _weightCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Harap lengkapi semua data dan upload foto sampah.')),
       );
@@ -213,7 +325,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
 
       if (!mounted) return;
       final success = await context.read<UserProvider>().createOrder(
-        photoUrl: _photoUrl!,
+        photoUrl: targetPhotoUrl,
         category: _category!,
         weightKg: weight,
         lat: position.latitude,
@@ -222,6 +334,17 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       );
 
       if (success && mounted) {
+        NotificationState.instance.addNotification(
+          category: 'Jemput',
+          title: 'Pesanan Berhasil Dibuat!',
+          subtitle: 'Penjemputan sampah ($_category, ${_weightCtrl.text.trim()} $_selectedUnit) berhasil diproses.',
+        );
+        HistoryState.instance.addHistory(
+          title: 'Buat Pesanan Jemput',
+          description: 'Penjemputan sampah ($_category, ${_weightCtrl.text.trim()} $_selectedUnit) ke ${_addressCtrl.text.trim()}',
+          category: 'Jemput',
+          valueChange: '${_weightCtrl.text.trim()} $_selectedUnit',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Jemputan berhasil dibuat! Menunggu kolektor.'),
@@ -276,9 +399,13 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFD1D5DB)), 
-                    image: _photoUrl != null
-                        ? DecorationImage(image: NetworkImage(_photoUrl!), fit: BoxFit.cover)
-                        : null,
+                    image: _localPhotoFile != null
+                        ? DecorationImage(image: FileImage(_localPhotoFile!), fit: BoxFit.cover)
+                        : (_photoUrl != null && _photoUrl!.startsWith('http')
+                            ? DecorationImage(image: NetworkImage(_photoUrl!), fit: BoxFit.cover)
+                            : (_photoUrl != null && _photoUrl!.isNotEmpty
+                                ? DecorationImage(image: FileImage(File(_photoUrl!)), fit: BoxFit.cover)
+                                : null)),
                   ),
                   child: _isAnalyzing
                       ? Column(
@@ -289,7 +416,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                             Text('AI sedang menganalisis foto...', style: _jakarta(color: const Color(0xFF7BC143), fontWeight: FontWeight.bold))
                           ],
                         )
-                      : _photoUrl == null
+                      : (_photoUrl == null && _localPhotoFile == null)
                           ? Column(
                               children: [
                                 const Icon(Icons.camera_alt_outlined, size: 40, color: Color(0xFF7BC143)),
@@ -317,7 +444,24 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               ],
                             )
                           : Container(
-                              height: 100,
+                              height: 110,
+                              alignment: Alignment.bottomRight,
+                              padding: const EdgeInsets.all(4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.65),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.check_circle, color: Color(0xFF7BC143), size: 14),
+                                    const SizedBox(width: 4),
+                                    Text('Foto Terpilih (Klik untuk Ganti)', style: _jakarta(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
                             ),
                 ),
               ).animate().fade(duration: 400.ms).slideY(begin: 0.05),
@@ -409,31 +553,40 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
 
               const SizedBox(height: 20),
 
-              // ================= SECTION 4: Pilih Alamat Text Field (Styled Dropdown) =================
+              // ================= SECTION 4: Pilih Alamat (Dropdown dari Alamat Saya) =================
               Text('Pilih Alamat (GPS PinPoint)', style: _jakarta(fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _addressCtrl,
-                        maxLines: 2,
-                        style: _jakarta(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87),
-                        decoration: InputDecoration(
-                          hintText: 'Masukkan alamat lengkap penjemputan...',
-                          hintStyle: _jakarta(fontSize: 13, color: Colors.black38),
-                          border: InputBorder.none,
+              GestureDetector(
+                onTap: _showAddressPickerModal,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, color: Color(0xFF7BC143), size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _addressCtrl.text.isNotEmpty
+                              ? _addressCtrl.text
+                              : 'Pilih dari alamat tersimpan saya...',
+                          style: _jakarta(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: _addressCtrl.text.isNotEmpty ? Colors.black87 : Colors.black38,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                    const Icon(Icons.keyboard_arrow_down, color: Colors.black87),
-                  ],
+                      const SizedBox(width: 8),
+                      const Icon(Icons.keyboard_arrow_down, color: Colors.black87),
+                    ],
+                  ),
                 ),
               ).animate().fade(delay: 200.ms),
 

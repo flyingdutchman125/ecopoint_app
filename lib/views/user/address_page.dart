@@ -95,7 +95,9 @@ class _AddressPageState extends State<AddressPage> {
     });
 
     _showSnack('Alamat baru berhasil disimpan secara nyata!');
-    FocusScope.of(context).unfocus();
+    if (mounted) {
+      FocusScope.of(context).unfocus();
+    }
   }
 
   // Fungsi Hapus Alamat dengan simpan nyata ke SharedPreferences
@@ -106,8 +108,49 @@ class _AddressPageState extends State<AddressPage> {
 
   // Fungsi Pilih Alamat Utama
   Future<void> _selectAddress(int index) async {
-    await _addressState.selectAddress(index);
-    _showSnack('Alamat utama berhasil dipilih!');
+    try {
+      final success = await _addressState.selectAddress(index);
+      if (success) {
+        _showSnack('Alamat utama berhasil dipilih!');
+      }
+    } on PrimaryAddressCooldownException catch (e) {
+      _showCooldownDialog(e.message);
+    } catch (e) {
+      _showSnack('Gagal memilih alamat: $e');
+    }
+  }
+
+  void _showCooldownDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.timer_outlined, color: Color(0xFFE53935), size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Perubahan Terkunci (24 Jam)',
+              style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: _jakarta(fontSize: 13, color: Colors.black87),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1B3A1B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Saya Mengerti', style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSnack(String message) {

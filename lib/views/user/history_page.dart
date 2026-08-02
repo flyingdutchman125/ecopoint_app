@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/history_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -24,43 +25,218 @@ class HistoryPage extends StatefulWidget {
 
 class _HistoryPageState extends State<HistoryPage> {
   String _selectedCategory = 'Semua';
+  final HistoryState _historyState = HistoryState.instance;
 
-  final List<String> _categories = [
-    'Semua',
-    'Jemput',
-    'Rating',
-    'Points',
-    'Tukar Point',
-    'Withdraw'
-  ];
-
-  final List<_HistoryItemData> _allHistory = const [
-    _HistoryItemData(
-      title: 'Pilah Sampah Lemari tua',
-      description: 'Melakukan transaksi pemilahan sampah lemari tua dengan colector Pak subarsono',
-      category: 'Jemput',
-      date: '21 Juli 2027',
-    ),
-    _HistoryItemData(
-      title: 'Pilah Sampah Lemari tua',
-      description: 'Sangat membantu untuk penjemputan dan dilakukan secara satset joss pokoe !!',
-      category: 'Rating',
-      date: '21 Juli 2027',
-    ),
-    _HistoryItemData(
-      title: 'Menyelesaikan Misi 10kg Carbon',
-      description: 'Berhasil Menyelesaikan misi 10kg dan mendapat hadiah total 1000 Pts',
-      category: 'Points',
-      date: '20 Juli 2027',
-    ),
+  final List<Map<String, dynamic>> _categories = const [
+    {'name': 'Semua', 'icon': Icons.tune, 'color': Color(0xFF1B3A1B)},
+    {'name': 'Jemput', 'icon': Icons.local_shipping, 'color': Color(0xFFE53935)},
+    {'name': 'Tukar Point', 'icon': Icons.sync_alt, 'color': Color(0xFFFB8C00)},
+    {'name': 'Withdraw', 'icon': Icons.account_balance_wallet, 'color': Color(0xFF8E24AA)},
+    {'name': 'EcoTree', 'icon': Icons.eco, 'color': Color(0xFF4CAF50)},
+    {'name': 'EcoBook', 'icon': Icons.menu_book, 'color': Color(0xFF3F51B5)},
+    {'name': 'Kunci Harga', 'icon': Icons.lock_clock, 'color': Color(0xFF009688)},
+    {'name': 'Alamat', 'icon': Icons.location_on, 'color': Color(0xFF0288D1)},
+    {'name': 'Rating', 'icon': Icons.star, 'color': Color(0xFFFFB300)},
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final filteredHistory = _selectedCategory == 'Semua'
-        ? _allHistory
-        : _allHistory.where((item) => item.category == _selectedCategory).toList();
+  void initState() {
+    super.initState();
+    _historyState.init();
+  }
 
+  void _showFilterInspectionBottomSheet(BuildContext context, List<HistoryItem> allHistory) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctxState, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Inspeksi Filter Riwayat Fitur',
+                        style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Pilih kategori fitur untuk mengecek riwayat aktivitas:',
+                    style: _jakarta(fontSize: 12, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _categories.map((cat) {
+                      final name = cat['name'] as String;
+                      final isSelected = _selectedCategory == name;
+                      final count = name == 'Semua'
+                          ? allHistory.length
+                          : allHistory.where((h) => h.category == name).length;
+
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = name;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFE8F5E9) : const Color(0xFFF4F6F8),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF82C139) : Colors.transparent,
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(cat['icon'] as IconData, size: 16, color: cat['color'] as Color),
+                              const SizedBox(width: 6),
+                              Text(
+                                name,
+                                style: _jakarta(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF82C139) : Colors.black12,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '$count',
+                                  style: _jakarta(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected ? Colors.white : Colors.black54,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showItemDetailDialog(BuildContext context, HistoryItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: item.categoryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(item.icon, color: item.categoryColor, size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.title, style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text(item.category, style: _jakarta(fontSize: 11, color: item.categoryColor, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDetailRow('Waktu Transaksi', '${item.dateFormatted} • ${item.timeFormatted}'),
+            const SizedBox(height: 6),
+            _buildDetailRow('ID Aktivitas', item.id),
+            const SizedBox(height: 6),
+            _buildDetailRow('Status', item.status),
+            if (item.valueChange != null) ...[
+              const SizedBox(height: 6),
+              _buildDetailRow('Perubahan Nilai', item.valueChange!, isHighlight: true),
+            ],
+            const SizedBox(height: 12),
+            Text('Deskripsi Lengkap:', style: _jakarta(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
+            const SizedBox(height: 4),
+            Text(item.description, style: _jakarta(fontSize: 12, color: Colors.black.withValues(alpha: 0.65))),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF82C139),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Tutup', style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String val, {bool isHighlight = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: _jakarta(fontSize: 11, color: Colors.black54)),
+        Flexible(
+          child: Text(
+            val,
+            style: _jakarta(
+              fontSize: 11,
+              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+              color: isHighlight ? const Color(0xFF2E7D32) : Colors.black87,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FA),
       appBar: AppBar(
@@ -71,98 +247,169 @@ class _HistoryPageState extends State<HistoryPage> {
           'Riwayat Aktivitas',
           style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: _buildFilterBar(),
-        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.black87, size: 24),
+            tooltip: 'Filter Pop-up Aktivitas',
+            onPressed: () => _showFilterInspectionBottomSheet(context, _historyState.historyList.value),
+          ),
+        ],
       ),
-      body: filteredHistory.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: filteredHistory.length + 1,
-              itemBuilder: (context, index) {
-                if (index == filteredHistory.length) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 32, bottom: 16),
-                    child: Text(
-                      'Tidak ada obrolan lain',
-                      textAlign: TextAlign.center,
-                      style: _jakarta(fontSize: 14, color: Colors.black38, fontWeight: FontWeight.w500),
+      body: ValueListenableBuilder<List<HistoryItem>>(
+        valueListenable: _historyState.historyList,
+        builder: (context, allHistory, _) {
+          final filteredHistory = _selectedCategory == 'Semua'
+              ? allHistory
+              : allHistory.where((item) => item.category == _selectedCategory).toList();
+
+          return Column(
+            children: [
+              // --- UPTOP SUMMARY CARD & QUICK FILTER TRIGGER ---
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ringkasan Aktivitas Warga',
+                              style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Kategori Aktif: $_selectedCategory (${filteredHistory.length} Transaksi)',
+                              style: _jakarta(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32)),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () => _showFilterInspectionBottomSheet(context, allHistory),
+                          icon: const Icon(Icons.tune, size: 16, color: Colors.white),
+                          label: Text('Inspeksi Pop-up', style: _jakarta(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF82C139),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: _HistoryCard(data: filteredHistory[index]),
-                );
-              },
-            ),
-    );
-  }
-
-  Widget _buildFilterBar() {
-    List<Widget> rowChildren = [];
-
-    for (int index = 0; index < _categories.length; index++) {
-      final cat = _categories[index];
-      final isSelected = _selectedCategory == cat;
-
-      rowChildren.add(
-        Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => _selectedCategory = cat),
-            child: Container(
-              alignment: Alignment.center,
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 1),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFE8F5E9) : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: FittedBox(
-                fit: BoxFit.scaleDown, // Memaksa teks mengecil otomatis jika ruang menyempit
-                child: Text(
-                  cat,
-                  textAlign: TextAlign.center,
-                  style: _jakarta(
-                    fontSize: 12, // Ukuran dasar yang ideal untuk layar normal
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: _getCategoryColor(cat, isSelected),
-                  ),
+                  ],
                 ),
               ),
-            ),
-          ),
-        ),
-      );
 
-      // Berikan garis batas pembatas '|' antar menu kecuali di item paling akhir
-      if (index < _categories.length - 1) {
-        rowChildren.add(
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 1),
-            child: Text(
-              '|',
-              style: TextStyle(color: Colors.black12, fontSize: 11),
-            ),
-          ),
-        );
-      }
-    }
+              // --- DAFTAR RIWAYAT NYATA ---
+              Expanded(
+                child: filteredHistory.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        itemCount: filteredHistory.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == filteredHistory.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 24, bottom: 16),
+                              child: Text(
+                                'Seluruh riwayat terverifikasi secara nyata',
+                                textAlign: TextAlign.center,
+                                style: _jakarta(fontSize: 12, color: Colors.black38, fontWeight: FontWeight.w500),
+                              ),
+                            );
+                          }
 
-    return Container(
-      height: 46,
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.black12),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: rowChildren,
+                          final item = filteredHistory[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: GestureDetector(
+                              onTap: () => _showItemDetailDialog(context, item),
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.02),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: item.categoryColor.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(item.icon, color: item.categoryColor, size: 20),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  item.title,
+                                                  style: _jakarta(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.black87),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                item.dateFormatted,
+                                                style: _jakarta(fontSize: 10, color: Colors.black38),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            item.description,
+                                            style: _jakarta(fontSize: 11, color: Colors.black54),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          if (item.valueChange != null) ...[
+                                            const SizedBox(height: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFE8F5E9),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                item.valueChange!,
+                                                style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Icon(Icons.chevron_right, color: Colors.black26, size: 20),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -175,103 +422,15 @@ class _HistoryPageState extends State<HistoryPage> {
           const Icon(Icons.history_toggle_off, size: 48, color: Colors.black26),
           const SizedBox(height: 12),
           Text(
-            'Belum ada riwayat di kategori ini',
-            style: _jakarta(fontSize: 14, color: Colors.black38),
+            'Belum ada riwayat di kategori $_selectedCategory',
+            style: _jakarta(fontSize: 14, color: Colors.black38, fontWeight: FontWeight.w500),
           ),
-        ],
-      ),
-    );
-  }
-
-  Color _getCategoryColor(String category, bool isSelected) {
-    if (category == 'Semua') return Colors.black87;
-    if (category == 'Rating' || category == 'Points') {
-      return const Color(0xFFB8860B);
-    }
-    return const Color(0xFF4CAF50);
-  }
-}
-
-class _HistoryItemData {
-  final String title;
-  final String description;
-  final String category;
-  final String date;
-
-  const _HistoryItemData({
-    required this.title,
-    required this.description,
-    required this.category,
-    required this.date,
-  });
-}
-
-class _HistoryCard extends StatelessWidget {
-  final _HistoryItemData data;
-  const _HistoryCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  data.title,
-                  style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildTag(data.category),
-              const SizedBox(width: 6),
-              Text(
-                data.date,
-                style: _jakarta(fontSize: 10.5, color: Colors.black38, fontStyle: FontStyle.italic),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            data.description,
-            style: _jakarta(fontSize: 11, color: Colors.black54),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            'Lakukan transaksi penjemputan, tukar poin, atau penarikan.',
+            style: _jakarta(fontSize: 12, color: Colors.black26),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTag(String category) {
-    final isYellowTag = category == 'Rating' || category == 'Points';
-    final baseColor = isYellowTag ? const Color(0xFFB8860B) : const Color(0xFF4CAF50);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: baseColor.withOpacity(0.5), width: 0.8),
-        color: baseColor.withOpacity(0.05),
-      ),
-      child: Text(
-        category,
-        style: _jakarta(fontSize: 9, fontWeight: FontWeight.bold, color: baseColor),
       ),
     );
   }

@@ -3,6 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'history_state.dart';
+
+class PrimaryAddressCooldownException implements Exception {
+  final String message;
+  final int remainingSeconds;
+  PrimaryAddressCooldownException(this.message, {required this.remainingSeconds});
+  @override
+  String toString() => message;
+}
 
 /// Central persistent state for User Addresses & Real GPS Detection
 class AddressState {
@@ -11,11 +20,13 @@ class AddressState {
 
   static const String _storageKey = 'ecopoint_user_addresses_v2';
   static const String _selectedIndexKey = 'ecopoint_selected_address_index_v2';
+  static const String _lastPrimaryChangeKey = 'ecopoint_last_primary_address_changed_v2';
 
   final ValueNotifier<List<Map<String, String>>> addresses = ValueNotifier<List<Map<String, String>>>([]);
   final ValueNotifier<int> selectedIndex = ValueNotifier<int>(0);
   final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
 
+  DateTime? lastPrimaryAddressChangedAt;
   bool _initialized = false;
 
   Map<String, String>? get activeAddress {
@@ -25,6 +36,17 @@ class AddressState {
       return addresses.value[idx];
     }
     return addresses.value.first;
+  }
+
+  /// Returns remaining cooldown duration if primary address was changed within 24 hours
+  Duration? get primaryAddressCooldownRemaining {
+    if (lastPrimaryAddressChangedAt == null) return null;
+    final nextAllowed = lastPrimaryAddressChangedAt!.add(const Duration(hours: 24));
+    final now = DateTime.now();
+    if (now.isBefore(nextAllowed)) {
+      return nextAllowed.difference(now);
+    }
+    return null;
   }
 
   Future<void> init() async {
@@ -38,6 +60,11 @@ class AddressState {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString(_storageKey);
       final int savedIdx = prefs.getInt(_selectedIndexKey) ?? 0;
+      final String? lastChangeStr = prefs.getString(_lastPrimaryChangeKey);
+
+      if (lastChangeStr != null && lastChangeStr.isNotEmpty) {
+        lastPrimaryAddressChangedAt = DateTime.tryParse(lastChangeStr);
+      }
 
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
@@ -86,12 +113,16 @@ class AddressState {
       final jsonStr = jsonEncode(addresses.value);
       await prefs.setString(_storageKey, jsonStr);
       await prefs.setInt(_selectedIndexKey, selectedIndex.value);
+      if (lastPrimaryAddressChangedAt != null) {
+        await prefs.setString(_lastPrimaryChangeKey, lastPrimaryAddressChangedAt!.toIso8601String());
+      }
     } catch (e) {
       debugPrint('Error saving address state: $e');
     }
   }
 
   Future<void> addAddress({required String label, required String detail, String? lat, String? lng}) async {
+    await init();
     final newList = List<Map<String, String>>.from(addresses.value);
     newList.add({
       'label': label,
@@ -100,11 +131,18 @@ class AddressState {
       'lng': lng ?? '112.4166',
     });
     addresses.value = newList;
-    selectedIndex.value = newList.length - 1;
     await _saveToPrefs();
+
+    HistoryState.instance.addHistory(
+      title: 'Tambah Alamat Baru',
+      description: 'Menambahkan lokasi "$label": $detail',
+      category: 'Alamat',
+      valueChange: 'Alamat Tersimpan',
+    );
   }
 
   Future<void> deleteAddress(int index) async {
+    await init();
     if (index < 0 || index >= addresses.value.length) return;
     final newList = List<Map<String, String>>.from(addresses.value);
     newList.removeAt(index);
@@ -118,11 +156,39 @@ class AddressState {
     await _saveToPrefs();
   }
 
-  Future<void> selectAddress(int index) async {
-    if (index >= 0 && index < addresses.value.length) {
-      selectedIndex.value = index;
-      await _saveToPrefs();
+  /// Changes primary address with mandatory 24-hour cooldown rule
+  Future<bool> selectAddress(int index) async {
+    await init();
+    if (index < 0 || index >= addresses.value.length) return false;
+    
+    // If already primary, no action needed
+    if (selectedIndex.value == index) return true;
+
+    // Enforce 24-hour cooldown
+    final cooldown = primaryAddressCooldownRemaining;
+    if (cooldown != null) {
+      final hours = cooldown.inHours;
+      final minutes = cooldown.inMinutes % 60;
+      final timeStr = hours > 0 ? '$hours jam $minutes menit' : '$minutes menit';
+      throw PrimaryAddressCooldownException(
+        'Alamat Utama hanya dapat diubah kembali setelah 24 jam. Sisa waktu penunggu: $timeStr.',
+        remainingSeconds: cooldown.inSeconds,
+      );
     }
+
+    selectedIndex.value = index;
+    lastPrimaryAddressChangedAt = DateTime.now();
+    await _saveToPrefs();
+
+    final selected = addresses.value[index];
+    HistoryState.instance.addHistory(
+      title: 'Ubah Alamat Utama',
+      description: 'Mengubah alamat utama menjadi "${selected['label']}": ${selected['detail']}',
+      category: 'Alamat',
+      valueChange: 'Alamat Utama Diperbarui',
+    );
+
+    return true;
   }
 
   /// Real GPS location detection + Reverse Geocoding with OSM Nominatim

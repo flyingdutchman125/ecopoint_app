@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/eco_tree_state.dart';
 import '../../core/wallet_state.dart';
+import '../../core/history_state.dart';
+import '../../widgets/eco_tree_vector_widget.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -52,7 +54,7 @@ class _EcoTreePageState extends State<EcoTreePage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => context.pop(),
         ),
-        title: Text('EcoTree', style: _jakarta(fontSize: 16, fontWeight: FontWeight.w700)),
+        title: Text('EcoTree (Level 1 - 9)', style: _jakarta(fontSize: 16, fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -65,97 +67,166 @@ class _EcoTreePageState extends State<EcoTreePage> {
               final level = state.level;
               final next = _nextThreshold();
               final prev = state.xpThresholds[level];
-              final progress = (xp - prev) / (next - prev);
+              final progress = next == prev ? 1.0 : (xp - prev) / (next - prev);
 
               return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            height: 360,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFCEE9C9)),
-                              color: Colors.white,
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Left: 1 Tall Container (EcoTree graphic)
+                          Expanded(
+                            flex: 3,
+                            child: Container(
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFCEE9C9), width: 1.5),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.03),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Text('Level $level', style: _jakarta(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF2F7A2F))),
+                                      const SizedBox(height: 2),
+                                      Text(state.levelTitle, style: _jakarta(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF4CAF50))),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE8F5E9),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'Reduksi Karbon: ${(xp * 0.41).toStringAsFixed(1)} kg CO2',
+                                          style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Expanded(
+                                    child: Center(
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 400),
+                                        child: EcoTreeVectorWidget(
+                                          key: ValueKey(level),
+                                          level: level,
+                                          width: 220,
+                                          height: 220,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Right: 2 Stacked Containers aligned to match left height
+                          Expanded(
+                            flex: 2,
                             child: Column(
                               children: [
-                                Text('Level $level', style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF2F7A2F))),
-                                const SizedBox(height: 8),
-                                Text('Reduksi Karbon sebesar ${(xp * 0.41).toStringAsFixed(1)}kg', style: _jakarta(fontSize: 12, color: Colors.green)),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFEFEFEF)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Tingkatan Level (1-9)', style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 8),
+                                      ...List.generate(9, (i) {
+                                        final lvl = i + 1;
+                                        final thresh = state.xpThresholds[lvl];
+                                        final isCurrent = level == lvl;
+                                        final isUnlocked = level >= lvl;
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 3.5),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                isUnlocked ? Icons.check_circle : Icons.lock,
+                                                size: 13,
+                                                color: isCurrent
+                                                    ? const Color(0xFF2E7D32)
+                                                    : (isUnlocked ? Colors.green : Colors.grey.shade400),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  'Lvl $lvl',
+                                                  style: _jakarta(
+                                                    fontSize: 11,
+                                                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                                    color: isCurrent ? const Color(0xFF2E7D32) : (isUnlocked ? Colors.black87 : Colors.black45),
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                '$thresh XP',
+                                                style: _jakarta(
+                                                  fontSize: 10.5,
+                                                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                                  color: isCurrent ? const Color(0xFF2E7D32) : Colors.black45,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
                                 const SizedBox(height: 12),
                                 Expanded(
-                                  child: Center(
-                                    child: Image.asset(
-                                      'assets/images/eco_tree.png',
-                                      width: 140,
-                                      height: 140,
-                                      fit: BoxFit.contain,
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFFDE7),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFFFEE58)),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.card_giftcard, size: 15, color: Colors.orange.shade800),
+                                            const SizedBox(width: 4),
+                                            Text('Bonus Chest', style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.orange.shade800)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text('Lvl 1-3: Chance 25%\nLvl 4-6: Chance 45%\nLvl 7-9: Chance 75%', style: _jakarta(fontSize: 10.5, color: Colors.black54)),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFEFEFEF)),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Tingkatan Level', style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 8),
-                                    ...List.generate(state.xpThresholds.length - 1, (i) {
-                                      final lvl = i + 1;
-                                      final thresh = state.xpThresholds[lvl];
-                                      final isCurrent = level == lvl;
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(child: Text('Level$lvl', style: _jakarta(fontSize: 12, color: isCurrent ? Colors.green : Colors.black54))),
-                                            Text('$thresh XP', style: _jakarta(fontSize: 12, color: Colors.black45)),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFF0E8C6))),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Reward Level', style: _jakarta(fontSize: 12, fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 6),
-                                    Text('Rendah : Chance Good Chest 25%\nSedang : Chance Good Chest 40%\nTinggi : Chance Good Chest 60%', style: _jakarta(fontSize: 11, color: Colors.black54)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Container(
@@ -211,7 +282,7 @@ class _EcoTreePageState extends State<EcoTreePage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Level Tunas Saat ini $level (Kecil)', style: _jakarta(fontSize: 12, color: Colors.black54)),
+                                    Text('Level $level: ${state.levelTitle}', style: _jakarta(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
                                     const SizedBox(height: 8),
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
@@ -294,6 +365,12 @@ class _EcoTreePageState extends State<EcoTreePage> {
         // 1 Point = 1 XP gained
         wallet.points.value -= points;
         state.addXp(points);
+        HistoryState.instance.addHistory(
+          title: 'Penyiraman EcoTree',
+          description: 'Menggunakan $points Points untuk menyiram tunas EcoTree (+$points XP)',
+          category: 'EcoTree',
+          valueChange: '-$points Pts',
+        );
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

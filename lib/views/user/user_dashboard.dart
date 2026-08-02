@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/wallet_state.dart';
 import '../../core/eco_tree_state.dart';
+import '../../core/notification_state.dart';
+import '../../core/price_lock_state.dart';
 import '../../providers/auth_provider.dart';
 
 TextStyle _jakarta({
@@ -76,10 +78,12 @@ class _UserDashboardState extends State<UserDashboard> {
 
   Future<void> _onLockTap(int index) async {
     final item = _prices[index];
+    final lockState = PriceLockState.instance;
 
-    if (item.locked) {
-      final remaining = item.lockedUntil!.difference(DateTime.now());
-      _showSnack('Price lock aktif. Menunggu ${_formatDuration(remaining)} lagi.');
+    if (lockState.isLocked(item.name)) {
+      final remaining = lockState.getRemainingDuration(item.name);
+      final durationStr = remaining != null ? _formatDuration(remaining) : 'beberapa saat';
+      _showSnack('Price lock untuk ${item.name} sedang aktif. Sisa waktu: $durationStr.');
       return;
     }
 
@@ -87,8 +91,8 @@ class _UserDashboardState extends State<UserDashboard> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Kunci Harga', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
-        content: Text('Konfirmasi penguncian harga selama 24 jam?', style: _jakarta(fontSize: 14, color: Colors.black87)),
+        title: Text('Kunci Harga ${item.name}', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: Text('Konfirmasi penguncian harga ${item.name} (Rp ${item.pricePerKg.toInt()}/kg) selama 24 jam?', style: _jakarta(fontSize: 14, color: Colors.black87)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -107,9 +111,7 @@ class _UserDashboardState extends State<UserDashboard> {
     );
 
     if (confirmed == true) {
-      setState(() {
-        _prices[index] = item.copyWith(lockedUntil: DateTime.now().add(const Duration(hours: 24)));
-      });
+      await lockState.lockCommodity(item.name, price: item.pricePerKg);
       _showSnack('Harga "${item.name}" berhasil dikunci selama 24 jam.');
     }
   }
@@ -201,12 +203,40 @@ class _UserDashboardState extends State<UserDashboard> {
                     },
                   ),
                   const SizedBox(width: 18),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: const Icon(Icons.notifications, color: Colors.white, size: 24),
-                    onPressed: () {
-                      context.push('/notification'); 
+                  ValueListenableBuilder<int>(
+                    valueListenable: NotificationState.instance.unreadCount,
+                    builder: (context, count, _) {
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.notifications, color: Colors.white, size: 24),
+                            onPressed: () {
+                              context.push('/notification');
+                            },
+                          ),
+                          if (count > 0)
+                            Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                child: Text(
+                                  '$count',
+                                  textAlign: TextAlign.center,
+                                  style: _jakarta(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
                     },
                   ),
                 ],
@@ -423,17 +453,22 @@ class _UserDashboardState extends State<UserDashboard> {
             ],
           ),
           const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _prices.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 2.3,
-            ),
-            itemBuilder: (context, index) => _PriceCard(data: _prices[index], onLockTap: () => _onLockTap(index)),
+          ValueListenableBuilder<Map<String, String>>(
+            valueListenable: PriceLockState.instance.lockedPrices,
+            builder: (context, val, child) {
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _prices.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 2.3,
+                ),
+                itemBuilder: (context, index) => _PriceCard(data: _prices[index], onLockTap: () => _onLockTap(index)),
+              );
+            },
           ),
           const SizedBox(height: 12),
           GestureDetector(
@@ -505,11 +540,11 @@ class _PriceData {
   final String name;
   final double pricePerKg;
   final double change; 
-  final DateTime? lockedUntil;
 
-  const _PriceData({required this.name, required this.pricePerKg, required this.change, this.lockedUntil});
+  const _PriceData({required this.name, required this.pricePerKg, required this.change});
 
-  bool get locked => lockedUntil != null && DateTime.now().isBefore(lockedUntil!);
+  bool get locked => PriceLockState.instance.isLocked(name);
+  DateTime? get lockedUntil => PriceLockState.instance.getLockedUntil(name);
   bool get isUp => change >= 0;
 
   String get formattedPrice {
@@ -528,12 +563,11 @@ class _PriceData {
     return 'Terkunci s.d. ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
   }
 
-  _PriceData copyWith({String? name, double? pricePerKg, double? change, DateTime? lockedUntil}) {
+  _PriceData copyWith({String? name, double? pricePerKg, double? change}) {
     return _PriceData(
       name: name ?? this.name,
       pricePerKg: pricePerKg ?? this.pricePerKg,
       change: change ?? this.change,
-      lockedUntil: lockedUntil ?? this.lockedUntil,
     );
   }
 }

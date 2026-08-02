@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/utils/image_picker_helper.dart';
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/mission_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -32,6 +34,7 @@ class _AiVisionPageState extends State<AiVisionPage> {
   int _accuracy = 90;
   bool _isAnalyzing = false;
   String? _photoUrl;
+  File? _localPhotoFile;
 
   final Map<String, Map<String, dynamic>> _wasteData = {
     'Logam/Besi': {'price': '8.900/kg', 'accuracy': 90},
@@ -42,9 +45,29 @@ class _AiVisionPageState extends State<AiVisionPage> {
 
   Future<void> _pickAndAnalyze(ImageSource source) async {
     final pickedFile = await ImagePickerHelper.pickImage(source);
-    if (pickedFile == null) return;
+    if (pickedFile == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto tidak dipilih atau izin akses ditolak.')),
+        );
+      }
+      return;
+    }
 
-    setState(() => _isAnalyzing = true);
+    final file = File(pickedFile.path);
+    if (!file.existsSync()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File foto tidak ditemukan.')),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _localPhotoFile = file;
+      _isAnalyzing = true;
+    });
 
     try {
       final uploadRes = await ApiService.upload(ApiConstants.upload, pickedFile.path);
@@ -69,13 +92,27 @@ class _AiVisionPageState extends State<AiVisionPage> {
               _accuracy = _wasteData[aiCategory]!['accuracy'] as int;
             });
           }
+        } else {
+          _cycleCategoryDemo();
         }
+      } else {
+        _cycleCategoryDemo();
       }
     } catch (_) {
-      // Fallback cycle for demo offline testing
       _cycleCategoryDemo();
     } finally {
-      if (mounted) setState(() => _isAnalyzing = false);
+      MissionState.instance.incrementAiScan();
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        final sourceText = source == ImageSource.gallery ? 'Galeri' : 'Kamera';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Foto dari $sourceText berhasil diunggah & dipindai AI!'),
+            backgroundColor: const Color(0xFF7BC143),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -144,12 +181,17 @@ class _AiVisionPageState extends State<AiVisionPage> {
                     decoration: BoxDecoration(
                       color: Colors.black.withAlpha(8),
                       borderRadius: BorderRadius.circular(16),
-                      image: _photoUrl != null
+                      image: _localPhotoFile != null
                           ? DecorationImage(
-                              image: NetworkImage(_photoUrl!),
+                              image: FileImage(_localPhotoFile!),
                               fit: BoxFit.cover,
                             )
-                          : null,
+                          : (_photoUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(_photoUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null),
                     ),
                     child: Stack(
                       children: [

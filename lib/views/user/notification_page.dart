@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/notification_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -13,8 +14,21 @@ TextStyle _jakarta({
   );
 }
 
-class NotificationPage extends StatelessWidget {
+class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
+
+  @override
+  State<NotificationPage> createState() => _NotificationPageState();
+}
+
+class _NotificationPageState extends State<NotificationPage> {
+  final NotificationState _state = NotificationState.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _state.init();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,73 +46,102 @@ class NotificationPage extends StatelessWidget {
           'Notifikasi',
           style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
         ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- KATEGORI HARI INI ---
-                  _buildSectionHeader('Hari Ini'),
-                  _buildNotificationItem(
-                    icon: Icons.local_shipping,
-                    iconColor: const Color(0xFFE53935),
-                    categoryLabel: 'Jemput',
-                    title: 'Pesanan Berhasil di isi !',
-                    subtitle: 'Kardus, 2kg',
-                    time: '12.19',
-                    date: '21 Juli 2026',
-                  ),
-                  _buildDivider(),
-                  _buildNotificationItem(
-                    icon: Icons.receipt_long,
-                    iconColor: const Color(0xFFFFC107),
-                    categoryLabel: 'Order',
-                    title: 'Collector Ditemukan !',
-                    subtitle: 'Pak Subarsono berminat',
-                    time: '12.2',
-                    date: '21 Juli 2026',
-                  ),
-                  _buildDivider(),
-                  _buildNotificationItem(
-                    icon: Icons.chat_bubble_outline,
-                    iconColor: const Color(0xFFFFC107),
-                    categoryLabel: 'Chat',
-                    title: 'Pak Subarsono Mengirim Pesan',
-                    subtitle: 'Mas ini perkiraan sampai 15 menit lagi',
-                    time: '12.22',
-                    date: '21 Juli 2026',
-                  ),
-
-                  // --- KATEGORI MINGGU INI ---
-                  _buildSectionHeader('Minggu Ini'),
-                  _buildNotificationItem(
-                    icon: Icons.eco,
-                    iconColor: const Color(0xFF4CAF50),
-                    categoryLabel: 'EcoTree',
-                    title: 'Berhasil Meningkatkan Level',
-                    subtitle: 'Mencapai level 2 dalam penumbuhan tunas EcoTree',
-                    time: '12.22',
-                    date: '21 Juli 2026',
-                  ),
-                ],
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.black87),
+            onSelected: (value) {
+              if (value == 'read_all') {
+                _state.markAllAsRead();
+              } else if (value == 'clear_all') {
+                _state.clearAll();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'read_all',
+                child: Row(
+                  children: [
+                    const Icon(Icons.done_all, size: 18, color: Colors.black54),
+                    const SizedBox(width: 8),
+                    Text('Tandai Dibaca', style: _jakarta(fontSize: 13)),
+                  ],
+                ),
               ),
-            ),
-          ),
-          
-          // --- FOOTER TEKS BAWAH ---
-          Padding(
-            padding: const EdgeInsets.only(bottom: 40, top: 20),
-            child: Center(
-              child: Text(
-                'Tidak ada notifikasi lain',
-                style: _jakarta(fontSize: 14, color: Colors.black38, fontWeight: FontWeight.w500),
+              PopupMenuItem(
+                value: 'clear_all',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                    const SizedBox(width: 8),
+                    Text('Hapus Semua', style: _jakarta(fontSize: 13, color: Colors.redAccent)),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ],
+      ),
+      body: ValueListenableBuilder<List<NotificationItem>>(
+        valueListenable: _state.notifications,
+        builder: (context, notifications, _) {
+          if (notifications.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final weekAgo = today.subtract(const Duration(days: 7));
+
+          final todayItems = notifications.where((n) {
+            final d = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
+            return d.isAtSameMomentAs(today);
+          }).toList();
+
+          final thisWeekItems = notifications.where((n) {
+            final d = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
+            return d.isBefore(today) && d.isAfter(weekAgo);
+          }).toList();
+
+          final olderItems = notifications.where((n) {
+            final d = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
+            return d.isBefore(weekAgo) || d.isAtSameMomentAs(weekAgo);
+          }).toList();
+
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (todayItems.isNotEmpty) ...[
+                        _buildSectionHeader('Hari Ini'),
+                        ...todayItems.map((item) => _buildItemTile(item)),
+                      ],
+                      if (thisWeekItems.isNotEmpty) ...[
+                        _buildSectionHeader('Minggu Ini'),
+                        ...thisWeekItems.map((item) => _buildItemTile(item)),
+                      ],
+                      if (olderItems.isNotEmpty) ...[
+                        _buildSectionHeader('Sebelumnya'),
+                        ...olderItems.map((item) => _buildItemTile(item)),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24, top: 12),
+                child: Center(
+                  child: Text(
+                    'Tidak ada notifikasi lain',
+                    style: _jakarta(fontSize: 13, color: Colors.black38, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -110,58 +153,71 @@ class NotificationPage extends StatelessWidget {
       color: const Color(0xFFF4F6F8),
       child: Text(
         title,
-        style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+        style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
       ),
     );
   }
 
-  Widget _buildNotificationItem({
-    required IconData icon,
-    required Color iconColor,
-    required String categoryLabel,
-    required String title,
-    required String subtitle,
-    required String time,
-    required String date,
-  }) {
+  Widget _buildItemTile(NotificationItem item) {
     return Container(
-      color: Colors.white,
+      color: item.isRead ? Colors.white : const Color(0xFFF1F8E9),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Blok Ikon Kiri + Label
+          // Icon Box
           SizedBox(
-            width: 60,
+            width: 56,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: iconColor, size: 28),
-                const SizedBox(height: 6),
+                Icon(item.icon, color: item.iconColor, size: 26),
+                const SizedBox(height: 4),
                 Text(
-                  categoryLabel,
+                  item.category,
                   textAlign: TextAlign.center,
-                  style: _jakarta(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black54),
+                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.black54),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          // Konten Tengah (Judul & Deskripsi)
+          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: _jakarta(fontSize: 13.5, fontWeight: FontWeight.w600, color: Colors.black87),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: _jakarta(
+                          fontSize: 13.5,
+                          fontWeight: item.isRead ? FontWeight.w600 : FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (!item.isRead) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF82C139),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
-                  style: _jakarta(fontSize: 11, color: Colors.black45),
+                  item.subtitle,
+                  style: _jakarta(fontSize: 11, color: Colors.black54),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -169,18 +225,18 @@ class NotificationPage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // Info Waktu & Tanggal Kanan
+          // Timestamp & Actions
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                time,
+                item.timeFormatted,
                 style: _jakarta(fontSize: 11, color: Colors.black45),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
-                date,
-                style: _jakarta(fontSize: 10, color: Colors.black38),
+                item.dateFormatted,
+                style: _jakarta(fontSize: 9.5, color: Colors.black38),
               ),
             ],
           ),
@@ -189,13 +245,25 @@ class NotificationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
-    return const Divider(
-      height: 1,
-      thickness: 1,
-      color: Color(0xFFF1F3F4),
-      indent: 16,
-      endIndent: 16,
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.notifications_off_outlined, size: 54, color: Colors.black26),
+          const SizedBox(height: 12),
+          Text(
+            'Belum Ada Notifikasi',
+            style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Aktivitas penjemputan, penarikan, dan level akan tampil di sini.',
+            style: _jakarta(fontSize: 12, color: Colors.black38),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

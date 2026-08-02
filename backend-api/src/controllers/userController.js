@@ -269,6 +269,78 @@ async function redeemCoins(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getMissions(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const defaultMissions = {
+      daily_checkin: {
+        consecutive_days: 2,
+        last_checkin: new Date().toISOString().split('T')[0],
+        claimed_days: [1, 2]
+      },
+      ai_scan: { current: 1, target: 1, points: 300, claimed: false },
+      weekly_weight: { current: 2.5, target: 5.0, points: 1800, claimed: false },
+      master_category: { current: 1, target: 3, points: 2500, claimed: false },
+      consistent_orders: { current: 0, target: 2, points: 1350, claimed: false }
+    };
+    res.json({ success: true, data: defaultMissions });
+  } catch (error) { next(error); }
+}
+
+async function claimMission(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { mission_type, day_index, user_level = 1 } = req.body;
+
+    let pointsEarned = 0;
+    let isGoldenChest = false;
+    let luckPercentage = 25;
+
+    if (mission_type === 'daily_checkin') {
+      if (day_index === 4) {
+        isGoldenChest = true;
+        const luckMap = { 1: 25, 2: 45, 3: 65, 4: 80 };
+        luckPercentage = luckMap[user_level] || 95;
+
+        const baseRewardMap = { 1: 50, 2: 100, 3: 180, 4: 300 };
+        const base = baseRewardMap[user_level] || 500;
+
+        const isLucky = (Math.random() * 100) < luckPercentage;
+        const bonus = isLucky ? Math.floor(base * 0.5) : 0;
+        pointsEarned = base + bonus;
+      } else {
+        const rewardMap = { 1: 70, 2: 80, 3: 90, 5: 70, 6: 80 };
+        pointsEarned = rewardMap[day_index] || 70;
+      }
+    } else if (mission_type === 'ai_scan') {
+      pointsEarned = 300;
+    } else if (mission_type === 'weekly_weight') {
+      pointsEarned = 1800;
+    } else if (mission_type === 'master_category') {
+      pointsEarned = 2500;
+    } else if (mission_type === 'consistent_orders') {
+      pointsEarned = 1350;
+    }
+
+    const { data: user } = await supabase.from('users').select('eco_points').eq('id', userId).single();
+    if (user) {
+      await supabase.from('users').update({
+        eco_points: (user.eco_points || 0) + pointsEarned
+      }).eq('id', userId);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        points_earned: pointsEarned,
+        is_golden_chest: isGoldenChest,
+        luck_percentage: luckPercentage,
+        user_level: user_level
+      }
+    });
+  } catch (error) { next(error); }
+}
+
 module.exports = {
   analyzeImage,
   createOrder,
@@ -281,5 +353,7 @@ module.exports = {
   getOrderRoute,
   getWallet,
   getTransactions,
-  redeemCoins
+  redeemCoins,
+  getMissions,
+  claimMission
 };

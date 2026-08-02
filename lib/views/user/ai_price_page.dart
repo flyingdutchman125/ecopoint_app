@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../providers/user_provider.dart';
 import '../../models/price_model.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/price_lock_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -36,17 +37,67 @@ class _AiPricePageState extends State<AiPricePage> {
     });
   }
 
-  void _handleLockHarga(String commodityName, double price) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Harga $commodityName (${CurrencyFormatter.formatRupiah(price)}/kg) dikunci untuk 24 jam ke depan!',
-          style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+  Future<void> _handleLockHarga(String commodityName, double price) async {
+    final lockState = PriceLockState.instance;
+
+    if (lockState.isLocked(commodityName)) {
+      final remaining = lockState.getRemainingDuration(commodityName);
+      final hours = remaining?.inHours ?? 0;
+      final minutes = remaining?.inMinutes.remainder(60) ?? 0;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harga $commodityName sudah dikunci. Sisa waktu penguncian: $hours jam $minutes menit.',
+            style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: const Color(0xFF358C16),
+          behavior: SnackBarBehavior.floating,
         ),
-        backgroundColor: const Color(0xFF5CB82B),
-        behavior: SnackBarBehavior.floating,
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Kunci Harga $commodityName', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Konfirmasi penguncian harga $commodityName (${CurrencyFormatter.formatRupiah(price)}/kg) selama 24 jam ke depan?',
+          style: _jakarta(fontSize: 14, color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Batal', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.black54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF358C16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Ya, Kunci', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white)),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true) {
+      await lockState.lockCommodity(commodityName, price: price);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Harga $commodityName (${CurrencyFormatter.formatRupiah(price)}/kg) dikunci untuk 24 jam ke depan!',
+              style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+            backgroundColor: const Color(0xFF358C16),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -430,25 +481,36 @@ class _AiPricePageState extends State<AiPricePage> {
           const Divider(height: 1, color: Color(0xFFF0F2F5)),
 
           // Lock Price Action Button
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: SizedBox(
-              width: double.infinity,
-              height: 40,
-              child: FilledButton.icon(
-                onPressed: () => _handleLockHarga(item.itemName, item.currentPrice),
-                icon: const Icon(Icons.lock_outline, size: 16, color: Colors.white),
-                label: Text(
-                  'Kunci Harga Sekarang',
-                  style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+          ValueListenableBuilder<Map<String, String>>(
+            valueListenable: PriceLockState.instance.lockedPrices,
+            builder: (context, val, child) {
+              final isLocked = PriceLockState.instance.isLocked(item.itemName);
+              final remaining = PriceLockState.instance.getRemainingDuration(item.itemName);
+              final String remainingText = remaining != null
+                  ? '${remaining.inHours}j ${remaining.inMinutes.remainder(60)}m'
+                  : '24 jam';
+
+              return Padding(
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 40,
+                  child: FilledButton.icon(
+                    onPressed: () => _handleLockHarga(item.itemName, item.currentPrice),
+                    icon: Icon(isLocked ? Icons.lock : Icons.lock_outline, size: 16, color: Colors.white),
+                    label: Text(
+                      isLocked ? 'Harga Terkunci ($remainingText)' : 'Kunci Harga Sekarang',
+                      style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: isLocked ? const Color(0xFF358C16) : const Color(0xFF7BC143),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                  ),
                 ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF7BC143),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
-                ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),

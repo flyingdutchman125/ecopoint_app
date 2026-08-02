@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/utils/image_picker_helper.dart';
+import '../../core/history_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -26,7 +30,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _isEditing = false;
   bool _isPendingApproval = false; // Status menunggu ACC Admin
-  bool _isLoading = false; // Status simulasi kirim data ke backend
+  bool _isLoading = false;
   bool _isInitialized = false;
 
   // Controller untuk menampung data inputan
@@ -49,12 +53,20 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = context.read<AuthProvider>().user;
       if (user != null) {
         _nameController.text = user.name ?? 'Pengguna EcoPoint';
-        _whatsappController.text = user.phone ?? '08123456789';
+        String rawPhone = user.phone ?? '08123456789';
+        if (rawPhone.startsWith('+62')) {
+          rawPhone = rawPhone.substring(3);
+        } else if (rawPhone.startsWith('62')) {
+          rawPhone = rawPhone.substring(2);
+        } else if (rawPhone.startsWith('0')) {
+          rawPhone = rawPhone.substring(1);
+        }
+        _whatsappController.text = rawPhone;
         _emailController.text = user.email;
       } else {
         _nameController.text = 'Pengguna EcoPoint';
-        _whatsappController.text = '08123456789';
-        _emailController.text = 'warga@ecopoint.com';
+        _whatsappController.text = '8123456789';
+        _emailController.text = 'budi@ecopoint.com';
       }
       _isInitialized = true;
     }
@@ -68,26 +80,39 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // Fungsi simulasi pengiriman data ke backend
+  // Pengiriman dan penyimpanan data ke state & SharedPreferences
   Future<void> _submitProfileUpdate() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Simulasi delay request jaringan backend selama 1.5 detik
-    await Future.delayed(const Duration(milliseconds: 1500));
+    final authProvider = context.read<AuthProvider>();
+    String phoneText = _whatsappController.text.trim();
+    if (!phoneText.startsWith('+62')) {
+      if (phoneText.startsWith('0')) {
+        phoneText = '+62${phoneText.substring(1)}';
+      } else {
+        phoneText = '+62$phoneText';
+      }
+    }
+
+    await authProvider.updateUserProfile(
+      name: _nameController.text.trim(),
+      phone: phoneText,
+      email: _emailController.text.trim(),
+    );
 
     setState(() {
       _isLoading = false;
       _isEditing = false;
-      _isPendingApproval = true; // Set menjadi true untuk memicu banner & lock field
+      _isPendingApproval = true;
     });
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Permintaan perubahan berhasil dikirim. Menunggu persetujuan admin!',
+            'Permintaan perubahan data berhasil disimpan! Menunggu persetujuan admin.',
             style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
           ),
           backgroundColor: const Color(0xFF1B3A1B),
@@ -97,11 +122,10 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Fungsi untuk memunculkan dialog konfirmasi keluar akun
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // User wajib memilih salah satu tombol
+      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -161,7 +185,6 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               _buildHeader(context),
               
-              // Banner pemberitahuan jika data sedang ditinjau admin
               if (_isPendingApproval) _buildPendingBanner(),
 
               Padding(
@@ -188,7 +211,85 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _pickProfileImage() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Ubah Foto Profil',
+              style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF5CB82B)),
+              title: Text('Ambil Foto (Kamera)', style: _jakarta(fontSize: 14, fontWeight: FontWeight.w600)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final picked = await ImagePickerHelper.pickImage(ImageSource.camera);
+                if (picked != null) {
+                  await _updateAvatar(picked.path);
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF5CB82B)),
+              title: Text('Pilih dari Galeri HP', style: _jakarta(fontSize: 14, fontWeight: FontWeight.w600)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final picked = await ImagePickerHelper.pickImage(ImageSource.gallery);
+                if (picked != null) {
+                  await _updateAvatar(picked.path);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateAvatar(String path) async {
+    await context.read<AuthProvider>().updateUserProfile(avatarUrl: path);
+    HistoryState.instance.addHistory(
+      title: 'Ubah Foto Profil',
+      description: 'Berhasil memperbarui foto profil akun EcoPoint.',
+      category: 'Akun',
+      valueChange: 'Foto Diperbarui',
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Foto profil berhasil diperbarui!', style: _jakarta(color: Colors.white)),
+          backgroundColor: const Color(0xFF1B3A1B),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final displayName = user?.name ?? _nameController.text;
+    final displayId = user?.formattedId ?? '5505090';
+    final avatarUrl = user?.avatarUrl;
+
+    ImageProvider? avatarImage;
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      if (avatarUrl.startsWith('http')) {
+        avatarImage = NetworkImage(avatarUrl);
+      } else {
+        avatarImage = FileImage(File(avatarUrl));
+      }
+    }
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 24, 24, 28),
@@ -204,35 +305,43 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Row(
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.grey[200],
-                  border: Border.all(color: Colors.black12, width: 0.5),
-                ),
-                child: const ClipOval(
-                  child: Icon(Icons.person, size: 40, color: Colors.black38),
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: -2,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+          GestureDetector(
+            onTap: _pickProfileImage,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
+                    color: Colors.grey[200],
+                    border: Border.all(color: Colors.black12, width: 0.5),
+                    image: avatarImage != null
+                        ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
+                        : null,
                   ),
-                  child: const Icon(Icons.camera_alt_outlined, size: 11, color: Colors.black87),
+                  child: avatarImage == null
+                      ? const ClipOval(
+                          child: Icon(Icons.person, size: 40, color: Colors.black38),
+                        )
+                      : null,
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 0,
+                  right: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
+                    ),
+                    child: const Icon(Icons.camera_alt_outlined, size: 11, color: Colors.black87),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 18),
           Expanded(
@@ -240,16 +349,16 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _nameController.text,
+                  displayName,
                   style: _jakarta(fontSize: 17.5, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
                 const SizedBox(height: 3),
                 RichText(
                   text: TextSpan(
                     style: _jakarta(fontSize: 12.5, color: Colors.black45, fontWeight: FontWeight.w500),
-                    children: const [
-                      TextSpan(text: 'ID : '),
-                      TextSpan(text: '5505090', style: TextStyle(fontStyle: FontStyle.italic)),
+                    children: [
+                      const TextSpan(text: 'ID : '),
+                      TextSpan(text: displayId, style: const TextStyle(fontStyle: FontStyle.italic)),
                     ],
                   ),
                 ),
@@ -268,7 +377,7 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF9E6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.5)),
+        border: Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [

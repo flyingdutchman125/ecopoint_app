@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/eco_tree_state.dart';
 import '../../core/wallet_state.dart';
+import '../../core/notification_state.dart';
+import '../../core/history_state.dart';
 import '../../providers/user_provider.dart';
 
 TextStyle _jakarta({
@@ -30,17 +33,91 @@ class StorePage extends StatefulWidget {
 }
 
 class _StorePageState extends State<StorePage> {
-  final List<_StoreItemData> _level1Items = const [
-    _StoreItemData(icon: Icons.local_drink, title: 'Kecap Bango', description: 'Kecap Manis Bango Botol terbuat dari kedelai hitam pilihan.', price: 15000, locked: false),
-    _StoreItemData(icon: Icons.oil_barrel, title: 'Minyak Goreng Bimoli', description: 'Minyak goreng berkualitas terbuat dari kelapa sawit pilihan.', price: 33000, locked: false),
-  ];
+  final Set<String> _redeemedTitles = {};
+  bool _showAllLevels = false;
 
-  final List<_StoreItemData> _level2Items = const [
-    _StoreItemData(icon: Icons.soup_kitchen, title: 'Wajan Stainless Steel', description: 'Alat masak modern kuat, tahan karat, menghantarkan panas merata.', price: 50000, locked: true),
-    _StoreItemData(icon: Icons.shopping_basket, title: 'Keranjang Anyaman Rotan', description: 'Wadah penyimpanan estetik berbahan alami kokoh.', price: 35000, locked: true),
-  ];
+  final Map<int, List<_StoreItemData>> _storeLevelsData = const {
+    1: [
+      _StoreItemData(icon: Icons.grain, title: 'Garam Dapur 250g', description: 'Garam beryodium konsumsi keluarga untuk bumbu dapur sehari-hari.', price: 2500, locked: false),
+      _StoreItemData(icon: Icons.clean_hands, title: 'Sabun Cuci Tangan 100ml', description: 'Sabun cuci tangan cair wangi pembasmi kuman dan bakteri.', price: 3500, locked: false),
+    ],
+    2: [
+      _StoreItemData(icon: Icons.sanitizer, title: 'Spons Cuci Piring 2in1', description: 'Spons cuci piring busa tebal dan sabut penggosok kerak.', price: 5000, locked: true),
+      _StoreItemData(icon: Icons.local_fire_department, title: 'Korek Api Kayu (1 Pack)', description: 'Korek api kayu praktis untuk kebutuhan dapur.', price: 4000, locked: true),
+    ],
+    3: [
+      _StoreItemData(icon: Icons.dry_cleaning, title: 'Kain Lap Microfiber', description: 'Kain lap microfiber menyerap air tinggi untuk membersihkan meja & piring.', price: 7500, locked: true),
+      _StoreItemData(icon: Icons.soap, title: 'Sabun Cuci Piring 210ml', description: 'Cairan pencuci piring ekstrak jeruk nipis ampuh hilangkan lemak.', price: 9000, locked: true),
+    ],
+    4: [
+      _StoreItemData(icon: Icons.cleaning_services, title: 'Sikat Botol Gagang Panjang', description: 'Sikat fleksibel pembersih dalam botol minum dan gelas.', price: 12000, locked: true),
+      _StoreItemData(icon: Icons.takeout_dining, title: 'Gula Pasir 250g', description: 'Gula pasir putih murni kemasan praktis 250 gram.', price: 15000, locked: true),
+    ],
+    5: [
+      _StoreItemData(icon: Icons.delete_outline, title: 'Kantong Sampah Ramah Lingkungan', description: '1 roll plastik sampah biodegradable mudah terurai.', price: 20000, locked: true),
+      _StoreItemData(icon: Icons.wash, title: 'Deterjen Bubuk 450g', description: 'Deterjen pembersih pakaian harum anti bau apek.', price: 25000, locked: true),
+    ],
+    6: [
+      _StoreItemData(icon: Icons.opacity, title: 'Minyak Goreng Pouch 500ml', description: 'Minyak goreng kelapa sawit jernih kemasan pouch 500ml.', price: 35000, locked: true),
+      _StoreItemData(icon: Icons.local_drink, title: 'Botol Minum Plastik BPA Free', description: 'Botol minum portable ramah lingkungan bebas bahan kimia BPA.', price: 40000, locked: true),
+    ],
+    7: [
+      _StoreItemData(icon: Icons.rice_bowl, title: 'Beras Premium 1 Kg', description: 'Beras putih pulen berkualitas super kemasan 1 kg.', price: 50000, locked: true),
+      _StoreItemData(icon: Icons.egg, title: 'Telur Ayam Segar 1/2 Kg', description: 'Telur ayam negeri fresh kaya protein untuk konsumsi keluarga.', price: 45000, locked: true),
+    ],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRedeemedItems();
+  }
+
+  Future<void> _loadRedeemedItems() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('ecopoint_redeemed_store_items');
+      if (list != null) {
+        setState(() {
+          _redeemedTitles.addAll(list);
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveRedeemedItem(String title) async {
+    setState(() {
+      _redeemedTitles.add(title);
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('ecopoint_redeemed_store_items', _redeemedTitles.toList());
+    } catch (_) {}
+  }
 
   void _onTukarPoint(_StoreItemData item) {
+    if (item.locked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Item ini masih terkunci! Tingkatkan EcoTree Level kamu terlebih dahulu.', style: _jakarta(color: Colors.white)),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (WalletState.instance.currentPoints < item.price) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Poin tidak mencukupi untuk menukar "${item.title}"! Poin kamu: ${WalletState.instance.currentPoints} Pts, Butuh: ${item.formattedPrice}', style: _jakarta(color: Colors.white)),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -53,16 +130,76 @@ class _StorePageState extends State<StorePage> {
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4C8C2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () async {
               Navigator.pop(ctx);
-              final success = await context.read<UserProvider>().redeemPoints(1000);
-              if (mounted) {
+              final success = await context.read<UserProvider>().redeemPoints(item.price);
+              if (success) {
+                await _saveRedeemedItem(item.title);
+                NotificationState.instance.addNotification(
+                  category: 'Convert',
+                  title: 'Permintaan Penukaran Terkirim',
+                  subtitle: 'Penukaran "${item.title}" (${item.formattedPrice}) berhasil diajukan. Status: Menunggu Admin. Kamu akan dikabari via Chat ketika diterima.',
+                );
+                HistoryState.instance.addHistory(
+                  title: 'Tukar Barang: ${item.title}',
+                  description: 'Menunggu konfirmasi admin (Akan dikabari via Chat)',
+                  category: 'EcoStore',
+                  valueChange: '-${item.formattedPrice}',
+                );
+
+                if (mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (c) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Color(0xFF4C8C2B), size: 28),
+                          const SizedBox(width: 8),
+                          Text('Permintaan Terkirim!', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Permintaan penukaran poin untuk "${item.title}" (${item.formattedPrice}) berhasil diajukan.', style: _jakarta(fontSize: 13.5)),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFFFB74D)),
+                            ),
+                            child: Row(
+                              children: [
+                                const _RotatingSyncIcon(),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Status: Menunggu Admin\nKamu akan dikabari melalui Fitur Chat dan Notifikasi ketika permintaan penukaran sudah diterima oleh Admin.',
+                                    style: _jakarta(fontSize: 11, color: const Color(0xFFE65100), fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4C8C2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          onPressed: () => Navigator.pop(c),
+                          child: Text('Mengerti', style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              } else if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                      success
-                          ? 'Berhasil menukarkan poin untuk ${item.title}! Saldo dompet telah bertambah.'
-                          : 'Poin tidak mencukupi atau gagal melakukan penukaran.',
-                    ),
-                    backgroundColor: success ? const Color(0xFF5CB82B) : Colors.red,
+                    content: Text('Poin tidak mencukupi atau gagal melakukan penukaran.', style: _jakarta(color: Colors.white)),
+                    backgroundColor: Colors.red,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -77,24 +214,72 @@ class _StorePageState extends State<StorePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildStoreLevelSection('Store Level 1', _level1Items),
-              const SizedBox(height: 24),
-              _buildStoreLevelSection('Store Level 2', _level2Items),
-              const SizedBox(height: 30),
-            ],
+    return ValueListenableBuilder<int>(
+      valueListenable: EcoTreeState.instance.notifier,
+      builder: (context, xpValue, child) {
+        final currentLevel = EcoTreeState.instance.level;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF3F4F6),
+          body: SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 24),
+                  _buildStoreLevelSection(1, _storeLevelsData[1]!, currentLevel),
+                  const SizedBox(height: 24),
+                  _buildStoreLevelSection(2, _storeLevelsData[2]!, currentLevel),
+                  const SizedBox(height: 16),
+
+                  // Expand Button below Level 2
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showAllLevels = !_showAllLevels;
+                          });
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF4C8C2B),
+                          side: const BorderSide(color: Color(0xFF4C8C2B), width: 1.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        icon: Icon(
+                          _showAllLevels ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                          size: 20,
+                        ),
+                        label: Text(
+                          _showAllLevels
+                              ? 'Tutup Level Store Tambahan'
+                              : 'Lihat Selengkapnya Level Store (Level 1 - 7)',
+                          style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF4C8C2B)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Level 3 to 7
+                  if (_showAllLevels) ...[
+                    for (int lvl = 3; lvl <= 7; lvl++) ...[
+                      _buildStoreLevelSection(lvl, _storeLevelsData[lvl]!, currentLevel),
+                      const SizedBox(height: 24),
+                    ],
+                  ],
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -232,43 +417,78 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  Widget _buildStoreLevelSection(String title, List<_StoreItemData> items) {
-      final isLevel2 = title.toLowerCase().contains('level 2');
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(title, style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold)),
-                InkWell(onTap: () {}, child: Text('Lihat Semua', style: _jakarta(fontSize: 12.5, color: const Color(0xFF4C8C2B), fontWeight: FontWeight.w600))),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Jika ini adalah Level 2, cek EcoTreeState untuk menentukan apakah item terkunci
-            ...items.map((item) {
-              final itemToShow = isLevel2
-                  ? _StoreItemData(icon: item.icon, title: item.title, description: item.description, price: item.price, locked: EcoTreeState.instance.level < 2)
-                  : item;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _StoreItemCard(
-                  data: itemToShow,
-                  onTukarPoint: () => _onTukarPoint(itemToShow),
-                  onLockedTap: () {
-                    if (EcoTreeState.instance.level < 2) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reach EcoTree Level 2 to unlock Store Level 2', style: _jakarta(color: Colors.white)), backgroundColor: const Color(0xFF2E7D32)));
-                    }
-                  },
-                ),
-              );
-            }),
-          ],
-        ),
-      );
-    }
+  Widget _buildStoreLevelSection(int levelNum, List<_StoreItemData> items, int userTreeLevel) {
+    final bool isLevelUnlocked = levelNum == 1 ? true : userTreeLevel >= levelNum;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text('Store Level $levelNum', style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isLevelUnlocked ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isLevelUnlocked ? const Color(0xFF81C784) : const Color(0xFFE57373),
+                      ),
+                    ),
+                    child: Text(
+                      isLevelUnlocked ? 'Terbuka 🔓' : 'Terkunci 🔒 (Butuh Level $levelNum)',
+                      style: _jakarta(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isLevelUnlocked ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...items.map((item) {
+            final itemToShow = _StoreItemData(
+              icon: item.icon,
+              title: item.title,
+              description: item.description,
+              price: item.price,
+              locked: !isLevelUnlocked,
+            );
+            final isRedeemed = _redeemedTitles.contains(itemToShow.title);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _StoreItemCard(
+                data: itemToShow,
+                isRedeemed: isRedeemed,
+                onTukarPoint: () => _onTukarPoint(itemToShow),
+                onLockedTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Capai EcoTree Level $levelNum untuk membuka Store Level $levelNum!',
+                        style: _jakarta(color: Colors.white),
+                      ),
+                      backgroundColor: const Color(0xFF2E7D32),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
 }
 
 class _StoreItemData {
@@ -285,11 +505,51 @@ class _StoreItemData {
   }
 }
 
+class _RotatingSyncIcon extends StatefulWidget {
+  const _RotatingSyncIcon({Key? key}) : super(key: key);
+
+  @override
+  State<_RotatingSyncIcon> createState() => _RotatingSyncIconState();
+}
+
+class _RotatingSyncIconState extends State<_RotatingSyncIcon> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _controller,
+      child: const Icon(Icons.sync, size: 14, color: Color(0xFFE65100)),
+    );
+  }
+}
+
 class _StoreItemCard extends StatelessWidget {
   final _StoreItemData data;
+  final bool isRedeemed;
   final VoidCallback onTukarPoint;
   final VoidCallback onLockedTap;
-  const _StoreItemCard({required this.data, required this.onTukarPoint, required this.onLockedTap});
+  const _StoreItemCard({
+    required this.data,
+    required this.isRedeemed,
+    required this.onTukarPoint,
+    required this.onLockedTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -336,6 +596,37 @@ class _StoreItemCard extends StatelessWidget {
   }
 
   Widget _actionButton() {
+    if (isRedeemed) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3E0),
+          border: Border.all(color: const Color(0xFFFFB74D)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _RotatingSyncIcon(),
+                const SizedBox(width: 4),
+                Text(
+                  'Proses Pengiriman',
+                  style: _jakarta(fontSize: 9.5, color: const Color(0xFFE65100), fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Menunggu Admin',
+              style: _jakarta(fontSize: 8, color: Colors.black54),
+            ),
+          ],
+        ),
+      );
+    }
     if (data.locked) {
       return GestureDetector(
         onTap: onLockedTap,

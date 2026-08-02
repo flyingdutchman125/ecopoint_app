@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'notification_state.dart';
 
 /// Simple in-memory singleton state for EcoTree progress.
 /// Holds current XP and computed level. Other widgets can listen to "notifier" to update UI.
@@ -6,8 +7,9 @@ class EcoTreeState {
   EcoTreeState._internal();
   static final EcoTreeState instance = EcoTreeState._internal();
 
-  // XP required per level (example)
-  final List<int> xpThresholds = [0, 110, 220, 350, 550, 900, 3550, 10000];
+  // Increased XP thresholds per level (Level 1 to Level 9)
+  // Index 0 unused, Index 1: Lvl 1 (0 XP), Index 2: Lvl 2 (100 XP), ..., Index 9: Lvl 9 (35.000 XP)
+  final List<int> xpThresholds = [0, 0, 100, 500, 1500, 3500, 7000, 12000, 20000, 35000];
 
   final ValueNotifier<int> xp = ValueNotifier<int>(0); // starting XP: 0
 
@@ -23,14 +25,48 @@ class EcoTreeState {
 
   int get level {
     final v = xp.value;
-    for (var i = xpThresholds.length - 1; i >= 0; i--) {
-      if (v >= xpThresholds[i]) return i; // level index matches threshold index
+    for (var i = 9; i >= 1; i--) {
+      if (v >= xpThresholds[i]) return i;
     }
-    return 0;
+    return 1;
+  }
+
+  String get levelTitle {
+    switch (level) {
+      case 1:
+        return 'Bibit Kecil';
+      case 2:
+        return 'Kecambah Tunas';
+      case 3:
+        return 'Tunas Muda';
+      case 4:
+        return 'Tanaman Kecil';
+      case 5:
+        return 'Pohon Muda';
+      case 6:
+        return 'Pohon Sedang';
+      case 7:
+        return 'Pohon Rimbun';
+      case 8:
+        return 'Pohon Berbunga';
+      case 9:
+        return 'Pohon Abadi EcoPoint';
+      default:
+        return 'Bibit Kecil';
+    }
   }
 
   void addXp(int amount) {
+    final oldLevel = level;
     xp.value = xp.value + amount;
+    final newLevel = level;
+    if (newLevel > oldLevel) {
+      NotificationState.instance.addNotification(
+        category: 'EcoTree',
+        title: 'Berhasil Meningkatkan Level!',
+        subtitle: 'Selamat! Kamu berhasil mencapai EcoTree Level $newLevel.',
+      );
+    }
   }
 
   void setXp(int value) {
