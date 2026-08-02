@@ -117,9 +117,11 @@ class _AiPricePageState extends State<AiPricePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Katalog Komoditas Live Web API',
-                            style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                          Expanded(
+                            child: Text(
+                              'Katalog Komoditas Live Web API',
+                              style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                            ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -212,9 +214,11 @@ class _AiPricePageState extends State<AiPricePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Proyeksi Harga 48 Jam',
-                style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+              Expanded(
+                child: Text(
+                  'Proyeksi Harga 48 Jam',
+                  style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -278,13 +282,16 @@ class _AiPricePageState extends State<AiPricePage> {
           const SizedBox(height: 12),
 
           // Legend
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              _buildLegendItem(Colors.white, 'Web API BSI History'),
-              const SizedBox(width: 16),
-              _buildLegendItem(const Color(0xFFFFD54F), 'Proyeksi AI (+2.5%)'),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildLegendItem(Colors.white, 'Web API BSI History'),
+                const SizedBox(width: 16),
+                _buildLegendItem(const Color(0xFFFFD54F), 'Proyeksi AI (+2.5%)'),
+              ],
+            ),
           ),
         ],
       ),
@@ -338,15 +345,20 @@ class _AiPricePageState extends State<AiPricePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Text(item.iconForType, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    Text(
-                      item.itemName,
-                      style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(item.iconForType, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.itemName,
+                          style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
