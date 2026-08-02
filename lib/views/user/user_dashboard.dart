@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/wallet_state.dart';
 import '../../core/eco_tree_state.dart';
+import '../../providers/auth_provider.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -217,7 +219,7 @@ class _UserDashboardState extends State<UserDashboard> {
               style: _jakarta(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w400),
               children: [
                 const TextSpan(text: 'Hai, '),
-                TextSpan(text: 'Ahmad Syifa\'ul', style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                TextSpan(text: Provider.of<AuthProvider>(context).user?.name ?? 'Warga', style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               ],
             ),
           ),

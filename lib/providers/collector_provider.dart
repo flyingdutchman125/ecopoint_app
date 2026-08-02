@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
 
 class CollectorProvider with ChangeNotifier {
+  Position? _currentPosition;
   List<OrderModel> _nearbyOrders = [];
   List<OrderModel> _myOrders = [];
   double _earnings = 0.0;
@@ -13,6 +14,7 @@ class CollectorProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  Position? get currentPosition => _currentPosition;
   List<OrderModel> get nearbyOrders => _nearbyOrders;
   List<OrderModel> get myOrders => _myOrders;
   double get earnings => _earnings;
@@ -103,6 +105,7 @@ class CollectorProvider with ChangeNotifier {
       } 
 
       Position position = await Geolocator.getCurrentPosition();
+      _currentPosition = position;
 
       // 2. Update API Location
       await ApiService.put(ApiConstants.location, {

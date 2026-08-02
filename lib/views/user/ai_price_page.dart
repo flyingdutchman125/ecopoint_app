@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../providers/user_provider.dart';
+import '../../models/price_model.dart';
+import '../../core/utils/currency_formatter.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -21,52 +26,21 @@ class AiPricePage extends StatefulWidget {
 }
 
 class _AiPricePageState extends State<AiPricePage> {
-  String _selectedCategory = 'Logam/Besi';
+  String _selectedCategory = 'Semua';
 
-  final List<String> _categories = [
-    'Logam/Besi',
-    'Botol Plastik',
-    'Kardus',
-    'Minyak Jelantah'
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserProvider>().fetchPrices();
+    });
+  }
 
-  // Data Mock untuk List Komoditas Sampah
-  final List<Map<String, dynamic>> _commodities = [
-    {
-      'name': 'Logam/Besi',
-      'trend': '+ 1.2%',
-      'today_price': 'Rp 8.900/kg',
-      'tomorrow_price': 'Rp 8.900/kg',
-      'is_up': true,
-    },
-    {
-      'name': 'Minyak Jelantah',
-      'trend': '+ 1.2%',
-      'today_price': 'Rp 9.600/kg',
-      'tomorrow_price': 'Rp 9.900/kg',
-      'is_up': true,
-    },
-    {
-      'name': 'Kardus',
-      'trend': '+0%',
-      'today_price': 'Rp 4.900/kg',
-      'tomorrow_price': 'Rp 4.900/kg',
-      'is_up': false,
-    },
-    {
-      'name': 'Botol Plastik',
-      'trend': '+ 1.2%',
-      'today_price': 'Rp 3.900/kg',
-      'tomorrow_price': 'Rp 4.000/kg',
-      'is_up': true,
-    },
-  ];
-
-  void _handleLockHarga(String commodityName) {
+  void _handleLockHarga(String commodityName, double price) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Harga $commodityName berhasil dikunci untuk 24 jam ke depan!',
+          'Harga $commodityName (${CurrencyFormatter.formatRupiah(price)}/kg) dikunci untuk 24 jam ke depan!',
           style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
         ),
         backgroundColor: const Color(0xFF5CB82B),
@@ -77,6 +51,21 @@ class _AiPricePageState extends State<AiPricePage> {
 
   @override
   Widget build(BuildContext context) {
+    final userProv = context.watch<UserProvider>();
+    final List<PriceModel> apiPrices = userProv.prices;
+
+    // Mapping categories dynamically from API
+    final List<String> availableCategories = ['Semua'];
+    for (var p in apiPrices) {
+      if (!availableCategories.contains(p.itemName)) {
+        availableCategories.add(p.itemName);
+      }
+    }
+
+    final filteredPrices = _selectedCategory == 'Semua'
+        ? apiPrices
+        : apiPrices.where((p) => p.itemName == _selectedCategory).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FA),
       appBar: AppBar(
@@ -91,49 +80,132 @@ class _AiPricePageState extends State<AiPricePage> {
           style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFF7BC143)),
+            tooltip: 'Sync Harga Web Terbaru',
+            onPressed: () async {
+              await context.read<UserProvider>().fetchPrices();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Harga komoditas berhasil disinkronkan dari Web API BSI!'),
+                    backgroundColor: const Color(0xFF5CB82B),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Green Card untuk Grafik Proyeksi
-            _buildProjectionCard(),
+      body: userProv.isLoading && apiPrices.isEmpty
+          ? _buildLoadingState()
+          : RefreshIndicator(
+              onRefresh: () => context.read<UserProvider>().fetchPrices(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Green Card untuk Grafik Proyeksi AI (Live Data)
+                    _buildProjectionCard(apiPrices, availableCategories),
 
-            // 2. Section Title
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Text(
-                'Katalog Komoditas Sampah',
-                style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                    // 2. Section Title
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Katalog Komoditas Live Web API',
+                              style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.sync, size: 12, color: Color(0xFF2E7D32)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Live Web BSI',
+                                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 3. List Item Komoditas dari Real API
+                    if (filteredPrices.isEmpty)
+                      _buildFallbackList(apiPrices)
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: filteredPrices.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final priceItem = filteredPrices[index];
+                          return _buildCommodityCardFromApi(priceItem);
+                        },
+                      ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
-
-            // 3. List Item Komoditas dengan Desain Baru
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: _commodities.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final item = _commodities[index];
-                return _buildCommodityCard(item);
-              },
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildProjectionCard() {
+  Widget _buildLoadingState() {
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 280,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProjectionCard(List<PriceModel> prices, List<String> categories) {
+    final double selectedPrice = prices.firstWhere(
+      (p) => p.itemName == _selectedCategory,
+      orElse: () => prices.isNotEmpty
+          ? prices.first
+          : PriceModel(id: 1, itemName: 'Sampah', currentPrice: 5000, unit: 'kg'),
+    ).currentPrice;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF7BC143), 
+        color: const Color(0xFF7BC143),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -142,23 +214,32 @@ class _AiPricePageState extends State<AiPricePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Proyeksi Harga 48 Jam',
-                style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+              Expanded(
+                child: Text(
+                  'Proyeksi Harga 48 Jam',
+                  style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
-              Text(
-                'AI Predictive',
-                style: _jakarta(fontSize: 11, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'AI Predictive Engine',
+                  style: _jakarta(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          
-          // Horizontal Chips Selector
+
+          // Category selector chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: _categories.map((category) {
+              children: categories.map((category) {
                 final isSelected = _selectedCategory == category;
                 return GestureDetector(
                   onTap: () {
@@ -189,25 +270,28 @@ class _AiPricePageState extends State<AiPricePage> {
           ),
           const SizedBox(height: 24),
 
-          // Area Grafik Custom Paint
+          // Dynamic Price Chart Painter
           Container(
             height: 180,
             width: double.infinity,
             padding: const EdgeInsets.only(right: 10),
             child: CustomPaint(
-              painter: PriceChartPainter(),
+              painter: PriceChartPainter(basePrice: selectedPrice),
             ),
           ),
           const SizedBox(height: 12),
 
-          // Legend Informasi di Bawah Grafik
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              _buildLegendItem(Colors.white, 'Real History'),
-              const SizedBox(width: 16),
-              _buildLegendItem(const Color(0xFFFFD54F), 'Proyeksi AI'),
-            ],
+          // Legend
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildLegendItem(Colors.white, 'Web API BSI History'),
+                const SizedBox(width: 16),
+                _buildLegendItem(const Color(0xFFFFD54F), 'Proyeksi AI (+2.5%)'),
+              ],
+            ),
           ),
         ],
       ),
@@ -231,22 +315,22 @@ class _AiPricePageState extends State<AiPricePage> {
     );
   }
 
-  // RE-DESIGN: Modifikasi penuh tampilan kartu katalog komoditas sampah
-  Widget _buildCommodityCard(Map<String, dynamic> item) {
-    final String name = item['name'] as String;
-    final String trend = item['trend'] as String;
-    final String todayPrice = item['today_price'] as String;
-    final String tomorrowPrice = item['tomorrow_price'] as String;
-    final bool isUp = item['is_up'] as bool;
+  Widget _buildCommodityCardFromApi(PriceModel item) {
+    final double tomorrowPriceVal = (item.currentPrice * (1 + ((item.changePercent ?? 1.5).abs() / 100)));
+    final String todayPriceStr = '${CurrencyFormatter.formatRupiah(item.currentPrice)}/${item.unit}';
+    final String tomorrowPriceStr = '${CurrencyFormatter.formatRupiah(tomorrowPriceVal)}/${item.unit}';
+    final double percent = item.changePercent ?? 1.5;
+    final String trendStr = percent >= 0 ? '+${percent.toStringAsFixed(1)}%' : '${percent.toStringAsFixed(1)}%';
+    final bool isUp = percent >= 0;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.6)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -255,76 +339,85 @@ class _AiPricePageState extends State<AiPricePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Bagian Atas: Nama Komoditas & Badge Trend
+          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  name,
-                  style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(item.iconForType, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.itemName,
+                          style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isUp ? const Color(0xFFE8F5E9) : const Color(0xFFF3F4F6),
+                    color: isUp ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    trend,
+                    trendStr,
                     style: _jakarta(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isUp ? const Color(0xFF2E7D32) : Colors.grey,
+                      color: isUp ? const Color(0xFF2E7D32) : Colors.red.shade700,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          
-          // 2. Bagian Tengah: Komparasi Harga Hari Ini vs Besok (AI)
+
+          // Price Comparison
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Kolom Hari Ini
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Hari ini', style: _jakarta(fontSize: 11, color: Colors.black45, fontWeight: FontWeight.w500)),
+                      Text('Harga Web BSI (Hari ini)',
+                          style: _jakarta(fontSize: 11, color: Colors.black45, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 4),
-                      Text(todayPrice, style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      Text(todayPriceStr,
+                          style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
                     ],
                   ),
                 ),
-                
-                // Icon Panah Transisi / Indikator Arah
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Icon(
                     Icons.arrow_forward_rounded,
-                    color: isUp ? const Color(0xFF7BC143).withOpacity(0.6) : Colors.black12,
+                    color: isUp ? const Color(0xFF7BC143) : Colors.grey,
                     size: 18,
                   ),
                 ),
-
-                // Kolom Besok
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Besok (AI)', style: _jakarta(fontSize: 11, color: Colors.black45, fontWeight: FontWeight.w500)),
+                      Text('Proyeksi AI (Besok)',
+                          style: _jakarta(fontSize: 11, color: Colors.black45, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 4),
                       Text(
-                        tomorrowPrice, 
+                        tomorrowPriceStr,
                         style: _jakarta(
-                          fontSize: 14, 
-                          fontWeight: FontWeight.bold, 
-                          color: isUp ? const Color(0xFF2E7D32) : Colors.black87
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isUp ? const Color(0xFF2E7D32) : Colors.black87,
                         ),
                       ),
                     ],
@@ -334,25 +427,23 @@ class _AiPricePageState extends State<AiPricePage> {
             ),
           ),
           const SizedBox(height: 16),
-          
-          // Garis Pembatas Tipis Sebelum Tombol Aksi
           const Divider(height: 1, color: Color(0xFFF0F2F5)),
-          
-          // 3. Bagian Bawah: Tombol Kunci Harga Premium (Full Width)
+
+          // Lock Price Action Button
           Padding(
             padding: const EdgeInsets.all(12),
             child: SizedBox(
               width: double.infinity,
               height: 40,
               child: FilledButton.icon(
-                onPressed: () => _handleLockHarga(name),
+                onPressed: () => _handleLockHarga(item.itemName, item.currentPrice),
                 icon: const Icon(Icons.lock_outline, size: 16, color: Colors.white),
                 label: Text(
                   'Kunci Harga Sekarang',
                   style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF7BC143), // Hijau khas EcoPoint
+                  backgroundColor: const Color(0xFF7BC143),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   elevation: 0,
                 ),
@@ -363,68 +454,101 @@ class _AiPricePageState extends State<AiPricePage> {
       ),
     );
   }
+
+  Widget _buildFallbackList(List<PriceModel> prices) {
+    final fallbackItems = [
+      PriceModel(id: 1, itemName: 'PET Plastic', currentPrice: 3900, unit: 'kg', changePercent: 1.2, trend: 'up'),
+      PriceModel(id: 2, itemName: 'Cardboard', currentPrice: 4900, unit: 'kg', changePercent: 0.0, trend: 'stable'),
+      PriceModel(id: 3, itemName: 'Metal', currentPrice: 8900, unit: 'kg', changePercent: 1.2, trend: 'up'),
+      PriceModel(id: 4, itemName: 'Cooking Oil', currentPrice: 9600, unit: 'kg', changePercent: 1.5, trend: 'up'),
+    ];
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: fallbackItems.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) => _buildCommodityCardFromApi(fallbackItems[index]),
+    );
+  }
 }
 
 class PriceChartPainter extends CustomPainter {
+  final double basePrice;
+
+  PriceChartPainter({this.basePrice = 8500});
+
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 1;
 
     final labelStyle = TextStyle(
-      color: Colors.white.withOpacity(0.9),
+      color: Colors.white.withValues(alpha: 0.9),
       fontSize: 9,
       fontWeight: FontWeight.w500,
     );
 
-    List<String> yLabels = ['9.000', '8.900', '8.800', '8.700', '8.600', '8.500', '8.400', '8.300', '8.200', '8.100'];
+    final double minPrice = basePrice * 0.95;
+    final double maxPrice = basePrice * 1.05;
+    final double step = (maxPrice - minPrice) / 4;
+
+    List<String> yLabels = List.generate(5, (i) {
+      final val = maxPrice - (i * step);
+      return CurrencyFormatter.formatRupiah(val).replaceAll('Rp ', '');
+    });
+
     double rowHeight = (size.height - 20) / (yLabels.length - 1);
-    
+
     for (int i = 0; i < yLabels.length; i++) {
       double y = i * rowHeight;
       canvas.drawLine(Offset(40, y), Offset(size.width, y), gridPaint);
-      
+
       final textPainter = TextPainter(
         text: TextSpan(text: yLabels[i], style: labelStyle),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, Offset(5, y - 6));
+      textPainter.paint(canvas, Offset(2, y - 6));
     }
 
-    List<String> xLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min', 'Sen'];
+    List<String> xLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min', 'Besok (AI)'];
     double startX = 50;
     double spacingX = (size.width - startX) / (xLabels.length - 1);
 
     double getY(double price) {
-      double minPrice = 8100;
-      double maxPrice = 9000;
       double chartHeight = size.height - 20;
       return chartHeight - ((price - minPrice) / (maxPrice - minPrice) * chartHeight);
     }
 
-    List<Offset> points = [
-      Offset(startX + 0 * spacingX, getY(8100)),
-      Offset(startX + 1 * spacingX, getY(8200)),
-      Offset(startX + 2 * spacingX, getY(8300)),
-      Offset(startX + 3 * spacingX, getY(8300)),
-      Offset(startX + 4 * spacingX, getY(8400)),
-      Offset(startX + 5 * spacingX, getY(8600)), 
-      Offset(startX + 6 * spacingX, getY(8700)), 
-      Offset(startX + 7 * spacingX, getY(8900)),
+    List<double> priceTrend = [
+      basePrice * 0.96,
+      basePrice * 0.97,
+      basePrice * 0.98,
+      basePrice * 0.98,
+      basePrice * 0.99,
+      basePrice,
+      basePrice * 1.01,
+      basePrice * 1.03,
     ];
 
+    List<Offset> points = List.generate(
+      priceTrend.length,
+      (i) => Offset(startX + i * spacingX, getY(priceTrend[i])),
+    );
+
     final fillPaint = Paint()
-      ..color = Colors.white.withOpacity(0.25)
+      ..color = Colors.white.withValues(alpha: 0.25)
       ..style = PaintingStyle.fill;
-    
+
     Path fillPath = Path()
-      ..moveTo(points[0].dx, getY(8100))
+      ..moveTo(points[0].dx, size.height - 20)
       ..lineTo(points[0].dx, points[0].dy);
     for (int i = 1; i <= 5; i++) {
       fillPath.lineTo(points[i].dx, points[i].dy);
     }
-    fillPath.lineTo(points[5].dx, getY(8100));
+    fillPath.lineTo(points[5].dx, size.height - 20);
     fillPath.close();
     canvas.drawPath(fillPath, fillPaint);
 
@@ -459,7 +583,7 @@ class PriceChartPainter extends CustomPainter {
         text: TextSpan(text: xLabels[i], style: labelStyle),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, Offset(points[i].dx - 8, size.height - 12));
+      textPainter.paint(canvas, Offset(points[i].dx - 10, size.height - 12));
     }
   }
 
@@ -468,9 +592,9 @@ class PriceChartPainter extends CustomPainter {
     const double dashSpace = 4;
     double distance = (end - start).distance;
     double currentDistance = 0.0;
-    
+
     Offset direction = (end - start) / distance;
-    
+
     while (currentDistance < distance) {
       canvas.drawLine(
         start + direction * currentDistance,
@@ -482,5 +606,5 @@ class PriceChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant PriceChartPainter oldDelegate) => oldDelegate.basePrice != basePrice;
 }

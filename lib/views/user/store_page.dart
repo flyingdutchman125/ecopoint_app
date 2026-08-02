@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/eco_tree_state.dart';
 import '../../core/wallet_state.dart';
+import '../../providers/user_provider.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -49,7 +51,23 @@ class _StorePageState extends State<StorePage> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Batal', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.black54))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4C8C2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await context.read<UserProvider>().redeemPoints(1000);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Berhasil menukarkan poin untuk ${item.title}! Saldo dompet telah bertambah.'
+                          : 'Poin tidak mencukupi atau gagal melakukan penukaran.',
+                    ),
+                    backgroundColor: success ? const Color(0xFF5CB82B) : Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
             child: Text('Ya, Tukar', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white)),
           ),
         ],

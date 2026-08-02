@@ -48,13 +48,13 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!_isInitialized) {
       final user = context.read<AuthProvider>().user;
       if (user != null) {
-        _nameController.text = user.name ?? 'Ahmad Syifa’ul Falakhul K.';
-        _whatsappController.text = user.phone ?? '895333222130';
+        _nameController.text = user.name ?? 'Pengguna EcoPoint';
+        _whatsappController.text = user.phone ?? '08123456789';
         _emailController.text = user.email;
       } else {
-        _nameController.text = 'Ahmad Syifa’ul Falakhul K.';
-        _whatsappController.text = '895333222130';
-        _emailController.text = 'syifaul@email.com';
+        _nameController.text = 'Pengguna EcoPoint';
+        _whatsappController.text = '08123456789';
+        _emailController.text = 'warga@ecopoint.com';
       }
       _isInitialized = true;
     }

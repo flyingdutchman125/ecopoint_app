@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 
 // Menyelaraskan fungsi font dengan yang ada di User Dashboard & Store
 TextStyle _jakarta({
@@ -136,10 +138,20 @@ class _PointsPageState extends State<PointsPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _isCheckedInToday ? null : () {
+                            onPressed: _isCheckedInToday ? null : () async {
                               setState(() {
                                 _isCheckedInToday = true;
                               });
+                              await context.read<UserProvider>().redeemPoints(1000);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Check-in Berhasil! Poin harian telah ditambahkan dan dikonversi.'),
+                                    backgroundColor: primaryGreen,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryGreen,

@@ -46,15 +46,21 @@ async function getNearbyOrders(req, res, next) {
     const loc = parseLocation(collector.location);
     if (!loc) return res.status(400).json({ success: false, message: 'Could not parse location' });
 
-    const { data: orders, error } = await supabase.from('orders').select('id, user_id, item_type, est_weight, pickup_address, pickup_location, photo_url, created_at').eq('status', 'pending');
+    const { data: orders, error } = await supabase.from('orders').select('id, user_id, item_type, est_weight, pickup_address, pickup_location, photo_url, created_at, users:user_id(name, phone)').eq('status', 'pending');
     if (error) throw error;
 
-    const nearby = (orders || []).filter(o => {
+    const nearby = (orders || []).map(o => {
       const ol = parseLocation(o.pickup_location);
-      if (!ol) return false;
-      o.distance_meters = Math.round(haversine(loc.lng, loc.lat, ol.lng, ol.lat));
-      return o.distance_meters <= parseFloat(radius);
-    }).sort((a, b) => a.distance_meters - b.distance_meters);
+      const locObj = ol ? { lat: ol.lat, lng: ol.lng } : {};
+      return {
+        ...o,
+        user_name: o.users?.name || 'Warga Penjemputan',
+        user_phone: o.users?.phone || '',
+        ...locObj,
+        distance_meters: ol ? Math.round(haversine(loc.lng, loc.lat, ol.lng, ol.lat)) : 999999
+      };
+    }).filter(o => o.distance_meters <= parseFloat(radius))
+      .sort((a, b) => a.distance_meters - b.distance_meters);
 
     res.json({ success: true, data: nearby });
   } catch (error) { next(error); }
