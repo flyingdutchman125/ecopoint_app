@@ -479,7 +479,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   }
 
   Widget _buildPickupCard(OrderModel order) {
-    const String displayName = "Ahmad Syifa'ul Falakhul K.";
+    final String displayName = (order.userName != null && order.userName!.isNotEmpty)
+        ? order.userName!
+        : "Warga Penjemputan";
     final String displayAddress = order.address.isNotEmpty ? order.address : "Jl. Andansari Mojo";
     final String displayCategory = (order.category != null && order.category!.isNotEmpty) ? order.category! : "Plastik PET Bening";
     final double weight = order.weightKg ?? 10.0;
@@ -714,7 +716,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Ahmad Syifa'ul Falakhul K.",
+                        (collectorProv.nearbyOrders.isNotEmpty && collectorProv.nearbyOrders.first.userName != null)
+                            ? collectorProv.nearbyOrders.first.userName!
+                            : "Budi Santoso",
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -874,7 +878,140 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   // --- 5. PETA RUTE GPS CONTENT ---
   Widget _buildPetaRuteGpsContent(CollectorProvider collectorProv) {
-    final defaultCenter = const LatLng(-7.1186, 112.4162); // Lamongan center
+    final double myLat = collectorProv.currentPosition?.latitude ?? -7.1186;
+    final double myLng = collectorProv.currentPosition?.longitude ?? 112.4162;
+    final myCenter = LatLng(myLat, myLng);
+
+    final List<Marker> markers = [
+      // Collector marker (Yellow pin with car icon at actual GPS location)
+      Marker(
+        point: myCenter,
+        width: 60,
+        height: 60,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFACC15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.directions_car,
+                  color: Colors.black, size: 20),
+            ),
+          ],
+        ),
+      ),
+    ];
+
+    // Add nearby order markers
+    if (collectorProv.nearbyOrders.isNotEmpty) {
+      for (var o in collectorProv.nearbyOrders) {
+        if (o.latitude != 0 && o.longitude != 0) {
+          markers.add(
+            Marker(
+              point: LatLng(o.latitude, o.longitude),
+              width: 140,
+              height: 70,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 4,
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${o.userName ?? "Warga"} - ${o.category ?? "Plastik"}',
+                          style: GoogleFonts.inter(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Siap Dijemput',
+                          style: GoogleFonts.inter(
+                            fontSize: 7,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.location_on,
+                      color: Color(0xFF7CB342), size: 32),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    } else {
+      // Dynamic fallback markers centered relative to real collector GPS
+      markers.addAll([
+        Marker(
+          point: LatLng(myLat - 0.0012, myLng + 0.0013),
+          width: 140,
+          height: 70,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 4,
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Warung Bu Kris - Plastik Bening',
+                      style: GoogleFonts.inter(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Siap Dijemput',
+                      style: GoogleFonts.inter(
+                        fontSize: 7,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.location_on,
+                  color: Color(0xFF7CB342), size: 32),
+            ],
+          ),
+        ),
+        Marker(
+          point: LatLng(myLat + 0.0015, myLng - 0.0010),
+          width: 50,
+          height: 50,
+          child: const Icon(Icons.location_on,
+              color: Color(0xFF7CB342), size: 36),
+        ),
+      ]);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -910,95 +1047,36 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                 ),
                 child: SizedBox(
                   height: 260,
-                  child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: defaultCenter,
-                      initialZoom: 14.5,
-                    ),
+                  child: Stack(
                     children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.ecopoint',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          // Collector marker (Yellow pin with car icon)
-                          Marker(
-                            point: defaultCenter,
-                            width: 60,
-                            height: 60,
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFFACC15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.directions_car,
-                                      color: Colors.black, size: 20),
-                                ),
-                              ],
-                            ),
+                      FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: myCenter,
+                          initialZoom: 15.0,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.example.ecopoint',
                           ),
-                          // Warga Marker 1
-                          Marker(
-                            point: const LatLng(-7.1198, 112.4175),
-                            width: 50,
-                            height: 50,
-                            child: const Icon(Icons.location_on,
-                                color: Color(0xFF7CB342), size: 36),
-                          ),
-                          // Warga Marker 2 (Active callout pin)
-                          Marker(
-                            point: const LatLng(-7.1170, 112.4150),
-                            width: 140,
-                            height: 70,
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.15),
-                                        blurRadius: 4,
-                                      )
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Warung Bu kris - Plastik Bening',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Siap Dijemput',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 7,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(Icons.location_on,
-                                    color: Color(0xFF7CB342), size: 32),
-                              ],
-                            ),
-                          ),
+                          MarkerLayer(markers: markers),
                         ],
+                      ),
+                      // Recenter button
+                      Positioned(
+                        right: 12,
+                        bottom: 12,
+                        child: FloatingActionButton.small(
+                          heroTag: 'recenter_map',
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF7CB342),
+                          onPressed: () {
+                            _mapController.move(myCenter, 15.5);
+                          },
+                          child: const Icon(Icons.my_location),
+                        ),
                       ),
                     ],
                   ),
@@ -1131,7 +1209,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Ahmad Syifa'ul Falakhul K.",
+                      (collectorProv.nearbyOrders.isNotEmpty && collectorProv.nearbyOrders.first.userName != null)
+                          ? collectorProv.nearbyOrders.first.userName!
+                          : "Budi Santoso",
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -1214,7 +1294,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                     child: const Icon(Icons.person, color: Colors.white),
                   ),
                   title: Text(
-                    "Ahmad Syifa'ul Falakhul K.",
+                    "Budi Santoso",
                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                   ),
                   subtitle: const Text('Halo bang, penjemputan jam berapa ya?'),

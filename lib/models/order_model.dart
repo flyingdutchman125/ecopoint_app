@@ -14,6 +14,7 @@ class OrderModel {
   final DateTime createdAt;
 
   final double? distanceMeters;
+  final String? userName;
 
   OrderModel({
     required this.id,
@@ -30,6 +31,7 @@ class OrderModel {
     required this.statusHistory,
     required this.createdAt,
     this.distanceMeters,
+    this.userName,
   });
 
   String? get itemType => category;
@@ -37,6 +39,8 @@ class OrderModel {
   String get pickupAddress => address;
   double get pickupLat => lat;
   double get pickupLng => lng;
+  double get latitude => lat;
+  double get longitude => lng;
   String? get notes => null;
   String get statusLabel => status;
   double? get displayWeight => weightKg;
@@ -59,6 +63,7 @@ class OrderModel {
       address: json['address'] ?? json['pickup_address'] ?? '',
       statusHistory: json['status_history'] ?? [],
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      userName: json['user_name'] ?? json['user']?['name'],
     );
   }
 }
