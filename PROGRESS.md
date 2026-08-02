@@ -1,6 +1,6 @@
 # 🚀 EcoPoint Flutter App - Progress & Development Report
 
-> **Last Updated:** 2026-07-31  
+> **Last Updated:** 2026-08-02  
 > **Backend API:** `https://ecopoint-api.fly.dev/api`  
 > **Framework:** Flutter 3.35+ (Dart 3.9), Material Design 3  
 
@@ -128,8 +128,11 @@ Aplikasi **EcoPoint** telah mengalami perombakan besar (*overhaul*) baik pada ar
 ### 6. 📦 **Build & Rilis APK**
 - [x] **Ukuran Teroptimasi**: Diperkecil dari **53 MB menjadi ~18 MB** menggunakan *ABI Splitting* (`--split-per-abi`).
 - [x] **Link Download Available**:
-  - 📥 **ARM64 APK (HP Modern - 18.7 MB)**: [https://tmpfiles.org/wmw4idsAtLUY/app-arm64-v8a-release.apk](https://tmpfiles.org/wmw4idsAtLUY/app-arm64-v8a-release.apk)
-  - 📥 **ARM32 APK (HP Lama - 16.2 MB)**: [https://tmpfiles.org/wVwyiJsUtaL1/app-armeabi-v7a-release.apk](https://tmpfiles.org/wVwyiJsUtaL1/app-armeabi-v7a-release.apk)
+  - 📥 **ARM64 APK (HP Modern - 18.8 MB)**: [https://tmpfiles.org/dl/wTw1Rfu4vGxP/app-arm64-v8a-release.apk](https://tmpfiles.org/dl/wTw1Rfu4vGxP/app-arm64-v8a-release.apk)
+  - 📥 **ARM32 APK (HP Lama - 16.4 MB)**: [https://tmpfiles.org/dl/wowqRquLvDEk/app-armeabi-v7a-release.apk](https://tmpfiles.org/dl/wowqRquLvDEk/app-armeabi-v7a-release.apk)
+- [x] **Screenshot Bukti Uji ADB**:
+  - 🖼️ **Tab Radar Order**: [https://tmpfiles.org/dl/w6wMREu1tRDj/screenshot_collector_radar_order.png](https://tmpfiles.org/dl/w6wMREu1tRDj/screenshot_collector_radar_order.png)
+  - 🗺️ **Tab Peta Rute GPS**: [https://tmpfiles.org/dl/wlwARKu2thGd/screenshot_collector_peta_gps.png](https://tmpfiles.org/dl/wlwARKu2thGd/screenshot_collector_peta_gps.png)
 
 ---
 

@@ -189,7 +189,7 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
               children: [
                 const Icon(Icons.scale_rounded, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text('${order.estWeight ?? 0} kg', style: const TextStyle(color: Colors.grey)),
+                Text('${order.estWeight} kg', style: const TextStyle(color: Colors.grey)),
               ],
             ),
             const SizedBox(height: 16),

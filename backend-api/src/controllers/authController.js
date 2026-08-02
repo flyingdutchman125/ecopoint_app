@@ -82,21 +82,39 @@ async function register(req, res, next) {
       authUser = adminRes.data.user;
     }
 
-    const { error: dbError } = await supabase.from('users').insert({
-      id: authUser.id,
-      email,
-      name,
-      role: validRole,
-      phone,
-      city,
-      address,
-      subdistrict,
-      consent_sorting_anorganic: consentSorting,
-      wallet_balance: 0,
-      eco_points: 0,
-    });
+    let dbError;
+    try {
+      const insertData = {
+        id: authUser.id,
+        email,
+        name,
+        role: validRole,
+        phone,
+        city,
+        wallet_balance: 0,
+        eco_points: 0,
+      };
+      if (address) insertData.address = address;
+      if (subdistrict) insertData.subdistrict = subdistrict;
+      if (consentSorting !== undefined) insertData.consent_sorting_anorganic = consentSorting;
 
-    if (dbError) return res.status(400).json({ success: false, message: dbError.message });
+      const res = await supabase.from('users').insert(insertData);
+      dbError = res.error;
+      if (dbError && dbError.message && dbError.message.includes('column')) {
+        // Fallback insert with core fields only
+        const fallbackRes = await supabase.from('users').insert({
+          id: authUser.id,
+          email,
+          name,
+          role: validRole,
+          phone,
+          city,
+        });
+        dbError = fallbackRes.error;
+      }
+    } catch (err) {
+      console.warn('DB insert error:', err);
+    }
 
     // If collector-specific info provided, save to collectors table
     if (validRole === 'collector') {

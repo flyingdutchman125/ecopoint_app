@@ -17,7 +17,7 @@ import '../../views/user/points_page.dart'; // INTEGRASI: Import halaman Points
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
     return GoRouter(
-      initialLocation: '/',
+      initialLocation: '/collector',
       refreshListenable: authProvider,
       redirect: (context, state) {
         final isLoggedIn = authProvider.isAuthenticated;
