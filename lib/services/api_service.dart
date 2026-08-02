@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -25,7 +25,7 @@ class ApiService {
       'Content-Type': 'application/json',
     };
     if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
+      headers['Authorization'] = 'Bearer ' + token;
     }
     return headers;
   }
@@ -106,3 +106,7 @@ class ApiService {
     }
   }
 }
+
+
+
+

@@ -1,0 +1,33 @@
+﻿import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../core/constants/api_constants.dart';
+
+class ApiConnectionException implements Exception {
+  ApiConnectionException(this.message);
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+class ApiService {
+  static const Duration _timeout = Duration(seconds: 15);
+
+  static Future<Map<String, String>> _getHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    if (token != null) {
+      headers['Authorization'] = 'Bearer \';token';
+    }
+    return headers;
+  }
+
+  st
