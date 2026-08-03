@@ -32,10 +32,17 @@ class _OrderItem {
   final String summary;
   final String code;
   final bool completed;
-  _OrderItem({required this.id, required this.name, required this.summary, required this.code, this.completed = false});
+  _OrderItem({
+    required this.id,
+    required this.name,
+    required this.summary,
+    required this.code,
+    this.completed = false,
+  });
 }
 
-class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMixin {
+class _OrderPageState extends State<OrderPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<_OrderItem> ongoing = [];
   List<_OrderItem> completed = [];
@@ -47,10 +54,22 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
 
     // seed demo data
     ongoing = [
-      _OrderItem(id: 'EP0001', name: 'Bapak Sutarjo Sangar', summary: 'Kardus 12kg', code: 'EP 0001', completed: false),
+      _OrderItem(
+        id: 'EP0001',
+        name: 'Bapak Sutarjo Sangar',
+        summary: 'Kardus 12kg',
+        code: 'EP 0001',
+        completed: false,
+      ),
     ];
     completed = [
-      _OrderItem(id: 'EP0000', name: 'Bapak Sutarjo Sangar', summary: 'Kardus 12kg', code: 'EP 0000', completed: true),
+      _OrderItem(
+        id: 'EP0000',
+        name: 'Bapak Sutarjo Sangar',
+        summary: 'Kardus 12kg',
+        code: 'EP 0000',
+        completed: true,
+      ),
     ];
 
     // if route passed an order from map, add to ongoing
@@ -79,7 +98,13 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
           final idx = ongoing.indexWhere((el) => el.id == id);
           if (idx != -1) {
             final moved = ongoing.removeAt(idx);
-            final completedItem = _OrderItem(id: moved.id, name: moved.name, summary: moved.summary, code: moved.code, completed: true);
+            final completedItem = _OrderItem(
+              id: moved.id,
+              name: moved.name,
+              summary: moved.summary,
+              code: moved.code,
+              completed: true,
+            );
             completed.insert(0, completedItem);
             // switch to completed tab
             _tabController.index = 1;
@@ -110,7 +135,17 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
     return InkWell(
       onTap: () {
         // navigate to tracking/detail page
-        context.push('/orders/tracking', extra: {'order': {'id': item.id, 'name': item.name, 'code': item.code, 'completed': item.completed}});
+        context.push(
+          '/orders/tracking',
+          extra: {
+            'order': {
+              'id': item.id,
+              'name': item.name,
+              'code': item.code,
+              'completed': item.completed,
+            },
+          },
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -123,7 +158,11 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
             Container(
               width: 46,
               height: 46,
-              decoration: BoxDecoration(color: const Color(0xFFF5F5F5), shape: BoxShape.circle, border: Border.all(color: const Color(0xFFE0E0E0))),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+              ),
               child: const Icon(Icons.person, color: Colors.black54),
             ),
             const SizedBox(width: 12),
@@ -131,18 +170,32 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.name, style: _jakarta(fontSize: 14, fontWeight: FontWeight.w700)),
+                  Text(
+                    item.name,
+                    style: _jakarta(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 4),
-                  Text(item.summary, style: _jakarta(fontSize: 12, color: Colors.black54)),
+                  Text(
+                    item.summary,
+                    style: _jakarta(fontSize: 12, color: Colors.black54),
+                  ),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('kode orderan : ${item.code}', style: _jakarta(fontSize: 12, color: Colors.black54)),
+                Text(
+                  'kode orderan : ${item.code}',
+                  style: _jakarta(fontSize: 12, color: Colors.black54),
+                ),
                 const SizedBox(height: 6),
-                Icon(item.completed ? Icons.check_circle_outline : Icons.chevron_right, color: item.completed ? Colors.green : Colors.black38),
+                Icon(
+                  item.completed
+                      ? Icons.check_circle_outline
+                      : Icons.chevron_right,
+                  color: item.completed ? Colors.green : Colors.black38,
+                ),
               ],
             ),
           ],
@@ -158,8 +211,14 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => context.pop()),
-        title: Text('Order', style: _jakarta(fontSize: 16, fontWeight: FontWeight.w700)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Order',
+          style: _jakarta(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -167,8 +226,18 @@ class _OrderPageState extends State<OrderPage> with SingleTickerProviderStateMix
           labelColor: Colors.black,
           unselectedLabelColor: Colors.black54,
           tabs: [
-            Tab(child: Text('Orderan Yang Berlangsung', style: _jakarta(fontSize: 12))),
-            Tab(child: Text('Orderan Yang Terselesaikan', style: _jakarta(fontSize: 12))),
+            Tab(
+              child: Text(
+                'Orderan Yang Berlangsung',
+                style: _jakarta(fontSize: 12),
+              ),
+            ),
+            Tab(
+              child: Text(
+                'Orderan Yang Terselesaikan',
+                style: _jakarta(fontSize: 12),
+              ),
+            ),
           ],
         ),
       ),

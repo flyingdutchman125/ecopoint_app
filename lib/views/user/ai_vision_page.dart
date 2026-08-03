@@ -29,26 +29,62 @@ class AiVisionPage extends StatefulWidget {
 }
 
 class _AiVisionPageState extends State<AiVisionPage> {
-  String _category = 'Logam/Besi';
-  String _price = '8.900/kg';
-  int _accuracy = 90;
+  String _category = 'Botol Plastik';
+  final TextEditingController _priceCtrl = TextEditingController(text: '3.900/kg');
+  int _accuracy = 94;
   bool _isAnalyzing = false;
   String? _photoUrl;
   File? _localPhotoFile;
 
   final Map<String, Map<String, dynamic>> _wasteData = {
-    'Logam/Besi': {'price': '8.900/kg', 'accuracy': 90},
     'Botol Plastik': {'price': '3.900/kg', 'accuracy': 94},
+    'Logam/Besi': {'price': '8.900/kg', 'accuracy': 90},
     'Kardus': {'price': '4.900/kg', 'accuracy': 92},
     'Minyak Jelantah': {'price': '9.600/kg', 'accuracy': 88},
   };
+
+  @override
+  void dispose() {
+    _priceCtrl.dispose();
+    super.dispose();
+  }
+
+  String _mapAiCategoryToIndonesian(String rawCategory) {
+    final cat = rawCategory.toLowerCase().trim();
+    if (cat.contains('plastic') || cat.contains('pet') || cat.contains('hdpe') || cat.contains('pp') || cat.contains('botol')) {
+      return 'Botol Plastik';
+    }
+    if (cat.contains('cardboard') || cat.contains('paper') || cat.contains('kardus') || cat.contains('karton') || cat.contains('kertas')) {
+      return 'Kardus';
+    }
+    if (cat.contains('oil') || cat.contains('minyak') || cat.contains('jelantah')) {
+      return 'Minyak Jelantah';
+    }
+    if (cat.contains('metal') || cat.contains('iron') || cat.contains('steel') || cat.contains('copper') || cat.contains('aluminum') || cat.contains('logam') || cat.contains('besi') || cat.contains('kaleng')) {
+      return 'Logam/Besi';
+    }
+    return 'Botol Plastik';
+  }
+
+  void _onCategoryChanged(String? newCategory) {
+    if (newCategory == null) return;
+    setState(() {
+      _category = newCategory;
+      if (_wasteData.containsKey(newCategory)) {
+        _priceCtrl.text = _wasteData[newCategory]!['price'] as String;
+        _accuracy = _wasteData[newCategory]!['accuracy'] as int;
+      }
+    });
+  }
 
   Future<void> _pickAndAnalyze(ImageSource source) async {
     final pickedFile = await ImagePickerHelper.pickImage(source);
     if (pickedFile == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto tidak dipilih atau izin akses ditolak.')),
+          const SnackBar(
+            content: Text('Foto tidak dipilih atau izin akses ditolak.'),
+          ),
         );
       }
       return;
@@ -70,12 +106,17 @@ class _AiVisionPageState extends State<AiVisionPage> {
     });
 
     try {
-      final uploadRes = await ApiService.upload(ApiConstants.upload, pickedFile.path);
+      final uploadRes = await ApiService.upload(
+        ApiConstants.upload,
+        pickedFile.path,
+      );
       final uploadData = jsonDecode(uploadRes.body);
 
       if (uploadRes.statusCode == 200 && uploadData['success'] == true) {
-        String imageUrl = (uploadData['data']['url'] as String)
-            .replaceFirst('localhost', '10.0.2.2');
+        String imageUrl = (uploadData['data']['url'] as String).replaceFirst(
+          'localhost',
+          '10.0.2.2',
+        );
         setState(() => _photoUrl = imageUrl);
 
         final analyzeRes = await ApiService.post(ApiConstants.analyzeImage, {
@@ -84,14 +125,20 @@ class _AiVisionPageState extends State<AiVisionPage> {
 
         final analyzeData = jsonDecode(analyzeRes.body);
         if (analyzeRes.statusCode == 200 && analyzeData['success'] == true) {
-          String aiCategory = analyzeData['data']['category'] ?? 'Logam/Besi';
-          if (_wasteData.containsKey(aiCategory)) {
-            setState(() {
-              _category = aiCategory;
-              _price = _wasteData[aiCategory]!['price'] as String;
-              _accuracy = _wasteData[aiCategory]!['accuracy'] as int;
-            });
-          }
+          String rawCat = analyzeData['data']['category'] ?? analyzeData['data']['detectedType'] ?? '';
+          String mappedCategory = _mapAiCategoryToIndonesian(rawCat);
+          int confidence = (analyzeData['data']['estimatedConfidence'] != null)
+              ? ((analyzeData['data']['estimatedConfidence'] as num) * 100).round()
+              : 95;
+          if (confidence <= 0) confidence = 92;
+
+          setState(() {
+            _category = mappedCategory;
+            if (_wasteData.containsKey(mappedCategory)) {
+              _priceCtrl.text = _wasteData[mappedCategory]!['price'] as String;
+            }
+            _accuracy = confidence;
+          });
         } else {
           _cycleCategoryDemo();
         }
@@ -107,7 +154,9 @@ class _AiVisionPageState extends State<AiVisionPage> {
         final sourceText = source == ImageSource.gallery ? 'Galeri' : 'Kamera';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Foto dari $sourceText berhasil diunggah & dipindai AI!'),
+            content: Text(
+              'Foto dari $sourceText berhasil diunggah & dipindai AI!',
+            ),
             backgroundColor: const Color(0xFF7BC143),
             duration: const Duration(seconds: 2),
           ),
@@ -124,13 +173,16 @@ class _AiVisionPageState extends State<AiVisionPage> {
 
     setState(() {
       _category = nextCategory;
-      _price = _wasteData[nextCategory]!['price'] as String;
+      _priceCtrl.text = _wasteData[nextCategory]!['price'] as String;
       _accuracy = _wasteData[nextCategory]!['accuracy'] as int;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('AI Pilah: Terdeteksi "$_category"', style: _jakarta(color: Colors.white)),
+        content: Text(
+          'AI Pilah: Terdeteksi "$_category"',
+          style: _jakarta(color: Colors.white),
+        ),
         duration: const Duration(seconds: 1),
         backgroundColor: const Color(0xFF7BC143),
       ),
@@ -152,7 +204,11 @@ class _AiVisionPageState extends State<AiVisionPage> {
         ),
         title: Text(
           'Ai Vision',
-          style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+          style: _jakarta(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
       ),
@@ -163,20 +219,20 @@ class _AiVisionPageState extends State<AiVisionPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 children: [
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
-                    'Scan Barang bekas untuk di pindai !',
+                    'Scan Barang bekas untuk dipindai!',
                     style: _jakarta(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // ================= CAMERA SCANNER VIEWFINDER =================
                   Container(
-                    height: 260,
+                    height: 240,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.black.withAlpha(8),
@@ -187,39 +243,57 @@ class _AiVisionPageState extends State<AiVisionPage> {
                               fit: BoxFit.cover,
                             )
                           : (_photoUrl != null
-                              ? DecorationImage(
-                                  image: NetworkImage(_photoUrl!),
-                                  fit: BoxFit.cover,
-                                )
-                              : null),
+                                ? DecorationImage(
+                                    image: NetworkImage(_photoUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null),
                     ),
                     child: Stack(
                       children: [
                         if (_isAnalyzing)
                           const Center(
-                            child: CircularProgressIndicator(color: primaryGreen),
+                            child: CircularProgressIndicator(
+                              color: primaryGreen,
+                            ),
                           ),
-                        // Corner borders (Framing Bracket)
                         CustomPaint(
-                          size: const Size(double.infinity, 260),
+                          size: const Size(double.infinity, 240),
                           painter: ScannerFramePainter(),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 20),
 
-                  // ================= RESULT CARD =================
-                  Text(
-                    'Image Classifier pintar',
-                    style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                  // ================= RESULT & MANUAL OVERRIDE CARD =================
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Hasil Pindaian & Pilih Manual',
+                        style: _jakarta(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'Akurasi: $_accuracy%',
+                        style: _jakarta(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF4CAF50),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -232,46 +306,85 @@ class _AiVisionPageState extends State<AiVisionPage> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Green 4-box Icon
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
-                            borderRadius: BorderRadius.circular(12),
+                        // Jenis Sampah Dropdown
+                        Text(
+                          'Jenis Sampah (Bisa Pilih Manual)',
+                          style: _jakarta(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
                           ),
-                          child: GridView.count(
-                            crossAxisCount: 2,
-                            padding: const EdgeInsets.all(10),
-                            mainAxisSpacing: 4,
-                            crossAxisSpacing: 4,
-                            children: List.generate(
-                              4,
-                              (index) => Container(
-                                decoration: BoxDecoration(
-                                  color: primaryGreen,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFD1D5DB)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _wasteData.containsKey(_category) ? _category : _wasteData.keys.first,
+                              isExpanded: true,
+                              icon: const Icon(Icons.keyboard_arrow_down, color: primaryGreen),
+                              items: _wasteData.keys.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: _jakarta(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: _onCategoryChanged,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 20),
 
-                        // Classification Details Table
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _infoRow('Jenis Sampah', ':', _category),
-                              const SizedBox(height: 6),
-                              _infoRow('Harga saat ini', ':', _price),
-                              const SizedBox(height: 6),
-                              _infoRow('Akurasi', ':', '$_accuracy %', isGreen: true),
-                            ],
+                        const SizedBox(height: 14),
+
+                        // Harga Satuan Editable Field
+                        Text(
+                          'Harga Satuan (Bisa Custom Manual)',
+                          style: _jakarta(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _priceCtrl,
+                          style: _jakarta(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            prefixIcon: const Icon(Icons.edit_note, color: primaryGreen, size: 20),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            filled: true,
+                            fillColor: const Color(0xFFF9FAFB),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: primaryGreen, width: 1.5),
+                            ),
                           ),
                         ),
                       ],
@@ -283,28 +396,31 @@ class _AiVisionPageState extends State<AiVisionPage> {
                   // ================= LANJUTKAN KE JEMPUT BUTTON =================
                   SizedBox(
                     width: double.infinity,
-                    height: 46,
-                    child: OutlinedButton(
+                    height: 48,
+                    child: ElevatedButton(
                       onPressed: () {
-                        context.push('/create-order', extra: {
-                          'category': _category,
-                          'price': _price,
-                          'photo_url': _photoUrl,
-                        });
+                        context.push(
+                          '/create-order',
+                          extra: {
+                            'category': _category,
+                            'price': _priceCtrl.text,
+                            'photo_url': _photoUrl,
+                          },
+                        );
                       },
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: primaryGreen, width: 1.2),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryGreen,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        backgroundColor: Colors.white,
+                        elevation: 0,
                       ),
                       child: Text(
                         'Lanjutkan ke "Jemput"',
                         style: _jakarta(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: primaryGreen,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -356,34 +472,6 @@ class _AiVisionPageState extends State<AiVisionPage> {
     );
   }
 
-  Widget _infoRow(String label, String colon, String value, {bool isGreen = false}) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 85,
-          child: Text(
-            label,
-            style: _jakarta(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87),
-          ),
-        ),
-        Text(
-          '$colon ',
-          style: _jakarta(fontSize: 11, color: Colors.black54),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: _jakarta(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: isGreen ? const Color(0xFF4CAF50) : Colors.black87,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// Painter to draw the 4 corner framing brackets matching scanner UI

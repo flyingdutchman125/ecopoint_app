@@ -16,8 +16,9 @@
     pkgs.gtk3
     pkgs.flyctl
     pkgs.htop
+    pkgs.ripgrep
   ];
-  # Sets environment variables in the workspace
+  # Sets environment variables i the workspace
   env = {
     CLAUDE_CODE_OAUTH_TOKEN = "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";
   };

@@ -26,7 +26,10 @@ class CollectorTasksTab extends StatelessWidget {
         },
         child: Column(
           children: [
-            _buildEarningsCard(context, provider).animate().fadeIn().slideY(begin: -0.2, end: 0),
+            _buildEarningsCard(
+              context,
+              provider,
+            ).animate().fadeIn().slideY(begin: -0.2, end: 0),
             Expanded(
               child: myOrders.isEmpty
                   ? const Center(child: Text('Belum ada tugas'))
@@ -111,7 +114,11 @@ class CollectorTasksTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskCard(BuildContext context, OrderModel order, CollectorProvider provider) {
+  Widget _buildTaskCard(
+    BuildContext context,
+    OrderModel order,
+    CollectorProvider provider,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -126,7 +133,10 @@ class CollectorTasksTab extends StatelessWidget {
               children: [
                 Text(
                   order.itemType ?? 'Barang',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 _buildStatusBadge(order.status),
               ],
@@ -134,7 +144,11 @@ class CollectorTasksTab extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: Colors.grey,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -184,12 +198,20 @@ class CollectorTasksTab extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, OrderModel order, CollectorProvider provider) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    OrderModel order,
+    CollectorProvider provider,
+  ) {
     if (order.status == 'accepted') {
       return SizedBox(
         width: double.infinity,
@@ -197,7 +219,9 @@ class CollectorTasksTab extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onPressed: () => provider.enRouteOrder(order.id),
           child: const Text('Mulai Perjalanan'),
@@ -210,7 +234,9 @@ class CollectorTasksTab extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onPressed: () => _showWeightDialog(context, order, provider),
           child: const Text('Selesaikan Pesanan'),
@@ -222,14 +248,21 @@ class CollectorTasksTab extends StatelessWidget {
         children: [
           Icon(Icons.check_circle, color: Colors.green),
           SizedBox(width: 8),
-          Text('Tugas Selesai', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+          Text(
+            'Tugas Selesai',
+            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+          ),
         ],
       );
     }
     return const SizedBox.shrink();
   }
 
-  void _showWeightDialog(BuildContext context, OrderModel order, CollectorProvider provider) {
+  void _showWeightDialog(
+    BuildContext context,
+    OrderModel order,
+    CollectorProvider provider,
+  ) {
     final TextEditingController controller = TextEditingController();
     showDialog(
       context: context,
@@ -257,7 +290,9 @@ class CollectorTasksTab extends StatelessWidget {
                   await provider.completeOrder(order.id, weight);
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 }
               }

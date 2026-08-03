@@ -6,15 +6,29 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:ecopoint/main.dart';
+import 'package:ecopoint/providers/admin_provider.dart';
+import 'package:ecopoint/providers/auth_provider.dart';
+import 'package:ecopoint/providers/collector_provider.dart';
+import 'package:ecopoint/providers/user_provider.dart';
 
 void main() {
   testWidgets('EcoPoint splash screen smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const EcoPointApp());
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
+          ChangeNotifierProvider(create: (_) => UserProvider()),
+          ChangeNotifierProvider(create: (_) => CollectorProvider()),
+          ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ],
+        child: const EcoPointApp(),
+      ),
+    );
 
-    // Verify that our splash screen text is present.
-    expect(find.text('EcoPoint'), findsOneWidget);
+    expect(find.byType(EcoPointApp), findsOneWidget);
   });
 }

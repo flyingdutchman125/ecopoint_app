@@ -68,10 +68,7 @@ void main() {
       final res = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': userEmail,
-          'password': password,
-        }),
+        body: jsonEncode({'email': userEmail, 'password': password}),
       );
 
       print('Login Warga response: ${res.statusCode}');
@@ -86,10 +83,7 @@ void main() {
       final res = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': collectorEmail,
-          'password': password,
-        }),
+        body: jsonEncode({'email': collectorEmail, 'password': password}),
       );
 
       print('Login Collector response: ${res.statusCode}');
@@ -113,7 +107,9 @@ void main() {
         headers: {'Authorization': 'Bearer $userToken'},
       );
       expect(pricesRes.statusCode, equals(200));
-      print('Prices Catalog count: ${jsonDecode(pricesRes.body)['data']?.length ?? 0}');
+      print(
+        'Prices Catalog count: ${jsonDecode(pricesRes.body)['data']?.length ?? 0}',
+      );
     });
 
     test('6. Warga Creates Waste Order (PET Plastic & Location)', () async {
@@ -149,11 +145,7 @@ void main() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $collectorToken',
         },
-        body: jsonEncode({
-          'lat': -6.2088,
-          'lng': 106.8456,
-          'is_online': true,
-        }),
+        body: jsonEncode({'lat': -6.2088, 'lng': 106.8456, 'is_online': true}),
       );
       expect(locRes.statusCode, equals(200));
 
@@ -173,10 +165,7 @@ void main() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $collectorToken',
         },
-        body: jsonEncode({
-          'amount': 100000,
-          'payment_method': 'Bank BCA',
-        }),
+        body: jsonEncode({'amount': 100000, 'payment_method': 'Bank BCA'}),
       );
       print('Collector TopUp response: ${topUpRes.statusCode}');
 
@@ -212,10 +201,7 @@ void main() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $userToken',
         },
-        body: jsonEncode({
-          'amount': 50000,
-          'payment_method': 'GoPay',
-        }),
+        body: jsonEncode({'amount': 50000, 'payment_method': 'GoPay'}),
       );
       expect(topup.statusCode, equals(201));
 

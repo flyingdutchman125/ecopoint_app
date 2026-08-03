@@ -30,7 +30,8 @@ class CollectorProvider with ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
-          _walletBalance = (data['data']['wallet_balance'] as num?)?.toDouble() ?? 0.0;
+          _walletBalance =
+              (data['data']['wallet_balance'] as num?)?.toDouble() ?? 0.0;
           notifyListeners();
         }
       }
@@ -58,7 +59,11 @@ class CollectorProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> withdraw(double amount, String bankName, String accountNumber) async {
+  Future<bool> withdraw(
+    double amount,
+    String bankName,
+    String accountNumber,
+  ) async {
     _isLoading = true;
     notifyListeners();
     try {
@@ -99,10 +104,10 @@ class CollectorProvider with ChangeNotifier {
           throw 'Location permissions are denied';
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         throw 'Location permissions are permanently denied, we cannot request permissions.';
-      } 
+      }
 
       Position position = await Geolocator.getCurrentPosition();
       _currentPosition = position;
@@ -115,31 +120,40 @@ class CollectorProvider with ChangeNotifier {
       });
 
       // 3. Fetch Nearby Orders
-      final res = await ApiService.get('${ApiConstants.nearbyOrders}?radius=5000&lat=${position.latitude}&lng=${position.longitude}');
+      final res = await ApiService.get(
+        '${ApiConstants.nearbyOrders}?radius=5000&lat=${position.latitude}&lng=${position.longitude}',
+      );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
-          _nearbyOrders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          _nearbyOrders = (data['data'] as List)
+              .map((o) => OrderModel.fromJson(o))
+              .toList();
         }
       }
 
       // 4. Fetch My Orders & Earnings
       final myOrdersRes = await ApiService.get(ApiConstants.collectorOrders);
       if (myOrdersRes.statusCode == 200) {
-         final data = jsonDecode(myOrdersRes.body);
-         if (data['success'] == true) {
-            _myOrders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
-         }
+        final data = jsonDecode(myOrdersRes.body);
+        if (data['success'] == true) {
+          _myOrders = (data['data'] as List)
+              .map((o) => OrderModel.fromJson(o))
+              .toList();
+        }
       }
 
-      final earnRes = await ApiService.get('${ApiConstants.earnings}?period=all');
+      final earnRes = await ApiService.get(
+        '${ApiConstants.earnings}?period=all',
+      );
       if (earnRes.statusCode == 200) {
-         final data = jsonDecode(earnRes.body);
-         if (data['success'] == true) {
-            _earnings = data['data']['total'] != null ? double.parse(data['data']['total'].toString()) : 0.0;
-         }
+        final data = jsonDecode(earnRes.body);
+        if (data['success'] == true) {
+          _earnings = data['data']['total'] != null
+              ? double.parse(data['data']['total'].toString())
+              : 0.0;
+        }
       }
-
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -152,14 +166,17 @@ class CollectorProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await ApiService.post('${ApiConstants.order}/$orderId/accept', {});
+      final res = await ApiService.post(
+        '${ApiConstants.order}/$orderId/accept',
+        {},
+      );
       if (res.statusCode == 200) {
         await updateLocationAndFetchNearby();
         return true;
       }
       _error = 'Failed to accept order';
       return false;
-    } catch(e) {
+    } catch (e) {
       _error = e.toString();
       return false;
     } finally {
@@ -174,7 +191,9 @@ class CollectorProvider with ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
-          _myOrders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          _myOrders = (data['data'] as List)
+              .map((o) => OrderModel.fromJson(o))
+              .toList();
           notifyListeners();
         }
       }
@@ -187,7 +206,9 @@ class CollectorProvider with ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
-          _earnings = data['data']['total'] != null ? double.parse(data['data']['total'].toString()) : 0.0;
+          _earnings = data['data']['total'] != null
+              ? double.parse(data['data']['total'].toString())
+              : 0.0;
           notifyListeners();
         }
       }
@@ -198,7 +219,10 @@ class CollectorProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await ApiService.put('${ApiConstants.order}/$orderId/en-route', {});
+      final res = await ApiService.put(
+        '${ApiConstants.order}/$orderId/en-route',
+        {},
+      );
       if (res.statusCode == 200) {
         await updateLocationAndFetchNearby();
         return true;
@@ -217,7 +241,7 @@ class CollectorProvider with ChangeNotifier {
     notifyListeners();
     try {
       final res = await ApiService.post('${ApiConstants.order}/$orderId/pay', {
-        'actual_weight': actualWeight
+        'actual_weight': actualWeight,
       });
       if (res.statusCode == 200) {
         await updateLocationAndFetchNearby();
@@ -225,7 +249,7 @@ class CollectorProvider with ChangeNotifier {
       }
       _error = 'Failed to complete order';
       return false;
-    } catch(e) {
+    } catch (e) {
       _error = e.toString();
       return false;
     } finally {

@@ -31,105 +31,117 @@ class _PriceCatalogScreenState extends State<PriceCatalogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Katalog Harga Sampah', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Katalog Harga Sampah',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: userProv.isLoading
           ? _buildShimmer(context)
           : userProv.prices.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text('Belum ada data harga', style: GoogleFonts.inter(fontSize: 16)),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: Colors.grey,
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () => userProv.fetchPrices(),
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.85,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: userProv.prices.length,
-                    itemBuilder: (context, index) {
-                      final price = userProv.prices[index];
-                      final isTrendUp = price.isTrendUp;
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada data harga',
+                    style: GoogleFonts.inter(fontSize: 16),
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: () => userProv.fetchPrices(),
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.85,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: userProv.prices.length,
+                itemBuilder: (context, index) {
+                  final price = userProv.prices[index];
+                  final isTrendUp = price.isTrendUp;
 
-                      return Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: theme.colorScheme.outlineVariant),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primaryContainer,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      price.iconForType,
-                                      style: const TextStyle(fontSize: 24),
-                                    ),
-                                  ),
-                                  if (price.trend != null)
-                                    Icon(
-                                      isTrendUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                                      color: isTrendUp ? Colors.green : Colors.red,
-                                      size: 20,
-                                    ),
-                                ],
-                              ),
-                              const Spacer(),
-                              Text(
-                                price.itemName,
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  shape: BoxShape.circle,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${CurrencyFormatter.formatRupiah(price.currentPrice)} / ${price.unit}',
-                                style: GoogleFonts.inter(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                child: Text(
+                                  price.iconForType,
+                                  style: const TextStyle(fontSize: 24),
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              if (price.lastUpdated != null)
-                                Text(
-                                  'Diperbarui ${price.lastUpdated!.toLocal().toString().split(' ')[0]}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
+                              if (price.trend != null)
+                                Icon(
+                                  isTrendUp
+                                      ? Icons.trending_up_rounded
+                                      : Icons.trending_down_rounded,
+                                  color: isTrendUp ? Colors.green : Colors.red,
+                                  size: 20,
                                 ),
                             ],
                           ),
-                        ),
-                      ).animate().fade(delay: Duration(milliseconds: 50 * index)).scale();
-                    },
-                  ),
-                ),
+                          const Spacer(),
+                          Text(
+                            price.itemName,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${CurrencyFormatter.formatRupiah(price.currentPrice)} / ${price.unit}',
+                            style: GoogleFonts.inter(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (price.lastUpdated != null)
+                            Text(
+                              'Diperbarui ${price.lastUpdated!.toLocal().toString().split(' ')[0]}',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ).animate().fade(delay: Duration(milliseconds: 50 * index)).scale();
+                },
+              ),
+            ),
     );
   }
 

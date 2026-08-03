@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
+
 class AuthProvider with ChangeNotifier {
   UserModel? _user;
   String? _token;
@@ -19,15 +20,15 @@ class AuthProvider with ChangeNotifier {
   Future<void> initAuth() async {
     _isLoading = true;
     notifyListeners();
-    
+
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
     final userJson = prefs.getString('user_data');
-    
+
     if (_token != null && userJson != null) {
       _user = UserModel.fromJson(jsonDecode(userJson));
     }
-    
+
     _isLoading = false;
     notifyListeners();
   }
@@ -59,27 +60,31 @@ class AuthProvider with ChangeNotifier {
     _clearError();
 
     try {
+      debugPrint('AUTH_DEBUG: Attempting login for $email at ${ApiConstants.login}');
       final response = await ApiService.post(ApiConstants.login, {
         'email': email,
         'password': password,
       });
 
+      debugPrint('AUTH_DEBUG: Response status=${response.statusCode}, body=${response.body}');
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200 && data['success'] == true) {
         _token = data['data']['token'];
         _user = UserModel.fromJson(data['data']['user']);
-        
+
         await _saveAuthData();
         _setLoading(false);
         return true;
       } else {
         _error = _parseErrorMessage(data, 'Login failed');
+        debugPrint('AUTH_DEBUG: Login failed error=$_error');
         _setLoading(false);
         return false;
       }
     } catch (e) {
       _error = _connectionErrorMessage(e);
+      debugPrint('AUTH_DEBUG: Login exception error=$e');
       _setLoading(false);
       return false;
     }
@@ -100,50 +105,53 @@ class AuthProvider with ChangeNotifier {
     String? vehiclePlate,
     String? ktpUrl,
   }) async {
-   _setLoading(true);
-   _clearError();
+    _setLoading(true);
+    _clearError();
 
-   try {
-     final response = await ApiService.post(ApiConstants.register, {
-       'email': email,
-       'password': password,
-       'name': name,
-       'phone': phone,
-       'city': city,
-       'address': address,
-       'subdistrict': subdistrict,
-       'role': role,
-       'consent_sorting_anorganic': consentSorting,
-       if (businessName != null) 'business_name': businessName,
-       if (vehicleType != null) 'vehicle_type': vehicleType,
-       if (vehiclePlate != null) 'vehicle_plate': vehiclePlate,
-       if (ktpUrl != null) 'ktp_url': ktpUrl,
-     });
+    try {
+      final response = await ApiService.post(ApiConstants.register, {
+        'email': email,
+        'password': password,
+        'name': name,
+        'phone': phone,
+        'city': city,
+        'address': address,
+        'subdistrict': subdistrict,
+        'role': role,
+        'consent_sorting_anorganic': consentSorting,
+        'business_name': ?businessName,
+        'vehicle_type': ?vehicleType,
+        'vehicle_plate': ?vehiclePlate,
+        'ktp_url': ?ktpUrl,
+      });
 
-     final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-     if (response.statusCode == 200 || response.statusCode == 201) {
-       if (data['success'] == true) {
-         _setLoading(false);
-         return true;
-       } else {
-         _error = _parseErrorMessage(data, 'Registration failed');
-         _setLoading(false);
-         return false;
-       }
-     } else {
-       _error = _parseErrorMessage(data, 'Registration failed');
-       _setLoading(false);
-       return false;
-     }
-   } catch (e) {
-     _error = _connectionErrorMessage(e);
-     _setLoading(false);
-     return false;
-   }
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (data['success'] == true) {
+          _setLoading(false);
+          return true;
+        } else {
+          _error = _parseErrorMessage(data, 'Registration failed');
+          _setLoading(false);
+          return false;
+        }
+      } else {
+        _error = _parseErrorMessage(data, 'Registration failed');
+        _setLoading(false);
+        return false;
+      }
+    } catch (e) {
+      _error = _connectionErrorMessage(e);
+      _setLoading(false);
+      return false;
+    }
   }
 
-  Future<bool> changePassword(String currentPassword, String newPassword) async {
+  Future<bool> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     _setLoading(true);
     _clearError();
     try {

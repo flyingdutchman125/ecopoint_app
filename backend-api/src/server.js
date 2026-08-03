@@ -1,8 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../swagger.json');
+const chatWS = require('./services/chatWebSocket');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,7 +38,10 @@ app.use((err, req, res, next) => {
   });
 });
 
+const server = http.createServer(app);
+chatWS.initWebSocket(server);
+
 const HOST = '0.0.0.0';
-app.listen(PORT, HOST, () => {
+server.listen(PORT, HOST, () => {
   console.log(`EcoPoint API running on http://${HOST}:${PORT}`);
 });

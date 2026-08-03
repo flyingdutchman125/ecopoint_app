@@ -31,10 +31,7 @@ class UserProvider with ChangeNotifier {
         ecoPoints: _wallet!.ecoPoints + points,
       );
     } else {
-      _wallet = WalletModel(
-        balance: 0.0,
-        ecoPoints: points,
-      );
+      _wallet = WalletModel(balance: 0.0, ecoPoints: points);
     }
     notifyListeners();
   }
@@ -44,8 +41,10 @@ class UserProvider with ChangeNotifier {
       final res = await ApiService.get(ApiConstants.prices);
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        if (data['success'] == true) {
-          _prices = (data['data'] as List).map((p) => PriceModel.fromJson(p)).toList();
+        if (data['success'] == true || data['status'] == 'success') {
+          _prices = (data['data'] as List)
+              .map((p) => PriceModel.fromJson(p))
+              .toList();
           notifyListeners();
         }
       }
@@ -58,7 +57,9 @@ class UserProvider with ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
-          _transactions = (data['data'] as List).map((t) => TransactionModel.fromJson(t)).toList();
+          _transactions = (data['data'] as List)
+              .map((t) => TransactionModel.fromJson(t))
+              .toList();
           notifyListeners();
         }
       }
@@ -77,7 +78,9 @@ class UserProvider with ChangeNotifier {
       if (orderRes.statusCode == 200) {
         final data = jsonDecode(orderRes.body);
         if (data['success'] == true) {
-          _orders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          _orders = (data['data'] as List)
+              .map((o) => OrderModel.fromJson(o))
+              .toList();
           MissionState.instance.syncFromOrders(_orders);
         }
       }
@@ -117,7 +120,11 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> withdraw(double amount, String bankName, String accountNumber) async {
+  Future<bool> withdraw(
+    double amount,
+    String bankName,
+    String accountNumber,
+  ) async {
     try {
       final res = await ApiService.post(ApiConstants.walletWithdraw, {
         'amount': amount,
@@ -157,7 +164,10 @@ class UserProvider with ChangeNotifier {
 
   Future<bool> cancelOrder(String orderId) async {
     try {
-      final res = await ApiService.put('${ApiConstants.order}/$orderId/cancel', {});
+      final res = await ApiService.put(
+        '${ApiConstants.order}/$orderId/cancel',
+        {},
+      );
       if (res.statusCode == 200) {
         await fetchDashboardData();
         return true;
@@ -175,7 +185,9 @@ class UserProvider with ChangeNotifier {
     }
 
     try {
-      final res = await ApiService.post(ApiConstants.redeem, {'points': points});
+      final res = await ApiService.post(ApiConstants.redeem, {
+        'points': points,
+      });
       if (res.statusCode == 200 || res.statusCode == 201) {
         WalletState.instance.addPoints(-points);
         await fetchDashboardData();
@@ -212,7 +224,7 @@ class UserProvider with ChangeNotifier {
         'pickup_lat': lat != 0 ? lat : (pickupLat ?? 0),
         'pickup_lng': lng != 0 ? lng : (pickupLng ?? 0),
         'pickup_address': pickupAddress ?? address,
-        if (notes != null) 'notes': notes,
+        'notes': ?notes,
       });
 
       final data = jsonDecode(res.body);

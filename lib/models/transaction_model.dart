@@ -28,7 +28,8 @@ class TransactionModel {
       amount: _parseDouble(json['amount']),
       type: json['type']?.toString() ?? 'payment',
       description: json['description']?.toString(),
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
     );
   }

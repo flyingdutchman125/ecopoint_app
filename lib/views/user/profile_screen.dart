@@ -14,7 +14,10 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Edit Nomor Telepon', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Edit Nomor Telepon',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: phoneCtrl,
           keyboardType: TextInputType.phone,
@@ -52,7 +55,10 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Ganti Password', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Ganti Password',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -71,7 +77,9 @@ class ProfileScreen extends StatelessWidget {
             TextField(
               controller: confirmCtrl,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
+              decoration: const InputDecoration(
+                labelText: 'Konfirmasi Password',
+              ),
             ),
           ],
         ),
@@ -84,7 +92,9 @@ class ProfileScreen extends StatelessWidget {
             onPressed: () async {
               if (newCtrl.text != confirmCtrl.text) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Password baru dan konfirmasi tidak cocok')),
+                  const SnackBar(
+                    content: Text('Password baru dan konfirmasi tidak cocok'),
+                  ),
                 );
                 return;
               }
@@ -112,8 +122,16 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Hapus Akun', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red)),
-        content: const Text('Apakah Anda yakin ingin menghapus akun ini? Tindakan ini tidak dapat dibatalkan.'),
+        title: Text(
+          'Hapus Akun',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+        content: const Text(
+          'Apakah Anda yakin ingin menghapus akun ini? Tindakan ini tidak dapat dibatalkan.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -124,7 +142,10 @@ class ProfileScreen extends StatelessWidget {
               Navigator.pop(ctx);
               await ctx.read<AuthProvider>().deleteAccount();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Hapus'),
           ),
         ],
@@ -140,12 +161,17 @@ class ProfileScreen extends StatelessWidget {
 
     if (user == null) return const SizedBox.shrink();
 
-    final displayName = (user.name != null && user.name!.isNotEmpty) ? user.name! : user.email;
+    final displayName = (user.name != null && user.name!.isNotEmpty)
+        ? user.name!
+        : user.email;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text('Profil Saya', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Profil Saya',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -158,7 +184,9 @@ class ProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                    backgroundImage: user.avatarUrl != null
+                        ? NetworkImage(user.avatarUrl!)
+                        : null,
                     child: user.avatarUrl == null
                         ? Text(
                             displayName.substring(0, 1).toUpperCase(),
@@ -187,11 +215,16 @@ class ProfileScreen extends StatelessWidget {
                   ).animate().fade(delay: 100.ms),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Text(
                       user.role.toUpperCase(),
@@ -208,7 +241,9 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 40),
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
@@ -216,14 +251,38 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.phone_rounded),
-                    title: Text('Nomor Telepon', style: GoogleFonts.inter(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
-                    subtitle: Text(user.phone ?? 'Belum diatur', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                    title: Text(
+                      'Nomor Telepon',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    subtitle: Text(
+                      user.phone ?? 'Belum diatur',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.home_work_rounded),
-                    title: Text('Alamat', style: GoogleFonts.inter(fontSize: 14, color: theme.colorScheme.onSurfaceVariant)),
-                    subtitle: Text(user.address ?? 'Belum diatur', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                    title: Text(
+                      'Alamat',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    subtitle: Text(
+                      user.address ?? 'Belum diatur',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -232,12 +291,15 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _showEditProfileDialog(context, user.phone ?? ''),
+                onPressed: () =>
+                    _showEditProfileDialog(context, user.phone ?? ''),
                 icon: const Icon(Icons.edit_rounded),
                 label: const Text('Edit Telepon'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
@@ -252,7 +314,9 @@ class ProfileScreen extends StatelessWidget {
                 label: const Text('Ganti Password'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   backgroundColor: theme.colorScheme.secondary,
                   foregroundColor: theme.colorScheme.onSecondary,
                 ),
@@ -267,7 +331,9 @@ class ProfileScreen extends StatelessWidget {
                 label: const Text('Keluar'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   foregroundColor: Colors.red,
                   side: const BorderSide(color: Colors.red),
                 ),

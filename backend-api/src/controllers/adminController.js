@@ -35,7 +35,7 @@ async function updatePrice(req, res, next) {
 async function getAllOrders(req, res, next) {
   try {
     const { page, limit, status } = req.query;
-    let query = supabase.from('orders').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+    let query = supabase.from('orders').select('*, user:user_id(name, phone), collector:collector_id(name, phone)', { count: 'exact' }).order('created_at', { ascending: false });
     if (status) query = query.eq('status', status);
     const result = await paginate(query, page, limit);
     res.json({ success: true, ...result });
@@ -70,11 +70,23 @@ async function getStatistics(req, res, next) {
 async function getAllUsers(req, res, next) {
   try {
     const { page, limit, role } = req.query;
-    let query = supabase.from('users').select('id, role, name, email, wallet_balance, eco_points, is_online, created_at', { count: 'exact' }).order('created_at', { ascending: false });
+    let selectCols = 'id, role, name, email, phone, city, address, subdistrict, avatar_url, wallet_balance, eco_points, is_online, created_at';
+    let query = supabase.from('users').select(selectCols, { count: 'exact' }).order('created_at', { ascending: false });
     if (role) query = query.eq('role', role);
-    const result = await paginate(query, page, limit);
+    let result = await paginate(query, page, limit);
     res.json({ success: true, ...result });
-  } catch (error) { next(error); }
+  } catch (error) {
+    try {
+      const { page, limit, role } = req.query;
+      let selectCols = 'id, role, name, email, phone, wallet_balance, eco_points, is_online, created_at';
+      let query = supabase.from('users').select(selectCols, { count: 'exact' }).order('created_at', { ascending: false });
+      if (role) query = query.eq('role', role);
+      let result = await paginate(query, page, limit);
+      res.json({ success: true, ...result });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 async function updateUserBalance(req, res, next) {
@@ -115,10 +127,24 @@ async function adminDeleteUser(req, res, next) {
     if (!userId) {
       return res.status(400).json({ success: false, message: 'userId is required' });
     }
+    if (userId === req.user.id) {
+      return res.status(400).json({ success: false, message: 'Admin cannot delete their own account' });
+    }
+
+    await Promise.allSettled([
+      supabase.from('user_addresses').delete().eq('user_id', userId),
+      supabase.from('transactions').delete().eq('user_id', userId),
+      supabase.from('topups').delete().eq('user_id', userId),
+      supabase.from('withdrawals').delete().eq('user_id', userId),
+      supabase.from('order_messages').delete().eq('sender_id', userId),
+    ]);
+
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+    if (authError && authError.status !== 404) throw authError;
+
     const { error: dbError } = await supabase.from('users').delete().eq('id', userId);
     if (dbError) throw dbError;
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-    if (authError) throw authError;
+
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (error) { next(error); }
 }

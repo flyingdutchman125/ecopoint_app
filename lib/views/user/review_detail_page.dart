@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/rating_state.dart';
 
 class ReviewDetailPage extends StatefulWidget {
   final Map<String, dynamic>? extra;
@@ -12,6 +13,7 @@ class ReviewDetailPage extends StatefulWidget {
 class _ReviewDetailPageState extends State<ReviewDetailPage> {
   final TextEditingController _reviewController = TextEditingController();
   int _rating = 5;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -19,7 +21,7 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
     final item = widget.extra?['item'] as Map<String, dynamic>?;
     final mode = widget.extra?['mode']?.toString() ?? 'view';
     if (mode == 'view' && item != null) {
-      _rating = (item['rating'] ?? 5) as int;
+      _rating = ((item['rating'] ?? 5) as num).toInt();
       _reviewController.text = item['text'] ?? '';
     }
   }
@@ -30,13 +32,32 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
     super.dispose();
   }
 
-  void _submitReview() {
-    // dummy: just pop back with result — in real app, call backend
-    final result = {
-      'rating': _rating,
-      'text': _reviewController.text.trim(),
-    };
-    Navigator.of(context).pop(result);
+  Future<void> _submitReview() async {
+    final item = widget.extra?['item'] as Map<String, dynamic>?;
+    if (item == null) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await RatingState.instance.submitReview(
+        item: item,
+        rating: _rating,
+        text: _reviewController.text.trim(),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ulasan berhasil dikirim! Terima kasih.'),
+            backgroundColor: Color(0xFF7CB342),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop(true);
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -56,7 +77,11 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
         ),
         title: Text(
           isCreate ? 'Beri Ulasan' : 'Ulasan',
-          style: GoogleFonts.outfit(color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         centerTitle: true,
       ),
@@ -65,23 +90,42 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(
               children: [
                 Container(
                   width: 46,
                   height: 46,
-                  decoration: BoxDecoration(color: const Color(0xFFF5F5F5), shape: BoxShape.circle, border: Border.all(color: const Color(0xFFE0E0E0))),
-                  child: const Icon(Icons.psychology_alt_outlined, color: Colors.black54),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
+                  ),
+                  child: const Icon(
+                    Icons.psychology_alt_outlined,
+                    color: Colors.black54,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item?['name'] ?? '-', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                      Text(
+                        item?['name'] ?? '-',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(height: 4),
-                      Text(item?['detail'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9E9E9E))),
+                      Text(
+                        item?['detail'] ?? '',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF9E9E9E),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -89,7 +133,13 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
                   Row(
                     children: List.generate(5, (i) {
                       final filled = i < (item['rating'] as int);
-                      return Icon(Icons.star, color: filled ? const Color(0xFFFFC107) : const Color(0xFFE0E0E0), size: 16);
+                      return Icon(
+                        Icons.star,
+                        color: filled
+                            ? const Color(0xFFFFC107)
+                            : const Color(0xFFE0E0E0),
+                        size: 16,
+                      );
                     }),
                   ),
               ],
@@ -103,12 +153,20 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Text(isCreate ? 'Berikan rating' : 'Ulasan', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                  Text(
+                    isCreate ? 'Berikan rating' : 'Ulasan',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: List.generate(5, (i) {
                       return IconButton(
-                        icon: Icon(i < _rating ? Icons.star : Icons.star_border, color: i < _rating ? const Color(0xFFFFC107) : const Color(0xFFE0E0E0)),
+                        icon: Icon(
+                          i < _rating ? Icons.star : Icons.star_border,
+                          color: i < _rating
+                              ? const Color(0xFFFFC107)
+                              : const Color(0xFFE0E0E0),
+                        ),
                         onPressed: isCreate
                             ? () {
                                 setState(() => _rating = i + 1);
@@ -126,15 +184,24 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
                       hintText: isCreate ? 'Tulis ulasan Anda di sini...' : '',
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   if (!isCreate && item != null)
                     Align(
                       alignment: Alignment.centerRight,
-                      child: Text('kode orderan : ${item['orderCode'] ?? '-'}', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9E9E9E))),
-                    )
+                      child: Text(
+                        'kode orderan : ${item['orderCode'] ?? '-'}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF9E9E9E),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -146,9 +213,30 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7CB342)),
-                  onPressed: _submitReview,
-                  child: Text('Kirim Ulasan', style: GoogleFonts.inter(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7CB342),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: _isSubmitting ? null : _submitReview,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'Kirim Ulasan',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ),

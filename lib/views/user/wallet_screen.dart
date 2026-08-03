@@ -68,7 +68,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 final amount = double.tryParse(amountCtrl.text);
                 if (amount != null && amount > 0) {
                   Navigator.pop(ctx);
-                  await context.read<UserProvider>().topUp(amount, 'bank_transfer');
+                  await context.read<UserProvider>().topUp(
+                    amount,
+                    'bank_transfer',
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -79,7 +82,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Top Up Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Top Up Sekarang',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 24),
           ],
@@ -87,7 +93,6 @@ class _WalletScreenState extends State<WalletScreen> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +103,10 @@ class _WalletScreenState extends State<WalletScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text('Dompet & Poin', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Dompet & Poin',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: RefreshIndicator(
@@ -117,10 +125,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF1B5E20),
-                      const Color(0xFF4CAF50),
-                    ],
+                    colors: [const Color(0xFF1B5E20), const Color(0xFF4CAF50)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -154,7 +159,9 @@ class _WalletScreenState extends State<WalletScreen> {
                             ),
                           )
                         : Text(
-                            CurrencyFormatter.formatRupiah(wallet?.balance ?? 0),
+                            CurrencyFormatter.formatRupiah(
+                              wallet?.balance ?? 0,
+                            ),
                             style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontSize: 36,
@@ -178,10 +185,15 @@ class _WalletScreenState extends State<WalletScreen> {
                         const SizedBox(width: 16),
                         ElevatedButton.icon(
                           onPressed: () => context.push('/withdraw'),
-                          icon: const Icon(Icons.account_balance_rounded, size: 18),
+                          icon: const Icon(
+                            Icons.account_balance_rounded,
+                            size: 18,
+                          ),
                           label: const Text('Tarik'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.2,
+                            ),
                             foregroundColor: Colors.white,
                             elevation: 0,
                           ),
@@ -217,7 +229,11 @@ class _WalletScreenState extends State<WalletScreen> {
                         color: Colors.green.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.eco_rounded, color: Colors.green, size: 28),
+                      child: const Icon(
+                        Icons.eco_rounded,
+                        color: Colors.green,
+                        size: 28,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -243,7 +259,9 @@ class _WalletScreenState extends State<WalletScreen> {
                     OutlinedButton(
                       onPressed: () => context.push('/convert'),
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Tukar'),
                     ),
@@ -252,7 +270,7 @@ class _WalletScreenState extends State<WalletScreen> {
               ).animate().fade(delay: 100.ms).slideY(begin: 0.1),
 
               const SizedBox(height: 32),
-              
+
               Text(
                 'Riwayat Transaksi',
                 style: GoogleFonts.outfit(
@@ -266,57 +284,69 @@ class _WalletScreenState extends State<WalletScreen> {
               userProv.isLoading && userProv.transactions.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : userProv.transactions.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32),
-                            child: Text(
-                              'Belum ada transaksi',
-                              style: GoogleFonts.inter(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          'Belum ada transaksi',
+                          style: GoogleFonts.inter(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: userProv.transactions.length,
+                      separatorBuilder: (context, index) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final trx = userProv.transactions[index];
+                        final isCredit =
+                            trx.type == 'credit' ||
+                            trx.type == 'top_up' ||
+                            trx.type == 'order_payment';
+
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isCredit
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : Colors.red.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isCredit
+                                  ? Icons.arrow_downward_rounded
+                                  : Icons.arrow_upward_rounded,
+                              color: isCredit ? Colors.green : Colors.red,
                             ),
                           ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: userProv.transactions.length,
-                          separatorBuilder: (context, index) => const Divider(),
-                          itemBuilder: (context, index) {
-                            final trx = userProv.transactions[index];
-                            final isCredit = trx.type == 'credit' || trx.type == 'top_up' || trx.type == 'order_payment';
-                            
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: isCredit ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  isCredit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                  color: isCredit ? Colors.green : Colors.red,
-                                ),
-                              ),
-                              title: Text(
-                                trx.description ?? trx.type.replaceAll('_', ' ').toUpperCase(),
-                                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Text(
-                                trx.createdAt.toLocal().toString().split('.')[0],
-                                style: GoogleFonts.inter(fontSize: 12),
-                              ),
-                              trailing: Text(
-                                '${isCredit ? '+' : '-'}${CurrencyFormatter.formatRupiah(trx.amount)}',
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  color: isCredit ? Colors.green : Colors.red,
-                                ),
-                              ),
-                            ).animate().fade(delay: Duration(milliseconds: 300 + (50 * index)));
-                          },
-                        ),
+                          title: Text(
+                            trx.description ??
+                                trx.type.replaceAll('_', ' ').toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            trx.createdAt.toLocal().toString().split('.')[0],
+                            style: GoogleFonts.inter(fontSize: 12),
+                          ),
+                          trailing: Text(
+                            '${isCredit ? '+' : '-'}${CurrencyFormatter.formatRupiah(trx.amount)}',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              color: isCredit ? Colors.green : Colors.red,
+                            ),
+                          ),
+                        ).animate().fade(
+                          delay: Duration(milliseconds: 300 + (50 * index)),
+                        );
+                      },
+                    ),
             ],
           ),
         ),

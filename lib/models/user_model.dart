@@ -62,7 +62,9 @@ class UserModel {
       avatarUrl: json['avatar_url'],
       walletBalance: (json['wallet_balance'] as num?)?.toDouble() ?? 0.0,
       ecoPoints: (json['eco_points'] as num?)?.toInt() ?? 0,
-      rating: (json['rating'] as num?)?.toDouble() ?? (json['user_metadata']?['rating'] as num?)?.toDouble(),
+      rating:
+          (json['rating'] as num?)?.toDouble() ??
+          (json['user_metadata']?['rating'] as num?)?.toDouble(),
     );
   }
 

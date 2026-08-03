@@ -13,40 +13,59 @@ class AdminHomeScreen extends StatefulWidget {
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _currentIndex = 0;
+  String _selectedUserRole = 'all';
 
-  final List<Widget> _tabs = [
-    const AdminDashboardTab(),
-    const AdminOrdersTab(),
-    const AdminUsersTab(),
-    const AdminSettingsTab(),
-  ];
+  void _onTabSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+      if (index == 2) _selectedUserRole = 'all';
+    });
+  }
+
+  void _showUsers(String role) {
+    setState(() {
+      _currentIndex = 2;
+      _selectedUserRole = role;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> tabs = [
+      AdminDashboardTab(
+        onNavigateToTab: _onTabSelected,
+        onNavigateToUsers: _showUsers,
+      ),
+      const AdminOrdersTab(),
+      AdminUsersTab(selectedRole: _selectedUserRole),
+      const AdminSettingsTab(),
+    ];
+
     return Scaffold(
-      body: _tabs[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: tabs),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onDestinationSelected: _onTabSelected,
+        elevation: 3,
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_rounded),
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded, color: Colors.teal),
             label: 'Dashboard',
           ),
           NavigationDestination(
-            icon: Icon(Icons.list_alt_rounded),
+            icon: Icon(Icons.list_alt_outlined),
+            selectedIcon: Icon(Icons.list_alt_rounded, color: Colors.teal),
             label: 'Pesanan',
           ),
           NavigationDestination(
-            icon: Icon(Icons.people_rounded),
+            icon: Icon(Icons.people_outline_rounded),
+            selectedIcon: Icon(Icons.people_rounded, color: Colors.teal),
             label: 'Pengguna',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_rounded),
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings_rounded, color: Colors.teal),
             label: 'Pengaturan',
           ),
         ],

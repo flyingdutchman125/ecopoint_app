@@ -13,7 +13,7 @@ import 'providers/admin_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Ensure all persistent states are fully loaded from SharedPreferences on app startup
   await AddressState.instance.init();
   await NotificationState.instance.init();

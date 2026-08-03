@@ -48,7 +48,11 @@ class _AiPricePageState extends State<AiPricePage> {
         SnackBar(
           content: Text(
             'Harga $commodityName sudah dikunci. Sisa waktu penguncian: $hours jam $minutes menit.',
-            style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+            style: _jakarta(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           backgroundColor: const Color(0xFF358C16),
           behavior: SnackBarBehavior.floating,
@@ -61,7 +65,10 @@ class _AiPricePageState extends State<AiPricePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Kunci Harga $commodityName', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Kunci Harga $commodityName',
+          style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
         content: Text(
           'Konfirmasi penguncian harga $commodityName (${CurrencyFormatter.formatRupiah(price)}/kg) selama 24 jam ke depan?',
           style: _jakarta(fontSize: 14, color: Colors.black87),
@@ -69,15 +76,26 @@ class _AiPricePageState extends State<AiPricePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.black54)),
+            child: Text(
+              'Batal',
+              style: _jakarta(
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF358C16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Ya, Kunci', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white)),
+            child: Text(
+              'Ya, Kunci',
+              style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -90,7 +108,11 @@ class _AiPricePageState extends State<AiPricePage> {
           SnackBar(
             content: Text(
               'Harga $commodityName (${CurrencyFormatter.formatRupiah(price)}/kg) dikunci untuk 24 jam ke depan!',
-              style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              style: _jakarta(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             backgroundColor: const Color(0xFF358C16),
             behavior: SnackBarBehavior.floating,
@@ -128,7 +150,11 @@ class _AiPricePageState extends State<AiPricePage> {
         ),
         title: Text(
           'AI Live Dynamic Price',
-          style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+          style: _jakarta(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -140,7 +166,9 @@ class _AiPricePageState extends State<AiPricePage> {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Harga komoditas berhasil disinkronkan dari Web API BSI!'),
+                    content: Text(
+                      'Harga komoditas berhasil disinkronkan dari Web API BSI!',
+                    ),
                     backgroundColor: const Color(0xFF5CB82B),
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -171,22 +199,37 @@ class _AiPricePageState extends State<AiPricePage> {
                           Expanded(
                             child: Text(
                               'Katalog Komoditas Live Web API',
-                              style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                              style: _jakarta(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.sync, size: 12, color: Color(0xFF2E7D32)),
+                                const Icon(
+                                  Icons.sync,
+                                  size: 12,
+                                  color: Color(0xFF2E7D32),
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Live Web BSI',
-                                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                                  style: _jakarta(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF2E7D32),
+                                  ),
                                 ),
                               ],
                             ),
@@ -204,7 +247,8 @@ class _AiPricePageState extends State<AiPricePage> {
                         physics: const NeverScrollableScrollPhysics(),
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         itemCount: filteredPrices.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final priceItem = filteredPrices[index];
                           return _buildCommodityCardFromApi(priceItem);
@@ -227,7 +271,10 @@ class _AiPricePageState extends State<AiPricePage> {
           highlightColor: Colors.grey.shade100,
           child: Container(
             height: 280,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -236,20 +283,33 @@ class _AiPricePageState extends State<AiPricePage> {
           highlightColor: Colors.grey.shade100,
           child: Container(
             height: 120,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildProjectionCard(List<PriceModel> prices, List<String> categories) {
-    final double selectedPrice = prices.firstWhere(
-      (p) => p.itemName == _selectedCategory,
-      orElse: () => prices.isNotEmpty
-          ? prices.first
-          : PriceModel(id: 1, itemName: 'Sampah', currentPrice: 5000, unit: 'kg'),
-    ).currentPrice;
+  Widget _buildProjectionCard(
+    List<PriceModel> prices,
+    List<String> categories,
+  ) {
+    final double selectedPrice = prices
+        .firstWhere(
+          (p) => p.itemName == _selectedCategory,
+          orElse: () => prices.isNotEmpty
+              ? prices.first
+              : PriceModel(
+                  id: 1,
+                  itemName: 'Sampah',
+                  currentPrice: 5000,
+                  unit: 'kg',
+                ),
+        )
+        .currentPrice;
 
     return Container(
       width: double.infinity,
@@ -268,7 +328,11 @@ class _AiPricePageState extends State<AiPricePage> {
               Expanded(
                 child: Text(
                   'Proyeksi Harga 48 Jam',
-                  style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: _jakarta(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               Container(
@@ -279,7 +343,11 @@ class _AiPricePageState extends State<AiPricePage> {
                 ),
                 child: Text(
                   'AI Predictive Engine',
-                  style: _jakarta(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600),
+                  style: _jakarta(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -300,7 +368,10 @@ class _AiPricePageState extends State<AiPricePage> {
                   },
                   child: Container(
                     margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.white : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
@@ -310,8 +381,12 @@ class _AiPricePageState extends State<AiPricePage> {
                       category,
                       style: _jakarta(
                         fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? const Color(0xFF7BC143) : Colors.white,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? const Color(0xFF7BC143)
+                            : Colors.white,
                       ),
                     ),
                   ),
@@ -340,7 +415,10 @@ class _AiPricePageState extends State<AiPricePage> {
               children: [
                 _buildLegendItem(Colors.white, 'Web API BSI History'),
                 const SizedBox(width: 16),
-                _buildLegendItem(const Color(0xFFFFD54F), 'Proyeksi AI (+2.5%)'),
+                _buildLegendItem(
+                  const Color(0xFFFFD54F),
+                  'Proyeksi AI (+2.5%)',
+                ),
               ],
             ),
           ),
@@ -360,18 +438,27 @@ class _AiPricePageState extends State<AiPricePage> {
         const SizedBox(width: 6),
         Text(
           label,
-          style: _jakarta(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500),
+          style: _jakarta(
+            fontSize: 11,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildCommodityCardFromApi(PriceModel item) {
-    final double tomorrowPriceVal = (item.currentPrice * (1 + ((item.changePercent ?? 1.5).abs() / 100)));
-    final String todayPriceStr = '${CurrencyFormatter.formatRupiah(item.currentPrice)}/${item.unit}';
-    final String tomorrowPriceStr = '${CurrencyFormatter.formatRupiah(tomorrowPriceVal)}/${item.unit}';
+    final double tomorrowPriceVal =
+        (item.currentPrice * (1 + ((item.changePercent ?? 1.5).abs() / 100)));
+    final String todayPriceStr =
+        '${CurrencyFormatter.formatRupiah(item.currentPrice)}/${item.unit}';
+    final String tomorrowPriceStr =
+        '${CurrencyFormatter.formatRupiah(tomorrowPriceVal)}/${item.unit}';
     final double percent = item.changePercent ?? 1.5;
-    final String trendStr = percent >= 0 ? '+${percent.toStringAsFixed(1)}%' : '${percent.toStringAsFixed(1)}%';
+    final String trendStr = percent >= 0
+        ? '+${percent.toStringAsFixed(1)}%'
+        : '${percent.toStringAsFixed(1)}%';
     final bool isUp = percent >= 0;
 
     return Container(
@@ -399,12 +486,19 @@ class _AiPricePageState extends State<AiPricePage> {
                 Expanded(
                   child: Row(
                     children: [
-                      Text(item.iconForType, style: const TextStyle(fontSize: 20)),
+                      Text(
+                        item.iconForType,
+                        style: const TextStyle(fontSize: 20),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           item.itemName,
-                          style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                          style: _jakarta(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -412,9 +506,14 @@ class _AiPricePageState extends State<AiPricePage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: isUp ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                    color: isUp
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFFFEBEE),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -422,7 +521,9 @@ class _AiPricePageState extends State<AiPricePage> {
                     style: _jakarta(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isUp ? const Color(0xFF2E7D32) : Colors.red.shade700,
+                      color: isUp
+                          ? const Color(0xFF2E7D32)
+                          : Colors.red.shade700,
                     ),
                   ),
                 ),
@@ -440,11 +541,23 @@ class _AiPricePageState extends State<AiPricePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Harga Web BSI (Hari ini)',
-                          style: _jakarta(fontSize: 11, color: Colors.black45, fontWeight: FontWeight.w500)),
+                      Text(
+                        'Harga Web BSI (Hari ini)',
+                        style: _jakarta(
+                          fontSize: 11,
+                          color: Colors.black45,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(todayPriceStr,
-                          style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      Text(
+                        todayPriceStr,
+                        style: _jakarta(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -460,15 +573,23 @@ class _AiPricePageState extends State<AiPricePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Proyeksi AI (Besok)',
-                          style: _jakarta(fontSize: 11, color: Colors.black45, fontWeight: FontWeight.w500)),
+                      Text(
+                        'Proyeksi AI (Besok)',
+                        style: _jakarta(
+                          fontSize: 11,
+                          color: Colors.black45,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         tomorrowPriceStr,
                         style: _jakarta(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isUp ? const Color(0xFF2E7D32) : Colors.black87,
+                          color: isUp
+                              ? const Color(0xFF2E7D32)
+                              : Colors.black87,
                         ),
                       ),
                     ],
@@ -485,7 +606,9 @@ class _AiPricePageState extends State<AiPricePage> {
             valueListenable: PriceLockState.instance.lockedPrices,
             builder: (context, val, child) {
               final isLocked = PriceLockState.instance.isLocked(item.itemName);
-              final remaining = PriceLockState.instance.getRemainingDuration(item.itemName);
+              final remaining = PriceLockState.instance.getRemainingDuration(
+                item.itemName,
+              );
               final String remainingText = remaining != null
                   ? '${remaining.inHours}j ${remaining.inMinutes.remainder(60)}m'
                   : '24 jam';
@@ -496,15 +619,30 @@ class _AiPricePageState extends State<AiPricePage> {
                   width: double.infinity,
                   height: 40,
                   child: FilledButton.icon(
-                    onPressed: () => _handleLockHarga(item.itemName, item.currentPrice),
-                    icon: Icon(isLocked ? Icons.lock : Icons.lock_outline, size: 16, color: Colors.white),
+                    onPressed: () =>
+                        _handleLockHarga(item.itemName, item.currentPrice),
+                    icon: Icon(
+                      isLocked ? Icons.lock : Icons.lock_outline,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                     label: Text(
-                      isLocked ? 'Harga Terkunci ($remainingText)' : 'Kunci Harga Sekarang',
-                      style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                      isLocked
+                          ? 'Harga Terkunci ($remainingText)'
+                          : 'Kunci Harga Sekarang',
+                      style: _jakarta(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     style: FilledButton.styleFrom(
-                      backgroundColor: isLocked ? const Color(0xFF358C16) : const Color(0xFF7BC143),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: isLocked
+                          ? const Color(0xFF358C16)
+                          : const Color(0xFF7BC143),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       elevation: 0,
                     ),
                   ),
@@ -519,10 +657,38 @@ class _AiPricePageState extends State<AiPricePage> {
 
   Widget _buildFallbackList(List<PriceModel> prices) {
     final fallbackItems = [
-      PriceModel(id: 1, itemName: 'PET Plastic', currentPrice: 3900, unit: 'kg', changePercent: 1.2, trend: 'up'),
-      PriceModel(id: 2, itemName: 'Cardboard', currentPrice: 4900, unit: 'kg', changePercent: 0.0, trend: 'stable'),
-      PriceModel(id: 3, itemName: 'Metal', currentPrice: 8900, unit: 'kg', changePercent: 1.2, trend: 'up'),
-      PriceModel(id: 4, itemName: 'Cooking Oil', currentPrice: 9600, unit: 'kg', changePercent: 1.5, trend: 'up'),
+      PriceModel(
+        id: 1,
+        itemName: 'PET Plastic',
+        currentPrice: 3900,
+        unit: 'kg',
+        changePercent: 1.2,
+        trend: 'up',
+      ),
+      PriceModel(
+        id: 2,
+        itemName: 'Cardboard',
+        currentPrice: 4900,
+        unit: 'kg',
+        changePercent: 0.0,
+        trend: 'stable',
+      ),
+      PriceModel(
+        id: 3,
+        itemName: 'Metal',
+        currentPrice: 8900,
+        unit: 'kg',
+        changePercent: 1.2,
+        trend: 'up',
+      ),
+      PriceModel(
+        id: 4,
+        itemName: 'Cooking Oil',
+        currentPrice: 9600,
+        unit: 'kg',
+        changePercent: 1.5,
+        trend: 'up',
+      ),
     ];
 
     return ListView.separated(
@@ -531,7 +697,8 @@ class _AiPricePageState extends State<AiPricePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       itemCount: fallbackItems.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) => _buildCommodityCardFromApi(fallbackItems[index]),
+      itemBuilder: (context, index) =>
+          _buildCommodityCardFromApi(fallbackItems[index]),
     );
   }
 }
@@ -575,13 +742,23 @@ class PriceChartPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(2, y - 6));
     }
 
-    List<String> xLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min', 'Besok (AI)'];
+    List<String> xLabels = [
+      'Sen',
+      'Sel',
+      'Rab',
+      'Kam',
+      'Jum',
+      'Sab',
+      'Min',
+      'Besok (AI)',
+    ];
     double startX = 50;
     double spacingX = (size.width - startX) / (xLabels.length - 1);
 
     double getY(double price) {
       double chartHeight = size.height - 20;
-      return chartHeight - ((price - minPrice) / (maxPrice - minPrice) * chartHeight);
+      return chartHeight -
+          ((price - minPrice) / (maxPrice - minPrice) * chartHeight);
     }
 
     List<double> priceTrend = [
@@ -660,7 +837,11 @@ class PriceChartPainter extends CustomPainter {
     while (currentDistance < distance) {
       canvas.drawLine(
         start + direction * currentDistance,
-        start + direction * (currentDistance + dashWidth <= distance ? currentDistance + dashWidth : distance),
+        start +
+            direction *
+                (currentDistance + dashWidth <= distance
+                    ? currentDistance + dashWidth
+                    : distance),
         paint,
       );
       currentDistance += dashWidth + dashSpace;
@@ -668,5 +849,6 @@ class PriceChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant PriceChartPainter oldDelegate) => oldDelegate.basePrice != basePrice;
+  bool shouldRepaint(covariant PriceChartPainter oldDelegate) =>
+      oldDelegate.basePrice != basePrice;
 }

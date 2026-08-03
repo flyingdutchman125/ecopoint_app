@@ -9,16 +9,28 @@ class WalletState {
   static final WalletState instance = WalletState._internal();
 
   // Balance & Points
-  final ValueNotifier<double> activeBalance = ValueNotifier<double>(200000); // Saldo Aktif
-  final ValueNotifier<int> points = ValueNotifier<int>(50000); // Points (increased default to allow testing Rp20.000 tier)
+  final ValueNotifier<double> activeBalance = ValueNotifier<double>(
+    200000,
+  ); // Saldo Aktif
+  final ValueNotifier<int> points = ValueNotifier<int>(
+    50000,
+  ); // Points (increased default to allow testing Rp20.000 tier)
 
   // Login progress for weekly tiers
-  final ValueNotifier<int> loginDaysCount = ValueNotifier<int>(1); // e.g. 1/7 days
+  final ValueNotifier<int> loginDaysCount = ValueNotifier<int>(
+    1,
+  ); // e.g. 1/7 days
 
   // Weekly convert limits left
-  final ValueNotifier<int> limit5k = ValueNotifier<int>(1);  // Sisa penarikan Rp 5.000 (1/1)
-  final ValueNotifier<int> limit10k = ValueNotifier<int>(1); // Sisa penarikan Rp 10.000 (1/1)
-  final ValueNotifier<int> limit20k = ValueNotifier<int>(1); // Sisa penarikan Rp 20.000 (1/1)
+  final ValueNotifier<int> limit5k = ValueNotifier<int>(
+    1,
+  ); // Sisa penarikan Rp 5.000 (1/1)
+  final ValueNotifier<int> limit10k = ValueNotifier<int>(
+    1,
+  ); // Sisa penarikan Rp 10.000 (1/1)
+  final ValueNotifier<int> limit20k = ValueNotifier<int>(
+    1,
+  ); // Sisa penarikan Rp 20.000 (1/1)
 
   // Last withdrawal date (for weekly cooldown)
   DateTime? lastWithdrawalDate;
@@ -100,14 +112,17 @@ class WalletState {
     NotificationState.instance.addNotification(
       category: 'Convert',
       title: 'Konversi Point Berhasil!',
-      subtitle: 'Kamu berhasil menukar $pointsToConvert Point menjadi Saldo Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}.',
+      subtitle:
+          'Kamu berhasil menukar $pointsToConvert Point menjadi Saldo Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}.',
     );
 
     HistoryState.instance.addHistory(
       title: 'Tukar Point ke Saldo',
-      description: 'Menukar $pointsToConvert Point menjadi Saldo Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+      description:
+          'Menukar $pointsToConvert Point menjadi Saldo Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
       category: 'Tukar Point',
-      valueChange: '+Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+      valueChange:
+          '+Rp ${balanceGain.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
     );
 
     return true;
@@ -115,7 +130,8 @@ class WalletState {
 
   /// Withdraw from active balance to bank account
   Future<bool> withdrawBalance(double amount) async {
-    if (amount <= 0 || amount > activeBalance.value || amount < 10000) return false;
+    if (amount <= 0 || amount > activeBalance.value || amount < 10000)
+      return false;
     if (!canWithdraw) return false;
 
     // Simulate API call
@@ -135,14 +151,17 @@ class WalletState {
     NotificationState.instance.addNotification(
       category: 'Withdraw',
       title: 'Penarikan Saldo Berhasil!',
-      subtitle: 'Penarikan Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ke akun ${bankAccount['bank']} berhasil diproses.',
+      subtitle:
+          'Penarikan Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ke akun ${bankAccount['bank']} berhasil diproses.',
     );
 
     HistoryState.instance.addHistory(
       title: 'Penarikan Saldo',
-      description: 'Penarikan Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ke rekening ${bankAccount['bank']} (${bankAccount['phone']})',
+      description:
+          'Penarikan Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ke rekening ${bankAccount['bank']} (${bankAccount['phone']})',
       category: 'Withdraw',
-      valueChange: '-Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+      valueChange:
+          '-Rp ${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
     );
 
     return true;

@@ -29,10 +29,6 @@ class ImagePickerHelper {
     if (!granted) return null;
 
     final picker = ImagePicker();
-    return picker.pickImage(
-      source: source,
-      imageQuality: 80,
-      maxWidth: 1200,
-    );
+    return picker.pickImage(source: source, imageQuality: 80, maxWidth: 1200);
   }
 }

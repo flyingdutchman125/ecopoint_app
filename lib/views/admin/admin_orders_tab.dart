@@ -30,11 +30,16 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AdminProvider>();
-    final orders = provider.adminOrders.where((o) => _selectedStatus == 'all' || o.status == _selectedStatus).toList();
+    final orders = provider.adminOrders
+        .where((o) => _selectedStatus == 'all' || o.status == _selectedStatus)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Daftar Pesanan', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Daftar Pesanan',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [
@@ -63,59 +68,131 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
                 : RefreshIndicator(
                     onRefresh: () => provider.fetchAdminOrders(),
                     child: orders.isEmpty
-                        ? Center(child: Text('Tidak ada pesanan', style: GoogleFonts.outfit(color: Colors.grey)))
+                        ? Center(
+                            child: Text(
+                              'Tidak ada pesanan',
+                              style: GoogleFonts.outfit(color: Colors.grey),
+                            ),
+                          )
                         : ListView.builder(
                             padding: const EdgeInsets.all(16),
                             itemCount: orders.length,
                             itemBuilder: (context, index) {
                               final order = orders[index];
                               return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16),
-                                  title: Text(order.itemType ?? 'Barang', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 6),
-                                      Text('Alamat: ${order.pickupAddress}', style: GoogleFonts.outfit(fontSize: 13)),
-                                      const SizedBox(height: 4),
-                                      Row(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.all(16),
+                                      title: Text(
+                                        order.itemType ?? 'Barang',
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              order.statusLabel.toUpperCase(),
-                                              style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Warga: ${order.userName ?? '-'}',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 13,
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
-                                          TextButton.icon(
-                                            style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                                            icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                                            label: Text('Kelola Pesan', style: GoogleFonts.outfit(fontSize: 12)),
-                                            onPressed: () => _showMessagesDialog(context, order),
+                                          Text(
+                                            'Alamat: ${order.pickupAddress}',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(context)
+                                                      .primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  order.statusLabel
+                                                      .toUpperCase(),
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).primaryColor,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              TextButton.icon(
+                                                style: TextButton.styleFrom(
+                                                  padding: EdgeInsets.zero,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.chat_bubble_outline,
+                                                  size: 16,
+                                                ),
+                                                label: Text(
+                                                  'Kelola Pesan',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                onPressed: () =>
+                                                    _showMessagesDialog(
+                                                      context,
+                                                      order,
+                                                    ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                  trailing: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text('${order.displayWeight ?? 0} kg', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                                      if (order.totalAmount != null)
-                                        Text(CurrencyFormatter.formatRupiah(order.totalAmount!), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.green)),
-                                    ],
-                                  ),
-                                ),
-                              ).animate().fadeIn(delay: Duration(milliseconds: 40 * index)).slideX(begin: 0.05, end: 0);
+                                      trailing: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '${order.displayWeight ?? 0} kg',
+                                            style: GoogleFonts.outfit(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          if (order.totalAmount != null)
+                                            Text(
+                                              CurrencyFormatter.formatRupiah(
+                                                order.totalAmount!,
+                                              ),
+                                              style: GoogleFonts.outfit(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .animate()
+                                  .fadeIn(
+                                    delay: Duration(milliseconds: 40 * index),
+                                  )
+                                  .slideX(begin: 0.05, end: 0);
                             },
                           ),
                   ),
@@ -128,7 +205,12 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
   Widget _buildFilterChip(String label, String value) {
     final isSelected = _selectedStatus == value;
     return ChoiceChip(
-      label: Text(label, style: GoogleFonts.outfit(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      label: Text(
+        label,
+        style: GoogleFonts.outfit(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
       selected: isSelected,
       onSelected: (selected) {
         if (selected) {
@@ -154,7 +236,8 @@ class _AdminOrderMessagesDialog extends StatefulWidget {
   const _AdminOrderMessagesDialog({required this.orderId});
 
   @override
-  State<_AdminOrderMessagesDialog> createState() => _AdminOrderMessagesDialogState();
+  State<_AdminOrderMessagesDialog> createState() =>
+      _AdminOrderMessagesDialogState();
 }
 
 class _AdminOrderMessagesDialogState extends State<_AdminOrderMessagesDialog> {
@@ -170,7 +253,9 @@ class _AdminOrderMessagesDialogState extends State<_AdminOrderMessagesDialog> {
   Future<void> _fetchMessages() async {
     setState(() => _loading = true);
     try {
-      final res = await ApiService.get('${ApiConstants.order}/${widget.orderId}/messages');
+      final res = await ApiService.get(
+        '${ApiConstants.order}/${widget.orderId}/messages',
+      );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
@@ -184,15 +269,21 @@ class _AdminOrderMessagesDialogState extends State<_AdminOrderMessagesDialog> {
   }
 
   Future<void> _deleteMessage(String messageId) async {
-    final success = await context.read<AdminProvider>().deleteOrderMessage(messageId);
+    final success = await context.read<AdminProvider>().deleteOrderMessage(
+      messageId,
+    );
     if (success) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pesan berhasil dihapus')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pesan berhasil dihapus')));
       }
       _fetchMessages();
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menghapus pesan')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gagal menghapus pesan')));
       }
     }
   }
@@ -200,30 +291,48 @@ class _AdminOrderMessagesDialogState extends State<_AdminOrderMessagesDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Kelola Pesan Order', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+      title: Text(
+        'Kelola Pesan Order',
+        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+      ),
       content: SizedBox(
         width: double.maxFinite,
         height: 300,
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _messages.isEmpty
-                ? Center(child: Text('Belum ada pesan pada order ini', style: GoogleFonts.outfit(color: Colors.grey)))
-                : ListView.builder(
-                    itemCount: _messages.length,
-                    itemBuilder: (ctx, idx) {
-                      final msg = _messages[idx];
-                      return ListTile(
-                        dense: true,
-                        title: Text(msg['message'] ?? '', style: GoogleFonts.outfit()),
-                        subtitle: Text(msg['created_at']?.toString().substring(0, 16) ?? '', style: GoogleFonts.outfit(fontSize: 10)),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                          tooltip: 'Hapus Pesan',
-                          onPressed: () => _deleteMessage(msg['id'].toString()),
-                        ),
-                      );
-                    },
-                  ),
+            ? Center(
+                child: Text(
+                  'Belum ada pesan pada order ini',
+                  style: GoogleFonts.outfit(color: Colors.grey),
+                ),
+              )
+            : ListView.builder(
+                itemCount: _messages.length,
+                itemBuilder: (ctx, idx) {
+                  final msg = _messages[idx];
+                  return ListTile(
+                    dense: true,
+                    title: Text(
+                      msg['message'] ?? '',
+                      style: GoogleFonts.outfit(),
+                    ),
+                    subtitle: Text(
+                      msg['created_at']?.toString().substring(0, 16) ?? '',
+                      style: GoogleFonts.outfit(fontSize: 10),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      tooltip: 'Hapus Pesan',
+                      onPressed: () => _deleteMessage(msg['id'].toString()),
+                    ),
+                  );
+                },
+              ),
       ),
       actions: [
         TextButton(

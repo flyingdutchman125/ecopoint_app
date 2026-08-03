@@ -98,22 +98,35 @@ async function register(req, res, next) {
       if (subdistrict) insertData.subdistrict = subdistrict;
       if (consentSorting !== undefined) insertData.consent_sorting_anorganic = consentSorting;
 
-      const res = await supabase.from('users').insert(insertData);
-      dbError = res.error;
-      if (dbError && dbError.message && dbError.message.includes('column')) {
-        // Fallback insert with core fields only
-        const fallbackRes = await supabase.from('users').insert({
-          id: authUser.id,
-          email,
-          name,
-          role: validRole,
-          phone,
-          city,
-        });
-        dbError = fallbackRes.error;
+      // Retry dropping whichever optional column the live schema is missing
+      // (migration_v4 columns may not be applied yet). Core columns are never dropped.
+      const optional = ['city', 'address', 'subdistrict', 'consent_sorting_anorganic'];
+      for (let attempt = 0; attempt <= optional.length; attempt++) {
+        const insertRes = await supabase.from('users').insert(insertData);
+        dbError = insertRes.error;
+        if (!dbError) break;
+        const missing = optional.find(
+          (c) => insertData[c] !== undefined && (
+            dbError.message?.includes(`'${c}'`) ||
+            dbError.message?.includes(`"${c}"`)
+          )
+        );
+        if (!missing) break;
+        console.warn(`users.${missing} missing in schema, retrying without it`);
+        delete insertData[missing];
       }
     } catch (err) {
-      console.warn('DB insert error:', err);
+      dbError = err;
+    }
+
+    if (dbError) {
+      // Rollback the auth user, otherwise it can log in but has no profile row.
+      console.error('Register DB insert failed:', dbError.message || dbError);
+      await supabase.auth.admin.deleteUser(authUser.id).catch(() => {});
+      return res.status(400).json({
+        success: false,
+        message: `Registrasi gagal menyimpan profil: ${dbError.message || dbError}`,
+      });
     }
 
     // If collector-specific info provided, save to collectors table

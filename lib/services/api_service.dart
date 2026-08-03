@@ -21,11 +21,9 @@ class ApiService {
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-    };
+    final headers = <String, String>{'Content-Type': 'application/json'};
     if (token != null) {
-      headers['Authorization'] = 'Bearer ' + token;
+      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }
@@ -46,12 +44,20 @@ class ApiService {
   }
 
   static Future<T> _withTimeout<T>(Future<T> future) {
-    return future.timeout(_timeout, onTimeout: () {
-      throw TimeoutException('Request timed out after ${_timeout.inSeconds}s');
-    });
+    return future.timeout(
+      _timeout,
+      onTimeout: () {
+        throw TimeoutException(
+          'Request timed out after ${_timeout.inSeconds}s',
+        );
+      },
+    );
   }
 
-  static Future<http.Response> post(String url, Map<String, dynamic> body) async {
+  static Future<http.Response> post(
+    String url,
+    Map<String, dynamic> body,
+  ) async {
     try {
       final headers = await _getHeaders();
       return await _withTimeout(
@@ -71,7 +77,10 @@ class ApiService {
     }
   }
 
-  static Future<http.Response> put(String url, Map<String, dynamic> body) async {
+  static Future<http.Response> put(
+    String url,
+    Map<String, dynamic> body,
+  ) async {
     try {
       final headers = await _getHeaders();
       return await _withTimeout(
@@ -106,7 +115,3 @@ class ApiService {
     }
   }
 }
-
-
-
-

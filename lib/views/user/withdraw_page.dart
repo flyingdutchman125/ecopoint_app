@@ -66,7 +66,10 @@ class _WithdrawPageState extends State<WithdrawPage> {
         final bal = wallet.activeBalance.value;
         _withdrawAmount = bal;
         // Format with thousand separator
-        final balStr = bal.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+        final balStr = bal.toInt().toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]}.',
+        );
         _amountController.text = balStr;
       } else {
         _amountController.clear();
@@ -81,9 +84,12 @@ class _WithdrawPageState extends State<WithdrawPage> {
     final cleanVal = val.replaceAll('.', '');
     final numVal = double.tryParse(cleanVal);
     if (numVal == null) return;
-    
-    final formatted = numVal.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
-    
+
+    final formatted = numVal.toInt().toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+
     // Prevent infinite loop by checking if text is already formatted
     if (_amountController.text != formatted) {
       _amountController.text = formatted;
@@ -109,13 +115,15 @@ class _WithdrawPageState extends State<WithdrawPage> {
         ),
         title: Text(
           'Withdraw',
-          style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+          style: _jakarta(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(24),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
         ),
       ),
       body: SafeArea(
@@ -135,7 +143,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
                       color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -150,22 +158,28 @@ class _WithdrawPageState extends State<WithdrawPage> {
                       listenable: wallet.activeBalance,
                       builder: (context, _) {
                         final bal = wallet.activeBalance.value;
-                        final balStr = bal.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                        final balStr = bal.toInt().toString().replaceAllMapped(
+                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                          (m) => '${m[1]}.',
+                        );
                         return Text(
                           'Rp $balStr',
-                          style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold),
+                          style: _jakarta(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                         );
                       },
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     Text(
                       'Lakukan Penarikan',
                       style: _jakarta(fontSize: 12, color: Colors.black54),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Nominal Input Box
                     Container(
                       decoration: BoxDecoration(
@@ -175,17 +189,32 @@ class _WithdrawPageState extends State<WithdrawPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Text('Rp ', style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+                          Text(
+                            'Rp ',
+                            style: _jakarta(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
                           Expanded(
                             child: TextField(
                               controller: _amountController,
                               keyboardType: TextInputType.number,
-                              style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: _jakarta(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                               decoration: InputDecoration(
                                 hintText: 'Minimum Rp 10.000',
-                                hintStyle: _jakarta(fontSize: 13, color: Colors.black38),
+                                hintStyle: _jakarta(
+                                  fontSize: 13,
+                                  color: Colors.black38,
+                                ),
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                               ),
                               enabled: !_tarikSemua,
                               onChanged: _formatInputText,
@@ -195,7 +224,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Tarik Semua Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -212,18 +241,25 @@ class _WithdrawPageState extends State<WithdrawPage> {
                         ),
                       ],
                     ),
-                    
+
                     const Divider(height: 24, color: Color(0xFFEEEEEE)),
-                    
+
                     Text(
                       'Transfer Ke',
-                      style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: _jakarta(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Transfer Destination Card
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: const Color(0xFFE0E0E0)),
@@ -240,50 +276,69 @@ class _WithdrawPageState extends State<WithdrawPage> {
                               shape: BoxShape.circle,
                             ),
                             child: const Center(
-                              child: Icon(Icons.account_balance_wallet, color: Colors.white, size: 16),
+                              child: Icon(
+                                Icons.account_balance_wallet,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
-                          
+
                           // Bank name and phone number
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  wallet.bankAccount['bank'] as String? ?? 'Dana',
-                                  style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold),
+                                  wallet.bankAccount['bank'] as String? ??
+                                      'Dana',
+                                  style: _jakarta(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  wallet.bankAccount['phone'] as String? ?? '0895341381130',
-                                  style: _jakarta(fontSize: 11, color: Colors.black45),
+                                  wallet.bankAccount['phone'] as String? ??
+                                      '0895341381130',
+                                  style: _jakarta(
+                                    fontSize: 11,
+                                    color: Colors.black45,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          
+
                           // Account Holder Name
                           Text(
                             'Ahmad Syifa\'ul Falakhul Khayyi',
-                            style: _jakarta(fontSize: 10, color: Colors.black45),
+                            style: _jakarta(
+                              fontSize: 10,
+                              color: Colors.black45,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 28),
-                    
+
                     // Lanjut Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: (_withdrawAmount == null || _withdrawAmount! < 10000 || _withdrawAmount! > wallet.activeBalance.value)
+                        onPressed:
+                            (_withdrawAmount == null ||
+                                _withdrawAmount! < 10000 ||
+                                _withdrawAmount! > wallet.activeBalance.value)
                             ? null
                             : () {
-                                context.push('/withdraw/confirm', extra: {
-                                  'amount': _withdrawAmount,
-                                });
+                                context.push(
+                                  '/withdraw/confirm',
+                                  extra: {'amount': _withdrawAmount},
+                                );
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: btnGreen,
@@ -299,8 +354,12 @@ class _WithdrawPageState extends State<WithdrawPage> {
                           'Lanjut',
                           style: _jakarta(
                             fontWeight: FontWeight.bold,
-                            color: (_withdrawAmount == null || _withdrawAmount! < 10000 || _withdrawAmount! > wallet.activeBalance.value) 
-                                ? Colors.black26 
+                            color:
+                                (_withdrawAmount == null ||
+                                    _withdrawAmount! < 10000 ||
+                                    _withdrawAmount! >
+                                        wallet.activeBalance.value)
+                                ? Colors.black26
                                 : Colors.white,
                             fontSize: 14,
                           ),

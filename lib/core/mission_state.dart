@@ -17,11 +17,17 @@ class MissionState {
   static const String _keyAiScanClaimed = 'ecopoint_ai_scan_claimed_v2';
   static const String _keyWeeklyWeightKg = 'ecopoint_weekly_weight_kg_v2';
   static const String _keyWeightClaimed = 'ecopoint_weekly_weight_claimed_v2';
-  static const String _keyMasterCategoryClaimed = 'ecopoint_master_category_claimed_v2';
-  static const String _keyConsistentOrdersClaimed = 'ecopoint_consistent_orders_claimed_v2';
+  static const String _keyMasterCategoryClaimed =
+      'ecopoint_master_category_claimed_v2';
+  static const String _keyConsistentOrdersClaimed =
+      'ecopoint_consistent_orders_claimed_v2';
 
-  final ValueNotifier<List<int>> claimedCheckinDays = ValueNotifier<List<int>>([]);
-  final ValueNotifier<DateTime?> lastCheckInTime = ValueNotifier<DateTime?>(null);
+  final ValueNotifier<List<int>> claimedCheckinDays = ValueNotifier<List<int>>(
+    [],
+  );
+  final ValueNotifier<DateTime?> lastCheckInTime = ValueNotifier<DateTime?>(
+    null,
+  );
   final ValueNotifier<int> aiScanCount = ValueNotifier<int>(1);
   final ValueNotifier<bool> isAiScanClaimed = ValueNotifier<bool>(false);
 
@@ -32,7 +38,9 @@ class MissionState {
   final ValueNotifier<bool> isCategoryClaimed = ValueNotifier<bool>(false);
 
   final ValueNotifier<int> completedOrdersCount = ValueNotifier<int>(0);
-  final ValueNotifier<bool> isConsistentOrderClaimed = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isConsistentOrderClaimed = ValueNotifier<bool>(
+    false,
+  );
 
   bool _initialized = false;
 
@@ -40,14 +48,18 @@ class MissionState {
   DateTime getCurrentCycleStartTime() {
     final now = DateTime.now();
     final today6am = DateTime(now.year, now.month, now.day, 6, 0, 0);
-    return now.isBefore(today6am) ? today6am.subtract(const Duration(days: 1)) : today6am;
+    return now.isBefore(today6am)
+        ? today6am.subtract(const Duration(days: 1))
+        : today6am;
   }
 
   /// Get next 6 AM reset target time
   DateTime getNextResetTime() {
     final now = DateTime.now();
     final today6am = DateTime(now.year, now.month, now.day, 6, 0, 0);
-    return now.isBefore(today6am) ? today6am : today6am.add(const Duration(days: 1));
+    return now.isBefore(today6am)
+        ? today6am
+        : today6am.add(const Duration(days: 1));
   }
 
   /// Remaining duration until 6 AM reset
@@ -73,7 +85,7 @@ class MissionState {
   Future<void> loadFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       final String? checkinStr = prefs.getString(_keyClaimedCheckin);
       if (checkinStr != null && checkinStr.isNotEmpty) {
         final List<dynamic> list = jsonDecode(checkinStr);
@@ -96,8 +108,10 @@ class MissionState {
       weeklyWeightKg.value = prefs.getDouble(_keyWeeklyWeightKg) ?? 2.5;
       isWeightClaimed.value = prefs.getBool(_keyWeightClaimed) ?? false;
 
-      isCategoryClaimed.value = prefs.getBool(_keyMasterCategoryClaimed) ?? false;
-      isConsistentOrderClaimed.value = prefs.getBool(_keyConsistentOrdersClaimed) ?? false;
+      isCategoryClaimed.value =
+          prefs.getBool(_keyMasterCategoryClaimed) ?? false;
+      isConsistentOrderClaimed.value =
+          prefs.getBool(_keyConsistentOrdersClaimed) ?? false;
     } catch (e) {
       debugPrint('Error loading MissionState: $e');
     }
@@ -106,16 +120,25 @@ class MissionState {
   Future<void> _saveToPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_keyClaimedCheckin, jsonEncode(claimedCheckinDays.value));
+      await prefs.setString(
+        _keyClaimedCheckin,
+        jsonEncode(claimedCheckinDays.value),
+      );
       if (lastCheckInTime.value != null) {
-        await prefs.setString(_keyLastCheckinTime, lastCheckInTime.value!.toIso8601String());
+        await prefs.setString(
+          _keyLastCheckinTime,
+          lastCheckInTime.value!.toIso8601String(),
+        );
       }
       await prefs.setInt(_keyAiScanCount, aiScanCount.value);
       await prefs.setBool(_keyAiScanClaimed, isAiScanClaimed.value);
       await prefs.setDouble(_keyWeeklyWeightKg, weeklyWeightKg.value);
       await prefs.setBool(_keyWeightClaimed, isWeightClaimed.value);
       await prefs.setBool(_keyMasterCategoryClaimed, isCategoryClaimed.value);
-      await prefs.setBool(_keyConsistentOrdersClaimed, isConsistentOrderClaimed.value);
+      await prefs.setBool(
+        _keyConsistentOrdersClaimed,
+        isConsistentOrderClaimed.value,
+      );
     } catch (e) {
       debugPrint('Error saving MissionState: $e');
     }
@@ -138,7 +161,7 @@ class MissionState {
   /// Calculates Luck Rate (Tingkat Kehokian) based on User EcoTree Level
   Map<String, dynamic> calculateGoldenChestReward() {
     final int level = EcoTreeState.instance.level;
-    
+
     // Level 1: 25% luck -> 50 base points
     // Level 2: 45% luck -> 100 base points
     // Level 3: 65% luck -> 180 base points
@@ -177,7 +200,10 @@ class MissionState {
   }
 
   /// Claim Daily Check-In
-  Future<Map<String, dynamic>?> claimCheckInDay(int dayIndex, UserProvider userProv) async {
+  Future<Map<String, dynamic>?> claimCheckInDay(
+    int dayIndex,
+    UserProvider userProv,
+  ) async {
     await init();
     if (!canCheckInToday()) return null;
     if (claimedCheckinDays.value.contains(dayIndex)) return null;
@@ -204,7 +230,9 @@ class MissionState {
     await _saveToPrefs();
 
     // Smart Notification & History
-    final titleNotification = dayIndex == 4 ? 'Hadiah Peti Emas Terbuka!' : 'Daily Check-in Berhasil!';
+    final titleNotification = dayIndex == 4
+        ? 'Hadiah Peti Emas Terbuka!'
+        : 'Daily Check-in Berhasil!';
     final descNotification = dayIndex == 4
         ? 'Kamu membuka Peti Emas (Level ${chestResult!['level']}, Kehokian ${chestResult['luck_percent']}%) dan mendapatkan +$pointsEarned EcoPoints!'
         : 'Berhasil melakukan Check-in Hari ke-$dayIndex dan mengklaim +$pointsEarned EcoPoints!';
@@ -237,7 +265,8 @@ class MissionState {
     NotificationState.instance.addNotification(
       category: 'Misi',
       title: 'Misi Detektif Sampah Selesai!',
-      subtitle: 'Selamat! Kamu mendapatkan 300 EcoPoints dari memindai sampah dengan AI Pilah.',
+      subtitle:
+          'Selamat! Kamu mendapatkan 300 EcoPoints dari memindai sampah dengan AI Pilah.',
     );
 
     HistoryState.instance.addHistory(
@@ -262,7 +291,8 @@ class MissionState {
     NotificationState.instance.addNotification(
       category: 'Misi',
       title: 'Misi Pahlawan Timbangan Selesai!',
-      subtitle: 'Kamu berhasil menyetor 5Kg+ sampah dan mendapatkan 1.800 EcoPoints!',
+      subtitle:
+          'Kamu berhasil menyetor 5Kg+ sampah dan mendapatkan 1.800 EcoPoints!',
     );
 
     HistoryState.instance.addHistory(
@@ -288,7 +318,8 @@ class MissionState {
       if (status == 'completed' || status == 'selesai') {
         completedCount++;
         final dynamic weightVal = order.weightKg;
-        final double weight = double.tryParse((weightVal ?? 0).toString()) ?? 0.0;
+        final double weight =
+            double.tryParse((weightVal ?? 0).toString()) ?? 0.0;
         totalKg += weight;
         final dynamic itemTypeVal = order.itemType;
         final String cat = (itemTypeVal ?? '').toString();

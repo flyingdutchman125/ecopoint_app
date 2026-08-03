@@ -127,11 +127,19 @@ class _AddressPageState extends State<AddressPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(Icons.timer_outlined, color: Color(0xFFE53935), size: 24),
+            const Icon(
+              Icons.timer_outlined,
+              color: Color(0xFFE53935),
+              size: 24,
+            ),
             const SizedBox(width: 8),
             Text(
               'Perubahan Terkunci (24 Jam)',
-              style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+              style: _jakarta(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
           ],
         ),
@@ -143,10 +151,15 @@ class _AddressPageState extends State<AddressPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1B3A1B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Saya Mengerti', style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text(
+              'Saya Mengerti',
+              style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -157,7 +170,14 @@ class _AddressPageState extends State<AddressPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+        content: Text(
+          message,
+          style: _jakarta(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF1B3A1B),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -179,7 +199,11 @@ class _AddressPageState extends State<AddressPage> {
         ),
         title: Text(
           'Alamat Warga',
-          style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+          style: _jakarta(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -194,10 +218,14 @@ class _AddressPageState extends State<AddressPage> {
                 children: [
                   Text(
                     'Tambah Alamat Baru',
-                    style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
+                    style: _jakarta(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black54,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Tombol Deteksi Lokasi Real (GPS)
                   SizedBox(
                     width: double.infinity,
@@ -207,17 +235,32 @@ class _AddressPageState extends State<AddressPage> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : const Icon(Icons.my_location, size: 20, color: Colors.white),
+                          : const Icon(
+                              Icons.my_location,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                       label: Text(
-                        _isDetectingLocation ? 'Mendeteksi Lokasi Real (GPS)...' : 'Deteksi Lokasi Saya Saat Ini (GPS)',
-                        style: _jakarta(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                        _isDetectingLocation
+                            ? 'Mendeteksi Lokasi Real (GPS)...'
+                            : 'Deteksi Lokasi Saya Saat Ini (GPS)',
+                        style: _jakarta(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7D32),
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -231,7 +274,8 @@ class _AddressPageState extends State<AddressPage> {
                   const SizedBox(height: 16),
                   _buildInputField(
                     label: 'Alamat Lengkap',
-                    hint: 'Nama jalan, Blok, No. Rumah, RT/RW, Ciri Gerbang/Pagar ...',
+                    hint:
+                        'Nama jalan, Blok, No. Rumah, RT/RW, Ciri Gerbang/Pagar ...',
                     controller: _addressController,
                     maxLines: 3,
                   ),
@@ -239,21 +283,28 @@ class _AddressPageState extends State<AddressPage> {
                   GestureDetector(
                     onTap: _addAddress,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF82C139),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'Simpan Alamat Baru',
-                        style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: _jakarta(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // --- SEKSI DAFTAR ALAMAT TERSIMPAN (PERSISTENT & SELECTABLE) ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -283,7 +334,9 @@ class _AddressPageState extends State<AddressPage> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: isSelected ? const Color(0xFF82C139) : Colors.transparent,
+                                  color: isSelected
+                                      ? const Color(0xFF82C139)
+                                      : Colors.transparent,
                                   width: 1.5,
                                 ),
                                 boxShadow: [
@@ -299,25 +352,43 @@ class _AddressPageState extends State<AddressPage> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
                                             Text(
                                               address['label'] ?? 'Alamat',
-                                              style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                                              style: _jakarta(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
                                             ),
                                             if (isSelected) ...[
                                               const SizedBox(width: 8),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: const Color(0xFFE8F5E9),
-                                                  borderRadius: BorderRadius.circular(4),
+                                                  color: const Color(
+                                                    0xFFE8F5E9,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
                                                 ),
                                                 child: Text(
                                                   'Utama',
-                                                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                                                  style: _jakarta(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(
+                                                      0xFF2E7D32,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -326,7 +397,10 @@ class _AddressPageState extends State<AddressPage> {
                                         const SizedBox(height: 4),
                                         Text(
                                           address['detail'] ?? '',
-                                          style: _jakarta(fontSize: 11, color: Colors.black54),
+                                          style: _jakarta(
+                                            fontSize: 11,
+                                            color: Colors.black54,
+                                          ),
                                           maxLines: 3,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -349,7 +423,11 @@ class _AddressPageState extends State<AddressPage> {
                                   IconButton(
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
-                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.redAccent,
+                                      size: 22,
+                                    ),
                                     onPressed: () => _deleteAddress(index),
                                   ),
                                 ],
@@ -380,7 +458,11 @@ class _AddressPageState extends State<AddressPage> {
       children: [
         Text(
           label,
-          style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),
+          style: _jakarta(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -392,7 +474,10 @@ class _AddressPageState extends State<AddressPage> {
             hintStyle: _jakarta(fontSize: 14, color: Colors.black38),
             fillColor: const Color(0xFFF4F5F6),
             filled: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
@@ -409,11 +494,19 @@ class _AddressPageState extends State<AddressPage> {
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(
           children: [
-            const Icon(Icons.location_off_outlined, size: 40, color: Colors.black26),
+            const Icon(
+              Icons.location_off_outlined,
+              size: 40,
+              color: Colors.black26,
+            ),
             const SizedBox(height: 8),
             Text(
               'Belum ada alamat tersimpan',
-              style: _jakarta(fontSize: 14, color: Colors.black38, fontWeight: FontWeight.w500),
+              style: _jakarta(
+                fontSize: 14,
+                color: Colors.black38,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

@@ -39,8 +39,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     final user = context.read<AuthProvider>().user;
     if (user != null) {
       _nameController.text = user.name ?? 'Ahmad Syifa’ul Falakhul K.';
-      _emailController.text = user.email.isNotEmpty ? user.email : 'syifaul@ecopoint.com';
-      
+      _emailController.text = user.email.isNotEmpty
+          ? user.email
+          : 'syifaul@ecopoint.com';
+
       String rawPhone = user.phone ?? '895123456130';
       if (rawPhone.startsWith('+62')) {
         rawPhone = rawPhone.substring(3);
@@ -97,7 +99,11 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
         SnackBar(
           content: Text(
             'Data profil kolektor berhasil diperbarui!',
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           backgroundColor: const Color(0xFF1B3A1B),
           behavior: SnackBarBehavior.floating,
@@ -121,10 +127,13 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
           children: [
             // 1. TOP PROFILE HEADER CARD (Dengan Awalan ID 000)
             _buildProfileHeader(displayName, collectorId, user?.avatarUrl),
-            
+
             // 2. FORM FIELDS CONTAINER
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -143,7 +152,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
                   // ALAMAT EMAIL
                   _buildFieldLabel('ALAMAT EMAIL'),
                   const SizedBox(height: 8),
-                  _buildEditableTextField(_emailController, enabled: _isEditing),
+                  _buildEditableTextField(
+                    _emailController,
+                    enabled: _isEditing,
+                  ),
                   const SizedBox(height: 20),
 
                   // SANDI AKUN
@@ -155,12 +167,19 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
                   // PLAT KENDARAAN
                   _buildFieldLabel('PLAT KENDARAAN'),
                   const SizedBox(height: 8),
-                  _buildEditableTextField(_plateController, enabled: _isEditing),
+                  _buildEditableTextField(
+                    _plateController,
+                    enabled: _isEditing,
+                  ),
                   const SizedBox(height: 32),
 
                   // 3. ACTION BUTTONS
                   if (_isLoading)
-                    const Center(child: CircularProgressIndicator(color: Color(0xFF7CB342)))
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7CB342),
+                      ),
+                    )
                   else if (_isEditing) ...[
                     _buildSolidGreenButton(
                       label: 'Simpan Perubahan',
@@ -219,26 +238,52 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
           children: [
             Text(
               'Ubah Foto Profil Kolektor',
-              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF7CB342)),
-              title: Text('Ambil Foto (Kamera)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
+              leading: const Icon(
+                Icons.camera_alt_outlined,
+                color: Color(0xFF7CB342),
+              ),
+              title: Text(
+                'Ambil Foto (Kamera)',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               onTap: () async {
                 Navigator.pop(ctx);
-                final picked = await ImagePickerHelper.pickImage(ImageSource.camera);
+                final picked = await ImagePickerHelper.pickImage(
+                  ImageSource.camera,
+                );
                 if (picked != null) {
                   await _updateAvatar(picked.path);
                 }
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF7CB342)),
-              title: Text('Pilih dari Galeri HP', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
+              leading: const Icon(
+                Icons.photo_library_outlined,
+                color: Color(0xFF7CB342),
+              ),
+              title: Text(
+                'Pilih dari Galeri HP',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               onTap: () async {
                 Navigator.pop(ctx);
-                final picked = await ImagePickerHelper.pickImage(ImageSource.gallery);
+                final picked = await ImagePickerHelper.pickImage(
+                  ImageSource.gallery,
+                );
                 if (picked != null) {
                   await _updateAvatar(picked.path);
                 }
@@ -261,7 +306,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Foto profil kolektor berhasil diperbarui!', style: GoogleFonts.inter(color: Colors.white)),
+          content: Text(
+            'Foto profil kolektor berhasil diperbarui!',
+            style: GoogleFonts.inter(color: Colors.white),
+          ),
           backgroundColor: const Color(0xFF1B3A1B),
           behavior: SnackBarBehavior.floating,
         ),
@@ -315,7 +363,11 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
                   ),
                   child: avatarImage == null
                       ? const ClipOval(
-                          child: Icon(Icons.person, size: 44, color: Colors.black38),
+                          child: Icon(
+                            Icons.person,
+                            size: 44,
+                            color: Colors.black38,
+                          ),
                         )
                       : null,
                 ),
@@ -383,7 +435,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     );
   }
 
-  Widget _buildEditableTextField(TextEditingController controller, {bool enabled = false}) {
+  Widget _buildEditableTextField(
+    TextEditingController controller, {
+    bool enabled = false,
+  }) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
@@ -391,7 +446,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
       decoration: InputDecoration(
         filled: true,
         fillColor: enabled ? Colors.white : const Color(0xFFF5F5F5),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 15,
+        ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 0.5),
@@ -421,15 +479,15 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
       ),
       child: Text(
         displayedText,
-        style: GoogleFonts.inter(
-          fontSize: 15,
-          color: const Color(0xFF424242),
-        ),
+        style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF424242)),
       ),
     );
   }
 
-  Widget _buildWhatsAppField(TextEditingController controller, {bool enabled = false}) {
+  Widget _buildWhatsAppField(
+    TextEditingController controller, {
+    bool enabled = false,
+  }) {
     return Row(
       children: [
         Container(
@@ -455,22 +513,46 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
             controller: controller,
             enabled: enabled,
             keyboardType: TextInputType.phone,
-            style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF424242)),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: const Color(0xFF424242),
+            ),
             decoration: InputDecoration(
               filled: true,
               fillColor: enabled ? Colors.white : const Color(0xFFF5F5F5),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 15,
+              ),
               disabledBorder: OutlineInputBorder(
-                borderRadius: const BorderRadius.only(topRight: Radius.circular(14), bottomRight: Radius.circular(14)),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 0.5),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(14),
+                  bottomRight: Radius.circular(14),
+                ),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE0E0E0),
+                  width: 0.5,
+                ),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: const BorderRadius.only(topRight: Radius.circular(14), bottomRight: Radius.circular(14)),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(14),
+                  bottomRight: Radius.circular(14),
+                ),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE0E0E0),
+                  width: 1,
+                ),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: const BorderRadius.only(topRight: Radius.circular(14), bottomRight: Radius.circular(14)),
-                borderSide: const BorderSide(color: Color(0xFF7CB342), width: 1.5),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(14),
+                  bottomRight: Radius.circular(14),
+                ),
+                borderSide: const BorderSide(
+                  color: Color(0xFF7CB342),
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -479,7 +561,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     );
   }
 
-  Widget _buildOutlinedButton({required String label, required VoidCallback onPressed}) {
+  Widget _buildOutlinedButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 48,
@@ -504,7 +589,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     );
   }
 
-  Widget _buildSolidGreenButton({required String label, required VoidCallback onPressed}) {
+  Widget _buildSolidGreenButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 48,
@@ -520,16 +608,16 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
         onPressed: onPressed,
         child: Text(
           label,
-          style: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  Widget _buildSolidRedButton({required String label, required VoidCallback onPressed}) {
+  Widget _buildSolidRedButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 48,
@@ -545,10 +633,7 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
         onPressed: onPressed,
         child: Text(
           label,
-          style: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );

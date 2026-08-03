@@ -21,8 +21,10 @@ class PriceModel {
 
   factory PriceModel.fromJson(Map<String, dynamic> json) {
     return PriceModel(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
-      itemName: json['item_name']?.toString() ?? '',
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id'].toString()) ?? 0,
+      itemName: _translateToIndonesian(json['item_name']?.toString() ?? ''),
       currentPrice: _parseDouble(json['current_price']),
       unit: json['unit']?.toString() ?? 'kg',
       lastUpdated: json['last_updated'] != null
@@ -32,6 +34,15 @@ class PriceModel {
       changePercent: _parseDoubleNullable(json['change_percent']),
       trend: json['trend']?.toString(),
     );
+  }
+
+  static String _translateToIndonesian(String val) {
+    final s = val.toLowerCase().trim();
+    if (s == 'metal') return 'Logam/Besi';
+    if (s == 'pet plastic') return 'Botol Plastik';
+    if (s == 'cardboard') return 'Kardus';
+    if (s == 'cooking oil') return 'Minyak Jelantah';
+    return val;
   }
 
   bool get isTrendUp => trend == 'up';

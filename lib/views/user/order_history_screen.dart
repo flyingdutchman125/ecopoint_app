@@ -22,7 +22,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     'Menunggu',
     'Diterima',
     'Selesai',
-    'Dibatalkan'
+    'Dibatalkan',
   ];
 
   String _mapFilterToStatus(String filter) {
@@ -48,7 +48,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
     final filteredOrders = _selectedFilter == 'Semua'
         ? orders
-        : orders.where((o) => o.status == _mapFilterToStatus(_selectedFilter)).toList();
+        : orders
+              .where((o) => o.status == _mapFilterToStatus(_selectedFilter))
+              .toList();
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -78,7 +80,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         color: isSelected
                             ? theme.colorScheme.onPrimary
                             : theme.colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     selected: isSelected,
@@ -104,7 +108,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         Icon(
                           Icons.receipt_long_rounded,
                           size: 80,
-                          color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -125,7 +131,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       itemBuilder: (context, index) {
                         final order = filteredOrders[index];
                         return _OrderCard(order: order).animate().fade(
-                            delay: Duration(milliseconds: 50 * index));
+                          delay: Duration(milliseconds: 50 * index),
+                        );
                       },
                     ),
                   ),
@@ -200,11 +207,16 @@ class _OrderCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Text(
                       _getStatusLabel(order.status),
@@ -220,25 +232,37 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.scale_rounded, size: 16, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.scale_rounded,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     CurrencyFormatter.formatWeight(order.estWeight),
-                    style: GoogleFonts.inter(color: theme.colorScheme.onSurfaceVariant),
+                    style: GoogleFonts.inter(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.location_on_rounded, size: 16, color: Colors.red[400]),
+                  Icon(
+                    Icons.location_on_rounded,
+                    size: 16,
+                    color: Colors.red[400],
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       order.pickupAddress,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(color: theme.colorScheme.onSurfaceVariant),
+                      style: GoogleFonts.inter(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -261,7 +285,9 @@ class _OrderCard extends StatelessWidget {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: const Text('Batalkan Pesanan?'),
-                            content: const Text('Apakah Anda yakin ingin membatalkan pesanan ini?'),
+                            content: const Text(
+                              'Apakah Anda yakin ingin membatalkan pesanan ini?',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
@@ -269,14 +295,19 @@ class _OrderCard extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('YA, BATALKAN', style: TextStyle(color: Colors.red)),
+                                child: const Text(
+                                  'YA, BATALKAN',
+                                  style: TextStyle(color: Colors.red),
+                                ),
                               ),
                             ],
                           ),
                         );
-                        
+
                         if (confirm == true && context.mounted) {
-                          await context.read<UserProvider>().cancelOrder(order.id);
+                          await context.read<UserProvider>().cancelOrder(
+                            order.id,
+                          );
                         }
                       },
                       style: TextButton.styleFrom(

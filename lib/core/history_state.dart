@@ -6,7 +6,8 @@ class HistoryItem {
   final String id;
   final String title;
   final String description;
-  final String category; // 'Jemput', 'Tukar Point', 'Withdraw', 'EcoTree', 'EcoBook', 'Kunci Harga', 'Alamat', 'Rating'
+  final String
+  category; // 'Jemput', 'Tukar Point', 'Withdraw', 'EcoTree', 'EcoBook', 'Kunci Harga', 'Alamat', 'Rating'
   final DateTime timestamp;
   final String? valueChange; // e.g. '+500 Pts', '-50 Pts', 'Rp 50.000'
   final String status;
@@ -22,24 +23,28 @@ class HistoryItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'category': category,
-        'timestamp': timestamp.toIso8601String(),
-        'valueChange': valueChange,
-        'status': status,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'category': category,
+    'timestamp': timestamp.toIso8601String(),
+    'valueChange': valueChange,
+    'status': status,
+  };
 
   factory HistoryItem.fromJson(Map<String, dynamic> json) => HistoryItem(
-        id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        title: json['title']?.toString() ?? 'Aktivitas',
-        description: json['description']?.toString() ?? '',
-        category: json['category']?.toString() ?? 'Lainnya',
-        timestamp: DateTime.tryParse(json['timestamp']?.toString() ?? '') ?? DateTime.now(),
-        valueChange: json['valueChange']?.toString(),
-        status: json['status']?.toString() ?? 'Selesai',
-      );
+    id:
+        json['id']?.toString() ??
+        DateTime.now().millisecondsSinceEpoch.toString(),
+    title: json['title']?.toString() ?? 'Aktivitas',
+    description: json['description']?.toString() ?? '',
+    category: json['category']?.toString() ?? 'Lainnya',
+    timestamp:
+        DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
+        DateTime.now(),
+    valueChange: json['valueChange']?.toString(),
+    status: json['status']?.toString() ?? 'Selesai',
+  );
 
   IconData get icon {
     switch (category) {
@@ -89,8 +94,18 @@ class HistoryItem {
 
   String get dateFormatted {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Ags',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${timestamp.day} ${months[timestamp.month - 1]} ${timestamp.year}';
   }
@@ -109,7 +124,8 @@ class HistoryState {
 
   static const String _storageKey = 'ecopoint_user_history_v3';
 
-  final ValueNotifier<List<HistoryItem>> historyList = ValueNotifier<List<HistoryItem>>([]);
+  final ValueNotifier<List<HistoryItem>> historyList =
+      ValueNotifier<List<HistoryItem>>([]);
 
   bool _initialized = false;
 
@@ -127,7 +143,10 @@ class HistoryState {
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         final List<HistoryItem> loaded = decoded
-            .map((item) => HistoryItem.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) =>
+                  HistoryItem.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
             .toList();
 
         historyList.value = loaded;
@@ -139,7 +158,8 @@ class HistoryState {
         HistoryItem(
           id: 'hist_init_1',
           title: 'Membuka Akun EcoPoint',
-          description: 'Aplikasi EcoPoint berhasil diaktifkan untuk transaksi pemilahan sampah.',
+          description:
+              'Aplikasi EcoPoint berhasil diaktifkan untuk transaksi pemilahan sampah.',
           category: 'Alamat',
           timestamp: DateTime.now().subtract(const Duration(hours: 2)),
           valueChange: 'Akun Aktif',

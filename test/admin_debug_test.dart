@@ -27,10 +27,7 @@ void main() {
     final loginRes = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': adminEmail,
-        'password': adminPassword,
-      }),
+      body: jsonEncode({'email': adminEmail, 'password': adminPassword}),
     );
     print('LOGIN ADMIN STATUS: ${loginRes.statusCode}');
     print('LOGIN ADMIN BODY: ${loginRes.body}');
@@ -45,17 +42,26 @@ void main() {
     };
 
     // 3. Fetch Statistics
-    final statRes = await http.get(Uri.parse('$baseUrl/statistics'), headers: headers);
+    final statRes = await http.get(
+      Uri.parse('$baseUrl/statistics'),
+      headers: headers,
+    );
     print('STATISTICS STATUS: ${statRes.statusCode}');
     print('STATISTICS BODY: ${statRes.body}');
 
     // 4. Fetch Admin Users
-    final usersRes = await http.get(Uri.parse('$baseUrl/admin/users'), headers: headers);
+    final usersRes = await http.get(
+      Uri.parse('$baseUrl/admin/users'),
+      headers: headers,
+    );
     print('ADMIN USERS STATUS: ${usersRes.statusCode}');
     print('ADMIN USERS BODY: ${usersRes.body}');
 
     // 5. Fetch Admin Orders
-    final ordersRes = await http.get(Uri.parse('$baseUrl/admin/orders'), headers: headers);
+    final ordersRes = await http.get(
+      Uri.parse('$baseUrl/admin/orders'),
+      headers: headers,
+    );
     print('ADMIN ORDERS STATUS: ${ordersRes.statusCode}');
     print('ADMIN ORDERS BODY: ${ordersRes.body}');
   });

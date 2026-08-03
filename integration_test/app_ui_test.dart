@@ -8,7 +8,9 @@ import 'package:ecopoint/main.dart' as app;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Full Android UI Navigation and Interactive Test', (WidgetTester tester) async {
+  testWidgets('Full Android UI Navigation and Interactive Test', (
+    WidgetTester tester,
+  ) async {
     // 1. Launch main application on Android
     app.main();
     await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -48,7 +50,7 @@ void main() {
 
     await tester.enterText(textFields.at(0), testEmail);
     await tester.pumpAndSettle();
-    
+
     await tester.enterText(textFields.at(1), testPassword);
     await tester.pumpAndSettle();
     print('✓ Step 3: Filled Form Inputs ($testEmail)');
@@ -66,13 +68,20 @@ void main() {
     print('✓ Step 4: Attempted Login via Live API');
 
     // 5. Verify Home Dashboard Rendered (User, Collector, or Admin)
-    final dashboardFound = find.text('Total Saldo').evaluate().isNotEmpty ||
+    final dashboardFound =
+        find.text('Total Saldo').evaluate().isNotEmpty ||
         find.text('Halo,').evaluate().isNotEmpty ||
         find.text('Pesanan Terdekat').evaluate().isNotEmpty ||
         find.text('Dashboard').evaluate().isNotEmpty;
 
-    expect(dashboardFound, isTrue, reason: 'Expected dashboard to render after login');
-    print('✓ Step 5: Dashboard UI Rendered Successfully for Authenticated Role');
+    expect(
+      dashboardFound,
+      isTrue,
+      reason: 'Expected dashboard to render after login',
+    );
+    print(
+      '✓ Step 5: Dashboard UI Rendered Successfully for Authenticated Role',
+    );
 
     // 6. Test Bottom Navigation Switching
     // Tap 'Pesanan' Tab (index 1)

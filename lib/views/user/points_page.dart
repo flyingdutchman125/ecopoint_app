@@ -23,7 +23,7 @@ TextStyle _jakarta({
 }
 
 class PointsPage extends StatefulWidget {
-  const PointsPage({Key? key}) : super(key: key);
+  const PointsPage({super.key});
 
   @override
   State<PointsPage> createState() => _PointsPageState();
@@ -78,13 +78,21 @@ class _PointsPageState extends State<PointsPage> {
                 color: const Color(0xFF358C16).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.help_outline, color: Color(0xFF358C16), size: 24),
+              child: const Icon(
+                Icons.help_outline,
+                color: Color(0xFF358C16),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Panduan Misi & Points',
-                style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: _jakarta(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ),
           ],
@@ -96,12 +104,14 @@ class _PointsPageState extends State<PointsPage> {
             children: [
               _buildInfoSection(
                 title: '1. Apa itu EcoPoints?',
-                desc: 'EcoPoints adalah poin hadiah yang kamu dapatkan setiap kali menyelesaikan misi harian, memindai sampah dengan AI Pilah, atau menyetor sampah. Poin ini dapat ditukarkan di EcoStore dengan saldo e-wallet, voucher, atau bibit tanaman!',
+                desc:
+                    'EcoPoints adalah poin hadiah yang kamu dapatkan setiap kali menyelesaikan misi harian, memindai sampah dengan AI Pilah, atau menyetor sampah. Poin ini dapat ditukarkan di EcoStore dengan saldo e-wallet, voucher, atau bibit tanaman!',
               ),
               const SizedBox(height: 14),
               _buildInfoSection(
                 title: '2. Peti Emas & Tingkat Kehokian (Luck Rate)',
-                desc: 'Peti Emas terbuka pada Daily Check-in Hari ke-4! Jumlah hadiah koin ditentukan oleh Tingkat Kehokian berdasarkan Level akunmu:\n'
+                desc:
+                    'Peti Emas terbuka pada Daily Check-in Hari ke-4! Jumlah hadiah koin ditentukan oleh Tingkat Kehokian berdasarkan Level akunmu:\n'
                     '• Level 1: 25% Kehokian (50 Koin Base)\n'
                     '• Level 2: 45% Kehokian (100 Koin Base)\n'
                     '• Level 3: 65% Kehokian (180 Koin Base)\n'
@@ -112,7 +122,8 @@ class _PointsPageState extends State<PointsPage> {
               const SizedBox(height: 14),
               _buildInfoSection(
                 title: '3. Misi Harian & Mingguan Real',
-                desc: 'Semua progres misi tercatat secara nyata:\n'
+                desc:
+                    'Semua progres misi tercatat secara nyata:\n'
                     '• Misi AI Pilah: Gunakan scanner AI untuk mendeteksi sampah.\n'
                     '• Misi Pahlawan Timbangan: Kumpulkan setoran sampah minimal 5Kg.\n'
                     '• Daily Check-in: Ambil hadiah koin setiap hari secara berurutan.',
@@ -124,11 +135,16 @@ class _PointsPageState extends State<PointsPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF358C16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Saya Paham', style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text(
+              'Saya Paham',
+              style: _jakarta(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -139,7 +155,14 @@ class _PointsPageState extends State<PointsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: _jakarta(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF358C16))),
+        Text(
+          title,
+          style: _jakarta(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF358C16),
+          ),
+        ),
         const SizedBox(height: 4),
         Text(desc, style: _jakarta(fontSize: 11.5, color: Colors.black87)),
       ],
@@ -170,12 +193,20 @@ class _PointsPageState extends State<PointsPage> {
                 color: Color(0xFFFFF8E1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.card_giftcard, size: 54, color: Colors.amber),
+              child: const Icon(
+                Icons.card_giftcard,
+                size: 54,
+                color: Colors.amber,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'PETI EMAS TERBUKA! 🎉',
-              style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFFB78103)),
+              style: _jakarta(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFB78103),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -187,20 +218,32 @@ class _PointsPageState extends State<PointsPage> {
               ),
               child: Text(
                 'Level $level • Kehokian $luckPercent%',
-                style: _jakarta(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                style: _jakarta(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF2E7D32),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               '+$totalReward EcoPoints',
-              style: _jakarta(fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFF358C16)),
+              style: _jakarta(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF358C16),
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               isLucky
                   ? 'HOKI BANGET! (Base: $baseReward + Bonus Kehokian: +$bonus Pts)'
                   : 'Peti Emas Level $level (Mendapatkan $baseReward Pts)',
-              style: _jakarta(fontSize: 11, color: isLucky ? Colors.amber.shade900 : Colors.black54, fontWeight: isLucky ? FontWeight.bold : FontWeight.normal),
+              style: _jakarta(
+                fontSize: 11,
+                color: isLucky ? Colors.amber.shade900 : Colors.black54,
+                fontWeight: isLucky ? FontWeight.bold : FontWeight.normal,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -209,11 +252,20 @@ class _PointsPageState extends State<PointsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF358C16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('Klaim Koin Hadiah!', style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(
+                  'Klaim Koin Hadiah!',
+                  style: _jakarta(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -258,7 +310,11 @@ class _PointsPageState extends State<PointsPage> {
         ),
         title: Text(
           'Misi & Points',
-          style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+          style: _jakarta(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -278,7 +334,11 @@ class _PointsPageState extends State<PointsPage> {
             // --- HEADER MISI HARIAN ---
             Text(
               'Misi Harian',
-              style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+              style: _jakarta(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -290,7 +350,11 @@ class _PointsPageState extends State<PointsPage> {
                 color: primaryGreen,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -298,7 +362,11 @@ class _PointsPageState extends State<PointsPage> {
                 children: [
                   Text(
                     'Selesaikan berbagai misi untuk mendapatkan Points dan tukarkan dengan berbagai hadiah di store',
-                    style: _jakarta(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w400),
+                    style: _jakarta(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -307,8 +375,12 @@ class _PointsPageState extends State<PointsPage> {
                     valueListenable: _missionState.claimedCheckinDays,
                     builder: (context, claimedDays, _) {
                       final canCheckIn = _missionState.canCheckInToday();
-                      final nextDayToClaim = [1, 2, 3, 4, 5, 6].firstWhere((d) => !claimedDays.contains(d), orElse: () => 1);
-                      final isCompletedAll = claimedDays.length >= 6 && !canCheckIn;
+                      final nextDayToClaim = [1, 2, 3, 4, 5, 6].firstWhere(
+                        (d) => !claimedDays.contains(d),
+                        orElse: () => 1,
+                      );
+                      final isCompletedAll =
+                          claimedDays.length >= 6 && !canCheckIn;
 
                       return Container(
                         padding: const EdgeInsets.all(12),
@@ -322,13 +394,23 @@ class _PointsPageState extends State<PointsPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Misi: Langkah Awal Hijau (Daily Check-in)',
-                                  style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: Text(
+                                    'Misi: Langkah Awal Hijau (Daily Check-in)',
+                                    style: _jakarta(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
+                                const SizedBox(width: 6),
                                 Text(
                                   '${claimedDays.length}/6 Hari',
-                                  style: _jakarta(fontSize: 11, fontWeight: FontWeight.bold, color: primaryGreen),
+                                  style: _jakarta(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryGreen,
+                                  ),
                                 ),
                               ],
                             ),
@@ -336,31 +418,46 @@ class _PointsPageState extends State<PointsPage> {
 
                             // 06:00 AM Reset Timer Banner
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: canCheckIn ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                                color: canCheckIn
+                                    ? const Color(0xFFE8F5E9)
+                                    : const Color(0xFFFFF3E0),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: canCheckIn ? const Color(0xFF81C784) : const Color(0xFFFFB74D),
+                                  color: canCheckIn
+                                      ? const Color(0xFF81C784)
+                                      : const Color(0xFFFFB74D),
                                 ),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    canCheckIn ? Icons.check_circle_outline : Icons.timer_outlined,
+                                    canCheckIn
+                                        ? Icons.check_circle_outline
+                                        : Icons.timer_outlined,
                                     size: 14,
-                                    color: canCheckIn ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+                                    color: canCheckIn
+                                        ? const Color(0xFF2E7D32)
+                                        : const Color(0xFFE65100),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    canCheckIn
-                                        ? 'Siap Check-in! Reset berikutnya 06.00 WIB (${_getFormattedResetTimer()})'
-                                        : 'Reset Jam 06.00 WIB dalam: ${_getFormattedResetTimer()}',
-                                    style: _jakarta(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: canCheckIn ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+                                  Expanded(
+                                    child: Text(
+                                      canCheckIn
+                                          ? 'Siap Check-in! Reset berikutnya 06.00 WIB (${_getFormattedResetTimer()})'
+                                          : 'Reset Jam 06.00 WIB dalam: ${_getFormattedResetTimer()}',
+                                      style: _jakarta(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: canCheckIn
+                                            ? const Color(0xFF2E7D32)
+                                            : const Color(0xFFE65100),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -372,12 +469,55 @@ class _PointsPageState extends State<PointsPage> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  _buildCheckInBox(1, "Hari 1", "70", claimedDays, nextDayToClaim, canCheckIn),
-                                  _buildCheckInBox(2, "Hari 2", "80", claimedDays, nextDayToClaim, canCheckIn),
-                                  _buildCheckInBox(3, "Hari 3", "90", claimedDays, nextDayToClaim, canCheckIn),
-                                  _buildCheckInBox(4, "Hari 4", "Peti Emas", claimedDays, nextDayToClaim, canCheckIn, isRandom: true),
-                                  _buildCheckInBox(5, "Hari 5", "70", claimedDays, nextDayToClaim, canCheckIn),
-                                  _buildCheckInBox(6, "Hari 6", "80", claimedDays, nextDayToClaim, canCheckIn),
+                                  _buildCheckInBox(
+                                    1,
+                                    "Hari 1",
+                                    "70",
+                                    claimedDays,
+                                    nextDayToClaim,
+                                    canCheckIn,
+                                  ),
+                                  _buildCheckInBox(
+                                    2,
+                                    "Hari 2",
+                                    "80",
+                                    claimedDays,
+                                    nextDayToClaim,
+                                    canCheckIn,
+                                  ),
+                                  _buildCheckInBox(
+                                    3,
+                                    "Hari 3",
+                                    "90",
+                                    claimedDays,
+                                    nextDayToClaim,
+                                    canCheckIn,
+                                  ),
+                                  _buildCheckInBox(
+                                    4,
+                                    "Hari 4",
+                                    "Peti Emas",
+                                    claimedDays,
+                                    nextDayToClaim,
+                                    canCheckIn,
+                                    isRandom: true,
+                                  ),
+                                  _buildCheckInBox(
+                                    5,
+                                    "Hari 5",
+                                    "70",
+                                    claimedDays,
+                                    nextDayToClaim,
+                                    canCheckIn,
+                                  ),
+                                  _buildCheckInBox(
+                                    6,
+                                    "Hari 6",
+                                    "80",
+                                    claimedDays,
+                                    nextDayToClaim,
+                                    canCheckIn,
+                                  ),
                                 ],
                               ),
                             ),
@@ -392,16 +532,22 @@ class _PointsPageState extends State<PointsPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: primaryGreen,
                                   disabledBackgroundColor: Colors.grey.shade400,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                   elevation: 0,
                                 ),
                                 child: Text(
                                   isCompletedAll
                                       ? 'Semua Check-in Diklaim 🎉 (Reset 06.00)'
                                       : (!canCheckIn
-                                          ? 'Sudah Check-in Hari ini (Reset Jam 06.00)'
-                                          : 'Check in Hari ini ! (Hari ke-$nextDayToClaim)'),
-                                  style: _jakarta(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5),
+                                            ? 'Sudah Check-in Hari ini (Reset Jam 06.00)'
+                                            : 'Check in Hari ini ! (Hari ke-$nextDayToClaim)'),
+                                  style: _jakarta(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12.5,
+                                  ),
                                 ),
                               ),
                             ),
@@ -437,21 +583,32 @@ class _PointsPageState extends State<PointsPage> {
                                         color: primaryGreen,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 22),
+                                      child: const Icon(
+                                        Icons.camera_alt_outlined,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Misi: Detektif Sampah (Gunakan AI Pilah)',
-                                            style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                            style: _jakarta(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             'Gunakan fitur AI Pilah minimal 1 kali untuk memindai jenis sampah di sekitarmu.',
-                                            style: _jakarta(fontSize: 10, color: Colors.black45),
+                                            style: _jakarta(
+                                              fontSize: 10,
+                                              color: Colors.black45,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -460,19 +617,30 @@ class _PointsPageState extends State<PointsPage> {
                                     Column(
                                       children: [
                                         Icon(
-                                          isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+                                          isCompleted
+                                              ? Icons.check_box
+                                              : Icons.check_box_outline_blank,
                                           color: primaryGreen,
                                         ),
                                         Text(
                                           '300 Pts',
-                                          style: _jakarta(fontSize: 9.5, color: primaryGreen, fontWeight: FontWeight.bold),
-                                        )
+                                          style: _jakarta(
+                                            fontSize: 9.5,
+                                            color: primaryGreen,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ],
-                                    )
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                _buildProgressBar(current: scanCount.toDouble(), target: 1.0, unit: 'Scan', activeColor: primaryGreen),
+                                _buildProgressBar(
+                                  current: scanCount.toDouble(),
+                                  target: 1.0,
+                                  unit: 'Scan',
+                                  activeColor: primaryGreen,
+                                ),
                                 if (isCompleted && !isClaimed) ...[
                                   const SizedBox(height: 10),
                                   SizedBox(
@@ -480,17 +648,36 @@ class _PointsPageState extends State<PointsPage> {
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: primaryGreen,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
                                       ),
                                       onPressed: () async {
-                                        await _missionState.claimAiScanMission(userProv);
+                                        await _missionState.claimAiScanMission(
+                                          userProv,
+                                        );
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Berhasil mengklaim +300 EcoPoints Misi Detektif Sampah!')),
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Berhasil mengklaim +300 EcoPoints Misi Detektif Sampah!',
+                                              ),
+                                            ),
                                           );
                                         }
                                       },
-                                      child: Text('Klaim +300 EcoPoints', style: _jakarta(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                      child: Text(
+                                        'Klaim +300 EcoPoints',
+                                        style: _jakarta(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -510,7 +697,11 @@ class _PointsPageState extends State<PointsPage> {
             // --- HEADER MISI MINGGUAN ---
             Text(
               'Misi Mingguan',
-              style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+              style: _jakarta(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -522,7 +713,11 @@ class _PointsPageState extends State<PointsPage> {
                 color: primaryGreen,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -535,7 +730,8 @@ class _PointsPageState extends State<PointsPage> {
                         builder: (context, isClaimed, _) {
                           return _buildWeeklyMissionCard(
                             title: 'Misi: Pahlawan Timbangan',
-                            desc: 'Mencapai akumulasi total berat setoran minimal 5 Kilogram dalam seminggu.',
+                            desc:
+                                'Mencapai akumulasi total berat setoran minimal 5 Kilogram dalam seminggu.',
                             points: '1.800 Pts',
                             icon: Icons.scale_outlined,
                             currentProgress: weightKg,
@@ -547,7 +743,11 @@ class _PointsPageState extends State<PointsPage> {
                               await _missionState.claimWeightMission(userProv);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Berhasil mengklaim +1.800 EcoPoints Misi Pahlawan Timbangan!')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Berhasil mengklaim +1.800 EcoPoints Misi Pahlawan Timbangan!',
+                                    ),
+                                  ),
                                 );
                               }
                             },
@@ -562,7 +762,8 @@ class _PointsPageState extends State<PointsPage> {
                     builder: (context, catCount, _) {
                       return _buildWeeklyMissionCard(
                         title: 'Misi: Master Pemilah',
-                        desc: 'Berhasil menyetor 3 jenis kategori sampah yang berbeda (Botol Plastik, Kardus, dan Minyak Jelantah).',
+                        desc:
+                            'Berhasil menyetor 3 jenis kategori sampah yang berbeda (Botol Plastik, Kardus, dan Minyak Jelantah).',
                         points: '2.500 Pts',
                         icon: Icons.category_outlined,
                         currentProgress: catCount.toDouble(),
@@ -580,7 +781,8 @@ class _PointsPageState extends State<PointsPage> {
                     builder: (context, orderCount, _) {
                       return _buildWeeklyMissionCard(
                         title: 'Misi: Setoran Konsisten',
-                        desc: 'Menyelesaikan minimal 2 kali transaksi penjemputan sampah (Status: Completed) dalam seminggu.',
+                        desc:
+                            'Menyelesaikan minimal 2 kali transaksi penjemputan sampah (Status: Completed) dalam seminggu.',
                         points: '1.350 Pts',
                         icon: Icons.receipt_long,
                         currentProgress: orderCount.toDouble(),
@@ -646,19 +848,40 @@ class _PointsPageState extends State<PointsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (isRandom) ...[
-                    const Icon(Icons.card_giftcard, color: Colors.amber, size: 20),
+                    const Icon(
+                      Icons.card_giftcard,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
                     const SizedBox(height: 2),
-                    Text(points, style: _jakarta(fontSize: 8.5, color: Colors.amber, fontWeight: FontWeight.bold)),
+                    Text(
+                      points,
+                      style: _jakarta(
+                        fontSize: 8.5,
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ] else ...[
                     Text(
                       '$points 🪙',
                       textAlign: TextAlign.center,
-                      style: _jakarta(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
+                      style: _jakarta(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
-                    Text('Points', style: _jakarta(fontSize: 9, color: Colors.black38)),
+                    Text(
+                      'Points',
+                      style: _jakarta(fontSize: 9, color: Colors.black38),
+                    ),
                   ],
                   const SizedBox(height: 4),
-                  Text(dayLabel, style: _jakarta(fontSize: 8.5, color: Colors.black38)),
+                  Text(
+                    dayLabel,
+                    style: _jakarta(fontSize: 8.5, color: Colors.black38),
+                  ),
                 ],
               ),
             ),
@@ -666,20 +889,33 @@ class _PointsPageState extends State<PointsPage> {
               const Positioned(
                 top: 3,
                 right: 3,
-                child: Icon(Icons.check_circle, color: Color(0xFFEAD247), size: 14),
-              )
+                child: Icon(
+                  Icons.check_circle,
+                  color: Color(0xFFEAD247),
+                  size: 14,
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProgressBar({required double current, required double target, required String unit, required Color activeColor}) {
+  Widget _buildProgressBar({
+    required double current,
+    required double target,
+    required String unit,
+    required Color activeColor,
+  }) {
     double percentage = current / target;
     if (percentage > 1.0) percentage = 1.0;
 
-    String currentStr = current % 1 == 0 ? current.toInt().toString() : current.toStringAsFixed(1);
-    String targetStr = target % 1 == 0 ? target.toInt().toString() : target.toStringAsFixed(1);
+    String currentStr = current % 1 == 0
+        ? current.toInt().toString()
+        : current.toStringAsFixed(1);
+    String targetStr = target % 1 == 0
+        ? target.toInt().toString()
+        : target.toStringAsFixed(1);
 
     return Row(
       children: [
@@ -697,7 +933,11 @@ class _PointsPageState extends State<PointsPage> {
         const SizedBox(width: 12),
         Text(
           '$currentStr / $targetStr $unit',
-          style: _jakarta(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87),
+          style: _jakarta(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
       ],
     );
@@ -723,7 +963,11 @@ class _PointsPageState extends State<PointsPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -737,9 +981,18 @@ class _PointsPageState extends State<PointsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                    Text(
+                      title,
+                      style: _jakarta(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(desc, style: _jakarta(fontSize: 10.5, color: Colors.black45)),
+                    Text(
+                      desc,
+                      style: _jakarta(fontSize: 10.5, color: Colors.black45),
+                    ),
                   ],
                 ),
               ),
@@ -748,21 +1001,32 @@ class _PointsPageState extends State<PointsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    isMissionCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+                    isMissionCompleted
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
                     color: activeColor,
                     size: 22,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     points,
-                    style: _jakarta(fontSize: 9.5, color: activeColor, fontWeight: FontWeight.bold),
-                  )
+                    style: _jakarta(
+                      fontSize: 9.5,
+                      color: activeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
-              )
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildProgressBar(current: currentProgress, target: targetProgress, unit: unit, activeColor: activeColor),
+          _buildProgressBar(
+            current: currentProgress,
+            target: targetProgress,
+            unit: unit,
+            activeColor: activeColor,
+          ),
           if (isMissionCompleted && !isClaimed && onClaim != null) ...[
             const SizedBox(height: 10),
             SizedBox(
@@ -770,10 +1034,19 @@ class _PointsPageState extends State<PointsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: activeColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: onClaim,
-                child: Text('Klaim $points', style: _jakarta(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                child: Text(
+                  'Klaim $points',
+                  style: _jakarta(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ),
           ],

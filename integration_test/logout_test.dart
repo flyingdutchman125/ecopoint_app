@@ -51,7 +51,7 @@ void main() {
 
     await tester.enterText(textFields.at(0), testEmail);
     await tester.pumpAndSettle();
-    
+
     await tester.enterText(textFields.at(1), testPassword);
     await tester.pumpAndSettle();
 
@@ -69,14 +69,22 @@ void main() {
 
     // 5. Tap 'Profile' Tab in Bottom Navigation
     final profileTab = find.text('Profile');
-    expect(profileTab, findsOneWidget, reason: 'Expected Profile tab on MainShell');
+    expect(
+      profileTab,
+      findsOneWidget,
+      reason: 'Expected Profile tab on MainShell',
+    );
     await tester.tap(profileTab);
     await tester.pumpAndSettle(const Duration(seconds: 3));
     print('✓ Step 4: Switched to Profile Tab');
 
     // 6. Scroll down if needed and tap 'Keluar dari akun'
     final logoutBtn = find.text('Keluar dari akun');
-    expect(logoutBtn, findsOneWidget, reason: 'Expected Keluar dari akun button on ProfilePage');
+    expect(
+      logoutBtn,
+      findsOneWidget,
+      reason: 'Expected Keluar dari akun button on ProfilePage',
+    );
     await tester.ensureVisible(logoutBtn);
     await tester.tap(logoutBtn);
     await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -84,7 +92,10 @@ void main() {
 
     // 7. Verify AlertDialog appears with title 'Keluar Akun'
     expect(find.text('Keluar Akun'), findsOneWidget);
-    expect(find.text('Apakah Anda yakin ingin keluar dari akun EcoPoint?'), findsOneWidget);
+    expect(
+      find.text('Apakah Anda yakin ingin keluar dari akun EcoPoint?'),
+      findsOneWidget,
+    );
 
     // 8. Tap 'Keluar' button inside AlertDialog
     final confirmLogoutBtn = find.widgetWithText(TextButton, 'Keluar');

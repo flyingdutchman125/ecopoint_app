@@ -44,7 +44,11 @@ class _NotificationPageState extends State<NotificationPage> {
         ),
         title: Text(
           'Notifikasi',
-          style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+          style: _jakarta(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         actions: [
           PopupMenuButton<String>(
@@ -71,9 +75,16 @@ class _NotificationPageState extends State<NotificationPage> {
                 value: 'clear_all',
                 child: Row(
                   children: [
-                    const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                    const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Colors.redAccent,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Hapus Semua', style: _jakarta(fontSize: 13, color: Colors.redAccent)),
+                    Text(
+                      'Hapus Semua',
+                      style: _jakarta(fontSize: 13, color: Colors.redAccent),
+                    ),
                   ],
                 ),
               ),
@@ -93,17 +104,29 @@ class _NotificationPageState extends State<NotificationPage> {
           final weekAgo = today.subtract(const Duration(days: 7));
 
           final todayItems = notifications.where((n) {
-            final d = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
+            final d = DateTime(
+              n.timestamp.year,
+              n.timestamp.month,
+              n.timestamp.day,
+            );
             return d.isAtSameMomentAs(today);
           }).toList();
 
           final thisWeekItems = notifications.where((n) {
-            final d = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
+            final d = DateTime(
+              n.timestamp.year,
+              n.timestamp.month,
+              n.timestamp.day,
+            );
             return d.isBefore(today) && d.isAfter(weekAgo);
           }).toList();
 
           final olderItems = notifications.where((n) {
-            final d = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
+            final d = DateTime(
+              n.timestamp.year,
+              n.timestamp.month,
+              n.timestamp.day,
+            );
             return d.isBefore(weekAgo) || d.isAtSameMomentAs(weekAgo);
           }).toList();
 
@@ -135,7 +158,11 @@ class _NotificationPageState extends State<NotificationPage> {
                 child: Center(
                   child: Text(
                     'Tidak ada notifikasi lain',
-                    style: _jakarta(fontSize: 13, color: Colors.black38, fontWeight: FontWeight.w500),
+                    style: _jakarta(
+                      fontSize: 13,
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -153,7 +180,11 @@ class _NotificationPageState extends State<NotificationPage> {
       color: const Color(0xFFF4F6F8),
       child: Text(
         title,
-        style: _jakarta(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+        style: _jakarta(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
       ),
     );
   }
@@ -176,7 +207,11 @@ class _NotificationPageState extends State<NotificationPage> {
                 Text(
                   item.category,
                   textAlign: TextAlign.center,
-                  style: _jakarta(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.black54),
+                  style: _jakarta(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
                 ),
               ],
             ),
@@ -194,7 +229,9 @@ class _NotificationPageState extends State<NotificationPage> {
                         item.title,
                         style: _jakarta(
                           fontSize: 13.5,
-                          fontWeight: item.isRead ? FontWeight.w600 : FontWeight.bold,
+                          fontWeight: item.isRead
+                              ? FontWeight.w600
+                              : FontWeight.bold,
                           color: Colors.black87,
                         ),
                         maxLines: 2,
@@ -250,11 +287,19 @@ class _NotificationPageState extends State<NotificationPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.notifications_off_outlined, size: 54, color: Colors.black26),
+          const Icon(
+            Icons.notifications_off_outlined,
+            size: 54,
+            color: Colors.black26,
+          ),
           const SizedBox(height: 12),
           Text(
             'Belum Ada Notifikasi',
-            style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
+            style: _jakarta(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
           ),
           const SizedBox(height: 4),
           Text(

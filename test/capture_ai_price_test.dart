@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import '../lib/views/user/ai_price_page.dart';
-import '../lib/providers/auth_provider.dart';
-import '../lib/providers/user_provider.dart';
+import 'package:ecopoint/views/user/ai_price_page.dart';
+import 'package:ecopoint/providers/auth_provider.dart';
+import 'package:ecopoint/providers/user_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -30,22 +30,22 @@ void main() {
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: RepaintBoundary(
-              key: key,
-              child: const AiPricePage(),
-            ),
+            home: RepaintBoundary(key: key, child: const AiPricePage()),
           ),
         ),
       );
 
       await tester.pump(const Duration(seconds: 1));
 
-      final boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final boundary =
+          key.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
 
-      final file = File('/home/user/.gemini/antigravity-cli/brain/257437b9-a89a-4414-afe3-4eec98073572/screenshot_ai_price_live.png');
+      final file = File(
+        '/home/user/.gemini/antigravity-cli/brain/257437b9-a89a-4414-afe3-4eec98073572/screenshot_ai_price_live.png',
+      );
       await file.writeAsBytes(buffer);
     });
   });

@@ -7,7 +7,6 @@ import 'package:ecopoint/providers/user_provider.dart';
 import 'package:ecopoint/providers/collector_provider.dart';
 import 'package:ecopoint/providers/admin_provider.dart';
 import 'package:ecopoint/views/auth/login_screen.dart';
-import 'package:ecopoint/views/user/user_home_screen.dart';
 import 'package:ecopoint/views/user/profile_screen.dart';
 import 'package:ecopoint/views/user/create_order_screen.dart';
 import 'package:ecopoint/views/collector/collector_home_screen.dart';
@@ -32,7 +31,9 @@ void main() {
     );
   }
 
-  testWidgets('1. Android UI Test: Login Screen & Form Interaction', (WidgetTester tester) async {
+  testWidgets('1. Android UI Test: Login Screen & Form Interaction', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestApp(const LoginScreen()));
     await tester.pumpAndSettle();
 
@@ -49,24 +50,34 @@ void main() {
     print('✓ Login Screen rendered and form inputs tested cleanly on Android');
   });
 
-  testWidgets('2. Android UI Test: User Profile Screen (Phone edit, Password, Delete)', (WidgetTester tester) async {
-    await tester.pumpWidget(buildTestApp(const ProfileScreen()));
-    await tester.pumpAndSettle();
+  testWidgets(
+    '2. Android UI Test: User Profile Screen (Phone edit, Password, Delete)',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(buildTestApp(const ProfileScreen()));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Profil Saya'), findsOneWidget);
-    print('✓ User Profile Screen rendered cleanly on Android');
-  });
+      expect(find.text('Profil Saya'), findsOneWidget);
+      print('✓ User Profile Screen rendered cleanly on Android');
+    },
+  );
 
-  testWidgets('3. Android UI Test: Create Order Screen (18 Categories & Notes & GPS)', (WidgetTester tester) async {
-    await tester.pumpWidget(buildTestApp(const CreateOrderScreen()));
-    await tester.pumpAndSettle();
+  testWidgets(
+    '3. Android UI Test: Create Order Screen (18 Categories & Notes & GPS)',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(buildTestApp(const CreateOrderScreen()));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Recycle Waste'), findsOneWidget);
-    expect(find.text('Upload Photo'), findsOneWidget);
-    print('✓ Create Order Screen rendered with 18 Categories & Notes on Android');
-  });
+      expect(find.text('Recycle Waste'), findsOneWidget);
+      expect(find.text('Upload Photo'), findsOneWidget);
+      print(
+        '✓ Create Order Screen rendered with 18 Categories & Notes on Android',
+      );
+    },
+  );
 
-  testWidgets('4. Android UI Test: Collector Home Screen (4 Tabs)', (WidgetTester tester) async {
+  testWidgets('4. Android UI Test: Collector Home Screen (4 Tabs)', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestApp(const CollectorHomeScreen()));
     await tester.pumpAndSettle();
 
@@ -74,7 +85,9 @@ void main() {
     print('✓ Collector Home Screen with 4 tabs rendered on Android');
   });
 
-  testWidgets('5. Android UI Test: Admin Home Screen (4 Tabs)', (WidgetTester tester) async {
+  testWidgets('5. Android UI Test: Admin Home Screen (4 Tabs)', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestApp(const AdminHomeScreen()));
     await tester.pumpAndSettle();
 

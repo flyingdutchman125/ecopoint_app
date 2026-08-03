@@ -7,7 +7,6 @@ import 'package:latlong2/latlong.dart';
 import '../../providers/collector_provider.dart';
 import '../../models/order_model.dart';
 
-
 class CollectorNearbyTab extends StatefulWidget {
   const CollectorNearbyTab({super.key});
 
@@ -65,16 +64,13 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
               SliverPadding(
                 padding: const EdgeInsets.all(16.0),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final order = provider.nearbyOrders[index];
-                      return _buildOrderCard(order, provider)
-                          .animate()
-                          .fadeIn(delay: Duration(milliseconds: 100 * index))
-                          .slideY(begin: 0.2, end: 0);
-                    },
-                    childCount: provider.nearbyOrders.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final order = provider.nearbyOrders[index];
+                    return _buildOrderCard(order, provider)
+                        .animate()
+                        .fadeIn(delay: Duration(milliseconds: 100 * index))
+                        .slideY(begin: 0.2, end: 0);
+                  }, childCount: provider.nearbyOrders.length),
                 ),
               ),
           ],
@@ -85,13 +81,10 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
 
   Widget _buildMap(List<OrderModel> orders) {
     final defaultCenter = const LatLng(-6.200000, 106.816666);
-    
+
     return FlutterMap(
       mapController: _mapController,
-      options: MapOptions(
-        initialCenter: defaultCenter,
-        initialZoom: 13.0,
-      ),
+      options: MapOptions(initialCenter: defaultCenter, initialZoom: 13.0),
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -107,11 +100,7 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
               point: LatLng(lat, lng),
               width: 40,
               height: 40,
-              child: const Icon(
-                Icons.location_on,
-                color: Colors.red,
-                size: 40,
-              ),
+              child: const Icon(Icons.location_on, color: Colors.red, size: 40),
             );
           }).toList(),
         ),
@@ -151,10 +140,16 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
               children: [
                 Text(
                   order.itemType ?? 'Barang Campuran',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -172,7 +167,11 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: Colors.grey,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -189,7 +188,10 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
               children: [
                 const Icon(Icons.scale_rounded, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text('${order.estWeight} kg', style: const TextStyle(color: Colors.grey)),
+                Text(
+                  '${order.estWeight} kg',
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -199,7 +201,9 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () => _acceptOrder(context, order.id, provider),
                 child: const Text('Terima Pesanan'),
@@ -211,7 +215,11 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
     );
   }
 
-  void _acceptOrder(BuildContext context, String orderId, CollectorProvider provider) async {
+  void _acceptOrder(
+    BuildContext context,
+    String orderId,
+    CollectorProvider provider,
+  ) async {
     try {
       await provider.acceptOrder(orderId);
       if (context.mounted) {
@@ -221,9 +229,9 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }

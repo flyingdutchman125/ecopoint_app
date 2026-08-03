@@ -26,7 +26,9 @@ class AdminProvider with ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['success'] == true) {
-          _adminOrders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          _adminOrders = (data['data'] as List)
+              .map((o) => OrderModel.fromJson(o))
+              .toList();
         }
       }
     } catch (e) {
@@ -105,7 +107,9 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> deleteOrderMessage(String messageId) async {
     try {
-      final res = await ApiService.delete(ApiConstants.deleteMessage(messageId));
+      final res = await ApiService.delete(
+        ApiConstants.deleteMessage(messageId),
+      );
       return res.statusCode == 200;
     } catch (_) {
       return false;
@@ -126,19 +130,33 @@ class AdminProvider with ChangeNotifier {
         }
       }
 
-      final usersRes = await ApiService.get(ApiConstants.adminUsers);
-      if (usersRes.statusCode == 200) {
+      final users = <UserModel>[];
+      var page = 1;
+      var totalPages = 1;
+      while (page <= totalPages) {
+        final usersRes = await ApiService.get(
+          '${ApiConstants.adminUsers}?page=$page&limit=1000',
+        );
+        if (usersRes.statusCode != 200) break;
+
         final data = jsonDecode(usersRes.body);
-        if (data['success'] == true && data['data'] is List) {
-          _users = (data['data'] as List).map((u) => UserModel.fromJson(u)).toList();
-        }
+        if (data['success'] != true || data['data'] is! List) break;
+
+        users.addAll(
+          (data['data'] as List).map((u) => UserModel.fromJson(u)),
+        );
+        totalPages = (data['pagination']?['total_pages'] as num?)?.toInt() ?? 1;
+        page++;
       }
+      _users = users;
 
       final ordersRes = await ApiService.get(ApiConstants.adminOrders);
       if (ordersRes.statusCode == 200) {
         final data = jsonDecode(ordersRes.body);
         if (data['success'] == true && data['data'] is List) {
-          _adminOrders = (data['data'] as List).map((o) => OrderModel.fromJson(o)).toList();
+          _adminOrders = (data['data'] as List)
+              .map((o) => OrderModel.fromJson(o))
+              .toList();
         }
       }
     } catch (e) {

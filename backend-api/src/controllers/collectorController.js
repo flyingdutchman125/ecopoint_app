@@ -128,13 +128,23 @@ async function completeOrderWithPayment(req, res, next) {
     const payment = await transferBalance(req.user.id, order.user_id, total, id);
     await addEcoPoints(order.user_id, 10);
 
-    const { data: updated, error } = await supabase.from('orders').update({
+    const updateData = {
       status: 'completed',
       actual_weight,
       total_amount: total,
-      carbon_reduction: reduction,
       completed_at: new Date().toISOString()
+    };
+
+    let { data: updated, error } = await supabase.from('orders').update({
+      ...updateData,
+      carbon_reduction: reduction
     }).eq('id', id).select().single();
+
+    if (error && error.message && (error.message.includes('carbon_reduction') || error.message.includes('schema cache'))) {
+      const fallback = await supabase.from('orders').update(updateData).eq('id', id).select().single();
+      updated = fallback.data;
+      error = fallback.error;
+    }
     if (error) throw error;
 
     appendStatusHistory(id, 'completed', req.user.id);

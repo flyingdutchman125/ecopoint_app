@@ -47,7 +47,7 @@ void main() {
     expect(loginData['success'], true);
     final token = loginData['data']['token'];
     expect(token, isNotNull);
-    
+
     // Parse User model from login
     final user = UserModel.fromJson(loginData['data']['user']);
     expect(user.id, isNotEmpty);
@@ -59,14 +59,20 @@ void main() {
     };
 
     // 2. Wallet
-    final walletRes = await http.get(Uri.parse('$baseUrl/wallet'), headers: headers);
+    final walletRes = await http.get(
+      Uri.parse('$baseUrl/wallet'),
+      headers: headers,
+    );
     expect(walletRes.statusCode, 200);
     final walletData = jsonDecode(walletRes.body);
     final wallet = WalletModel.fromJson(walletData['data']);
     print('  ✓ Wallet balance: ${wallet.balance}, points: ${wallet.ecoPoints}');
 
     // 3. Prices
-    final pricesRes = await http.get(Uri.parse('$baseUrl/prices'), headers: headers);
+    final pricesRes = await http.get(
+      Uri.parse('$baseUrl/prices'),
+      headers: headers,
+    );
     expect(pricesRes.statusCode, 200);
     final pricesData = jsonDecode(pricesRes.body);
     final List<dynamic> priceList = pricesData['data'];
@@ -77,22 +83,32 @@ void main() {
     }
 
     // 4. Orders
-    final ordersRes = await http.get(Uri.parse('$baseUrl/orders'), headers: headers);
+    final ordersRes = await http.get(
+      Uri.parse('$baseUrl/orders'),
+      headers: headers,
+    );
     expect(ordersRes.statusCode, 200);
     final ordersData = jsonDecode(ordersRes.body);
     final List<dynamic> orderList = ordersData['data'];
     final orders = orderList.map((j) => OrderModel.fromJson(j)).toList();
     print('  ✓ User Orders count: ${orders.length}');
     for (var o in orders) {
-      print('    - [${o.status}] ${o.itemType} (${o.estWeight}kg) at ${o.pickupAddress}');
+      print(
+        '    - [${o.status}] ${o.itemType} (${o.estWeight}kg) at ${o.pickupAddress}',
+      );
     }
 
     // 5. Transactions
-    final txRes = await http.get(Uri.parse('$baseUrl/transactions'), headers: headers);
+    final txRes = await http.get(
+      Uri.parse('$baseUrl/transactions'),
+      headers: headers,
+    );
     expect(txRes.statusCode, 200);
     final txData = jsonDecode(txRes.body);
     final List<dynamic> txList = txData['data'];
-    final transactions = txList.map((j) => TransactionModel.fromJson(j)).toList();
+    final transactions = txList
+        .map((j) => TransactionModel.fromJson(j))
+        .toList();
     print('  ✓ Transactions count: ${transactions.length}');
 
     // 6. Create Order

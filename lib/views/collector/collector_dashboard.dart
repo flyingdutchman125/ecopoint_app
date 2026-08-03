@@ -492,7 +492,8 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   }
 
   Widget _buildPickupCard(OrderModel order) {
-    final String displayName = (order.userName != null && order.userName!.isNotEmpty)
+    final String displayName =
+        (order.userName != null && order.userName!.isNotEmpty)
         ? order.userName!
         : "Ahmad Syifa'ul Falakhul K.";
     final String displayAddress = order.address.isNotEmpty
@@ -737,7 +738,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        (collectorProv.nearbyOrders.isNotEmpty && collectorProv.nearbyOrders.first.userName != null)
+                        (collectorProv.nearbyOrders.isNotEmpty &&
+                                collectorProv.nearbyOrders.first.userName !=
+                                    null)
                             ? collectorProv.nearbyOrders.first.userName!
                             : "Budi Santoso",
                         style: GoogleFonts.outfit(
@@ -940,7 +943,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${order.address}',
+                      order.address,
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Colors.grey.shade700,
@@ -1070,8 +1073,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                 color: Color(0xFFFACC15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.directions_car,
-                  color: Colors.black, size: 20),
+              child: const Icon(
+                Icons.directions_car,
+                color: Colors.black,
+                size: 20,
+              ),
             ),
           ],
         ),
@@ -1090,7 +1096,10 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -1098,7 +1107,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 4,
-                        )
+                        ),
                       ],
                     ),
                     child: Column(
@@ -1123,8 +1132,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                       ],
                     ),
                   ),
-                  const Icon(Icons.location_on,
-                      color: Color(0xFF7CB342), size: 32),
+                  const Icon(
+                    Icons.location_on,
+                    color: Color(0xFF7CB342),
+                    size: 32,
+                  ),
                 ],
               ),
             ),
@@ -1149,7 +1161,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 4,
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -1172,8 +1184,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   ],
                 ),
               ),
-              const Icon(Icons.location_on,
-                  color: Color(0xFF7CB342), size: 32),
+              const Icon(Icons.location_on, color: Color(0xFF7CB342), size: 32),
             ],
           ),
         ),
@@ -1181,8 +1192,11 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           point: LatLng(myLat + 0.0015, myLng - 0.0010),
           width: 50,
           height: 50,
-          child: const Icon(Icons.location_on,
-              color: Color(0xFF7CB342), size: 36),
+          child: const Icon(
+            Icons.location_on,
+            color: Color(0xFF7CB342),
+            size: 36,
+          ),
         ),
       ]);
     }
@@ -1223,8 +1237,6 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   height: 260,
                   child: Stack(
                     children: [
-
-                      
                       FlutterMap(
                         mapController: _mapController,
                         options: MapOptions(

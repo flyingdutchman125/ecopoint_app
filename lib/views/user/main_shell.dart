@@ -28,7 +28,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
- final List<Widget> _pages = [
+  final List<Widget> _pages = [
     const UserDashboard(),
     const StorePage(),
     const HistoryPage(),
@@ -45,10 +45,7 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(color: Color(0xFF1B3A1B)),
         padding: const EdgeInsets.only(top: 8, bottom: 16),
@@ -61,7 +58,7 @@ class _MainShellState extends State<MainShell> {
               children: [
                 _navItem(items[0], 0),
                 _navItem(items[1], 1),
-                const SizedBox(width: 56), 
+                const SizedBox(width: 56),
                 _navItem(items[2], 2),
                 _navItem(items[3], 3),
               ],
@@ -76,7 +73,9 @@ class _MainShellState extends State<MainShell> {
                   decoration: const BoxDecoration(
                     color: Color(0xFF4CAF50),
                     shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 6),
+                    ],
                   ),
                   child: const Icon(Icons.camera_alt, color: Colors.white),
                 ),
@@ -98,7 +97,14 @@ class _MainShellState extends State<MainShell> {
         children: [
           Icon(data.icon, color: color, size: 22),
           const SizedBox(height: 3),
-          Text(data.label, style: _jakarta(color: color, fontSize: 10.5, fontWeight: FontWeight.w500)),
+          Text(
+            data.label,
+            style: _jakarta(
+              color: color,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );

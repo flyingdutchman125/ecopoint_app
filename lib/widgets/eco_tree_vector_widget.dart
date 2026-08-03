@@ -6,11 +6,11 @@ class EcoTreeVectorWidget extends StatelessWidget {
   final double height;
 
   const EcoTreeVectorWidget({
-    Key? key,
+    super.key,
     required this.level,
     this.width = 200,
     this.height = 200,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +19,7 @@ class EcoTreeVectorWidget extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: CustomPaint(
-        painter: _EcoTreeVectorPainter(level: clampedLevel),
-      ),
+      child: CustomPaint(painter: _EcoTreeVectorPainter(level: clampedLevel)),
     );
   }
 }
@@ -103,7 +101,10 @@ class _EcoTreeVectorPainter extends CustomPainter {
     // Seed
     final seedCenter = Offset(w * 0.5, soilY - 4);
     final seedPaint = Paint()..color = const Color(0xFF4E342E);
-    canvas.drawOval(Rect.fromCenter(center: seedCenter, width: 18, height: 12), seedPaint);
+    canvas.drawOval(
+      Rect.fromCenter(center: seedCenter, width: 18, height: 12),
+      seedPaint,
+    );
 
     // Tiny Sprout Shoot
     final shootPath = Path()
@@ -268,7 +269,12 @@ class _EcoTreeVectorPainter extends CustomPainter {
   }
 
   // --- Level 8: Pohon Berbunga ---
-  void _drawLevel8FloweringTree(Canvas canvas, double w, double h, double soilY) {
+  void _drawLevel8FloweringTree(
+    Canvas canvas,
+    double w,
+    double h,
+    double soilY,
+  ) {
     _drawLevel7LushTree(canvas, w, h, soilY);
 
     // Flowers / Blossoms
@@ -292,16 +298,24 @@ class _EcoTreeVectorPainter extends CustomPainter {
   }
 
   // --- Level 9: Pohon Abadi (Grand Ancient Eco Tree) ---
-  void _drawLevel9AncientGrandTree(Canvas canvas, double w, double h, double soilY) {
+  void _drawLevel9AncientGrandTree(
+    Canvas canvas,
+    double w,
+    double h,
+    double soilY,
+  ) {
     // Golden Halo / Eco Aura
     final auraPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFFD54F).withOpacity(0.4),
-          const Color(0xFF4CAF50).withOpacity(0.2),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.5, soilY - 150), radius: 95));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFFFFD54F).withOpacity(0.4),
+              const Color(0xFF4CAF50).withOpacity(0.2),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromCircle(center: Offset(w * 0.5, soilY - 150), radius: 95),
+          );
     canvas.drawCircle(Offset(w * 0.5, soilY - 150), 95, auraPaint);
 
     // Majestic Trunk
@@ -346,7 +360,13 @@ class _EcoTreeVectorPainter extends CustomPainter {
     }
   }
 
-  void _drawLeaf(Canvas canvas, Offset origin, double angleRad, double length, Paint paint) {
+  void _drawLeaf(
+    Canvas canvas,
+    Offset origin,
+    double angleRad,
+    double length,
+    Paint paint,
+  ) {
     canvas.save();
     canvas.translate(origin.dx, origin.dy);
     canvas.rotate(angleRad);

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CollectorEarningsPage extends StatefulWidget {
-  const CollectorEarningsPage({Key? key}) : super(key: key);
+  const CollectorEarningsPage({super.key});
 
   @override
   State<CollectorEarningsPage> createState() => _CollectorEarningsPageState();
@@ -38,10 +38,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF82E23B),
-              Color(0xFF52A41F),
-            ],
+            colors: [Color(0xFF82E23B), Color(0xFF52A41F)],
           ),
         ),
         child: SafeArea(
@@ -166,7 +163,9 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                               child: Container(
                                 margin: const EdgeInsets.only(right: 8),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? const Color(0xFF7CB342)
@@ -199,14 +198,22 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Icon(Icons.arrow_left, size: 14, color: Colors.grey[400]),
+                          Icon(
+                            Icons.arrow_left,
+                            size: 14,
+                            color: Colors.grey[400],
+                          ),
                           Expanded(
                             child: Container(
                               height: 1,
                               color: Colors.grey[350],
                             ),
                           ),
-                          Icon(Icons.arrow_right, size: 14, color: Colors.grey[400]),
+                          Icon(
+                            Icons.arrow_right,
+                            size: 14,
+                            color: Colors.grey[400],
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -291,10 +298,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(9, (index) {
-                    return Container(
-                      height: 0.8,
-                      color: Colors.grey[200],
-                    );
+                    return Container(height: 0.8, color: Colors.grey[200]);
                   }),
                 ),
                 Positioned.fill(
@@ -302,10 +306,13 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: dailyData.map<Widget>((data) {
-                      double currentWeight = double.parse(data['weight'].toString());
+                      double currentWeight = double.parse(
+                        data['weight'].toString(),
+                      );
                       double minGridScale = 6.5;
                       double maxGridScale = 15.0;
-                      double heightFactor = (currentWeight - minGridScale) /
+                      double heightFactor =
+                          (currentWeight - minGridScale) /
                           (maxGridScale - minGridScale);
                       heightFactor = heightFactor.clamp(0.0, 1.0);
 

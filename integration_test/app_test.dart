@@ -6,7 +6,9 @@ import 'package:ecopoint/main.dart' as app;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('End-to-End Test: Admin, User, and Collector Flows', (WidgetTester tester) async {
+  testWidgets('End-to-End Test: Admin, User, and Collector Flows', (
+    WidgetTester tester,
+  ) async {
     app.main();
     await tester.pumpAndSettle(const Duration(seconds: 3));
     await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -38,16 +40,17 @@ void main() {
     // Tap "Don't have an account? Register"
     await tester.tap(find.text("Don't have an account? Register"));
     await tester.pumpAndSettle();
-    
+
     // Register as User
-    final userEmail = 'testuser_${DateTime.now().millisecondsSinceEpoch}@ecopoint.com';
+    final userEmail =
+        'testuser_${DateTime.now().millisecondsSinceEpoch}@ecopoint.com';
     await tester.enterText(find.byType(TextField).at(0), 'Test User');
     await tester.enterText(find.byType(TextField).at(1), userEmail);
     await tester.enterText(find.byType(TextField).at(2), 'password123');
     // Dropdown is already 'user' by default
     await tester.tap(find.text('Register').last);
     await tester.pumpAndSettle(const Duration(seconds: 5));
-    
+
     // Login as the new User
     await loginAs(userEmail, 'password123');
 
@@ -65,13 +68,14 @@ void main() {
     // Tap "Don't have an account? Register"
     await tester.tap(find.text("Don't have an account? Register"));
     await tester.pumpAndSettle();
-    
+
     // Register as Collector
-    final collectorEmail = 'testcollector_${DateTime.now().millisecondsSinceEpoch}@ecopoint.com';
+    final collectorEmail =
+        'testcollector_${DateTime.now().millisecondsSinceEpoch}@ecopoint.com';
     await tester.enterText(find.byType(TextField).at(0), 'Test Collector');
     await tester.enterText(find.byType(TextField).at(1), collectorEmail);
     await tester.enterText(find.byType(TextField).at(2), 'password123');
-    
+
     // Change Dropdown to collector
     await tester.tap(find.text('Waste Generator (User)'));
     await tester.pumpAndSettle();
@@ -80,7 +84,7 @@ void main() {
 
     await tester.tap(find.text('Register').last);
     await tester.pumpAndSettle(const Duration(seconds: 5));
-    
+
     // Login as Collector
     await loginAs(collectorEmail, 'password123');
 

@@ -6,7 +6,9 @@ import 'package:ecopoint/main.dart' as app;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Collector & Payment Android App UI Test', (WidgetTester tester) async {
+  testWidgets('Collector & Payment Android App UI Test', (
+    WidgetTester tester,
+  ) async {
     // 1. Launch App on Android
     app.main();
     await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -62,7 +64,9 @@ void main() {
       await tester.tap(hargaSampahBtn.first);
       await tester.pumpAndSettle(const Duration(seconds: 3));
       expect(find.text('Katalog Harga Sampah'), findsOneWidget);
-      print('✓ Step 4: Waste Prices Catalog UI Rendered with Live Prices & Icons');
+      print(
+        '✓ Step 4: Waste Prices Catalog UI Rendered with Live Prices & Icons',
+      );
     }
 
     print('\n=== ALL COLLECTOR & PAYMENT UI TESTS COMPLETED SUCCESSFULLY ===');

@@ -1,6 +1,124 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "small_model": "xstresser/FREE",
   "provider": {
+    "ohh": {
+      "name": "ohh",
+      "api": "https://9router.kliksosmed.id/v1",
+      "options": {
+        "apiKey": "sk-58507d96aea84e2c-4gnfys-ffeb9d25",
+        "baseURL": "https://9router.kliksosmed.id/v1"
+      },
+      "models": {
+        "opus-5": {
+          "id": "ohh/opus-5",
+          "name": "Opus 5",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "interleaved": "reasoning_content",
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "variants": {
+            "max": {
+              "reasoning": true
+            }
+          }
+        },
+        "opus-4.8": {
+          "id": "ohh/opus-4.8",
+          "name": "Opus 4.8",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "interleaved": "reasoning_content",
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "variants": {
+            "max": {
+              "reasoning": true
+            }
+          }
+        },
+        "gpt-5.6": {
+          "id": "ohh/gpt-5.6",
+          "name": "GPT 5.6",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          }
+        },
+        "gpt-5.6-sol": {
+          "id": "ohh/gpt-5.6-sol",
+          "name": "GPT 5.6 Sol",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "variants": {
+            "max": {
+              "reasoning": true
+            }
+          }
+        },
+        "gpt-5.6-terra": {
+          "id": "ohh/gpt-5.6-terra",
+          "name": "GPT 5.6 Terra",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          }
+        },
+        "gpt-5.6-luna": {
+          "id": "ohh/gpt-5.6-luna",
+          "name": "GPT 5.6 Luna",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          }
+        }
+      }
+    },
     "xstresser": {
       "name": "xstresser",
       "api": "https://xstresser.eu.org/v1",
@@ -11,11 +129,52 @@
       "models": {
         "FREE": {
           "id": "FREE",
-          "name": "FREE",
+          "name": "FREE (Vision)",
           "tool_call": true,
+          "attachment": true,
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
           "limit": {
             "context": 128000,
             "output": 4096
+          }
+        }
+      }
+    },
+    "al": {
+      "name": "AL",
+      "api": "https://9router.kliksosmed.id/v1",
+      "options": {
+        "baseURL": "https://9router.kliksosmed.id/v1",
+        "apiKey": "sk-58507d96aea84e2c-4gnfys-ffeb9d25"
+      },
+      "models": {
+        "deepseek-v4-pro": {
+          "id": "al/deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "interleaved": "reasoning_content",
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "variants": {
+            "max": {
+              "reasoning": true
+            }
           }
         }
       }

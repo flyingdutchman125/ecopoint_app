@@ -12,13 +12,13 @@ import '../../views/collector/collector_order_weigh.dart';
 import '../../views/collector/collector_chat_detail.dart';
 import '../../views/collector/collector_earnings_page.dart'; // Import halaman pendapatan
 import '../../models/order_model.dart';
-import '../../views/admin/admin_dashboard.dart';
+import '../../views/admin/admin_home_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../views/user/address_page.dart';
 import '../../views/user/notification_page.dart';
-import '../../views/user/ai_price_page.dart';
+import '../../views/user/price_catalog_screen.dart';
 import '../../views/user/ai_vision_page.dart';
-import '../../views/user/points_page.dart'; 
+import '../../views/user/points_page.dart';
 import '../../views/user/warga_chat_room_page.dart';
 import '../../views/user/warga_chat_list_page.dart';
 import '../../views/user/rating_page.dart';
@@ -35,11 +35,10 @@ import '../../views/user/withdraw_page.dart';
 import '../../views/user/withdraw_confirm_page.dart';
 import '../../views/user/withdraw_verify_page.dart';
 
-
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
     return GoRouter(
-      initialLocation: '/collector',
+      initialLocation: '/',
       refreshListenable: authProvider,
       redirect: (context, state) {
         final isLoggedIn = authProvider.isAuthenticated;
@@ -120,9 +119,8 @@ class AppRouter {
         GoRoute(
           path: '/create-order',
           name: 'create-order',
-          builder: (context, state) => CreateOrderScreen(
-            extra: state.extra as Map<String, dynamic>?,
-          ),
+          builder: (context, state) =>
+              CreateOrderScreen(extra: state.extra as Map<String, dynamic>?),
         ),
         GoRoute(
           path: '/ai-vision',
@@ -172,7 +170,8 @@ class AppRouter {
         GoRoute(
           path: '/warga/chat-room',
           name: 'warga-chat-room',
-          builder: (context, state) => WargaChatRoomPage(extra: state.extra as Map<String, dynamic>?),
+          builder: (context, state) =>
+              WargaChatRoomPage(extra: state.extra as Map<String, dynamic>?),
         ),
         GoRoute(
           path: '/collector/earnings',
@@ -182,12 +181,12 @@ class AppRouter {
         GoRoute(
           path: '/admin',
           name: 'admin',
-          builder: (context, state) => const AdminDashboard(),
+          builder: (context, state) => const AdminHomeScreen(),
         ),
         GoRoute(
           path: '/ai-price',
           name: 'ai-price',
-          builder: (context, state) => const AiPricePage(),
+          builder: (context, state) => const PriceCatalogScreen(),
         ),
         GoRoute(
           path: '/points',
@@ -202,7 +201,8 @@ class AppRouter {
         GoRoute(
           path: '/rating/detail',
           name: 'rating-detail',
-          builder: (context, state) => ReviewDetailPage(extra: state.extra as Map<String, dynamic>?),
+          builder: (context, state) =>
+              ReviewDetailPage(extra: state.extra as Map<String, dynamic>?),
         ),
         GoRoute(
           path: '/warga/chats',
@@ -214,57 +214,63 @@ class AppRouter {
           name: 'route-map',
           builder: (context, state) => const RouteMapPage(),
         ),
-                GoRoute(
-                  path: '/eco-tree',
-                  name: 'eco-tree',
-                  builder: (context, state) => const EcoTreePage(),
-                ),
-                GoRoute(
-                  path: '/orders',
-                  name: 'orders',
-                  builder: (context, state) => OrderPage(extra: state.extra as Map<String, dynamic>?),
-                ),
-                GoRoute(
-                  path: '/orders/tracking',
-                  name: 'orders-tracking',
-                  builder: (context, state) => OrderTrackingPage(extra: state.extra as Map<String, dynamic>?),
-                ),
-                GoRoute(
-                  path: '/eco-book',
-                  name: 'eco-book',
-                  builder: (context, state) => const EcoBookPage(),
-                ),
-                GoRoute(
-                  path: '/eco-book/modul',
-                  name: 'eco-book-modul',
-                  builder: (context, state) => EcoBookModulPage(extra: state.extra as Map<String, dynamic>?),
-                ),
-                GoRoute(
-                  path: '/convert',
-                  name: 'convert',
-                  builder: (context, state) => const ConvertPage(),
-                ),
-                GoRoute(
-                  path: '/convert/confirm',
-                  name: 'convert-confirm',
-                  builder: (context, state) => ConvertConfirmPage(extra: state.extra as Map<String, dynamic>?),
-                ),
-                GoRoute(
-                  path: '/withdraw',
-                  name: 'withdraw',
-                  builder: (context, state) => const WithdrawPage(),
-                ),
-                GoRoute(
-                  path: '/withdraw/confirm',
-                  name: 'withdraw-confirm',
-                  builder: (context, state) => WithdrawConfirmPage(extra: state.extra as Map<String, dynamic>?),
-                ),
-                GoRoute(
-                  path: '/withdraw/verify',
-                  name: 'withdraw-verify',
-                  builder: (context, state) => WithdrawVerifyPage(extra: state.extra as Map<String, dynamic>?),
-                ),
-              ],
-            );
+        GoRoute(
+          path: '/eco-tree',
+          name: 'eco-tree',
+          builder: (context, state) => const EcoTreePage(),
+        ),
+        GoRoute(
+          path: '/orders',
+          name: 'orders',
+          builder: (context, state) =>
+              OrderPage(extra: state.extra as Map<String, dynamic>?),
+        ),
+        GoRoute(
+          path: '/orders/tracking',
+          name: 'orders-tracking',
+          builder: (context, state) =>
+              OrderTrackingPage(extra: state.extra as Map<String, dynamic>?),
+        ),
+        GoRoute(
+          path: '/eco-book',
+          name: 'eco-book',
+          builder: (context, state) => const EcoBookPage(),
+        ),
+        GoRoute(
+          path: '/eco-book/modul',
+          name: 'eco-book-modul',
+          builder: (context, state) =>
+              EcoBookModulPage(extra: state.extra as Map<String, dynamic>?),
+        ),
+        GoRoute(
+          path: '/convert',
+          name: 'convert',
+          builder: (context, state) => const ConvertPage(),
+        ),
+        GoRoute(
+          path: '/convert/confirm',
+          name: 'convert-confirm',
+          builder: (context, state) =>
+              ConvertConfirmPage(extra: state.extra as Map<String, dynamic>?),
+        ),
+        GoRoute(
+          path: '/withdraw',
+          name: 'withdraw',
+          builder: (context, state) => const WithdrawPage(),
+        ),
+        GoRoute(
+          path: '/withdraw/confirm',
+          name: 'withdraw-confirm',
+          builder: (context, state) =>
+              WithdrawConfirmPage(extra: state.extra as Map<String, dynamic>?),
+        ),
+        GoRoute(
+          path: '/withdraw/verify',
+          name: 'withdraw-verify',
+          builder: (context, state) =>
+              WithdrawVerifyPage(extra: state.extra as Map<String, dynamic>?),
+        ),
+      ],
+    );
   }
 }

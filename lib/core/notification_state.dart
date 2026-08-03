@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationItem {
   final String id;
-  final String category; // 'Jemput', 'Order', 'Chat', 'EcoTree', 'Withdraw', 'Convert', 'EcoBook', 'Mission'
+  final String
+  category; // 'Jemput', 'Order', 'Chat', 'EcoTree', 'Withdraw', 'Convert', 'EcoBook', 'Mission'
   final String title;
   final String subtitle;
   final DateTime timestamp;
@@ -20,20 +21,25 @@ class NotificationItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'category': category,
-        'title': title,
-        'subtitle': subtitle,
-        'timestamp': timestamp.toIso8601String(),
-        'isRead': isRead,
-      };
+    'id': id,
+    'category': category,
+    'title': title,
+    'subtitle': subtitle,
+    'timestamp': timestamp.toIso8601String(),
+    'isRead': isRead,
+  };
 
-  factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem(
-        id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+  factory NotificationItem.fromJson(Map<String, dynamic> json) =>
+      NotificationItem(
+        id:
+            json['id']?.toString() ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         category: json['category']?.toString() ?? 'EcoPoint',
         title: json['title']?.toString() ?? 'Notifikasi',
         subtitle: json['subtitle']?.toString() ?? '',
-        timestamp: DateTime.tryParse(json['timestamp']?.toString() ?? '') ?? DateTime.now(),
+        timestamp:
+            DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
+            DateTime.now(),
         isRead: json['isRead'] == true,
       );
 
@@ -91,8 +97,18 @@ class NotificationItem {
 
   String get dateFormatted {
     final months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${timestamp.day} ${months[timestamp.month - 1]} ${timestamp.year}';
   }
@@ -105,7 +121,8 @@ class NotificationState {
 
   static const String _storageKey = 'ecopoint_user_notifications_v3';
 
-  final ValueNotifier<List<NotificationItem>> notifications = ValueNotifier<List<NotificationItem>>([]);
+  final ValueNotifier<List<NotificationItem>> notifications =
+      ValueNotifier<List<NotificationItem>>([]);
   final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
 
   bool _initialized = false;
@@ -124,7 +141,11 @@ class NotificationState {
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         final List<NotificationItem> loaded = decoded
-            .map((item) => NotificationItem.fromJson(Map<String, dynamic>.from(item as Map)))
+            .map(
+              (item) => NotificationItem.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
             .toList();
 
         notifications.value = loaded;

@@ -1,6 +1,6 @@
 async function paginate(query, page = 1, limit = 20) {
   const p = Math.max(1, parseInt(page) || 1);
-  const l = Math.min(100, Math.max(1, parseInt(limit) || 20));
+  const l = Math.min(1000, Math.max(1, parseInt(limit) || 20));
   const start = (p - 1) * l;
   const end = start + l - 1;
 

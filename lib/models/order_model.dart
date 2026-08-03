@@ -74,7 +74,7 @@ class OrderModel {
       collectorId: json['collector_id'],
       status: json['status'] ?? 'pending',
       photoUrl: json['photo_url'],
-      category: json['category'] ?? json['item_type'],
+      category: _translateToIndonesian(json['category'] ?? json['item_type']),
       weightKg: (json['weight_kg'] ?? json['est_weight']) != null
           ? double.parse((json['weight_kg'] ?? json['est_weight']).toString())
           : null,
@@ -96,5 +96,15 @@ class OrderModel {
       ),
       userName: json['user_name'] ?? json['user']?['name'],
     );
+  }
+
+  static String? _translateToIndonesian(dynamic val) {
+    if (val == null) return null;
+    final s = val.toString().toLowerCase().trim();
+    if (s == 'metal') return 'Logam/Besi';
+    if (s == 'pet plastic') return 'Botol Plastik';
+    if (s == 'cardboard') return 'Kardus';
+    if (s == 'cooking oil') return 'Minyak Jelantah';
+    return val.toString();
   }
 }

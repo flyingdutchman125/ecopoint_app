@@ -48,10 +48,12 @@ router.post('/wallet/topup', auth, mobileCtrl.requestTopup);
 router.post('/wallet/withdraw', auth, mobileCtrl.requestWithdrawal);
 
 // Chat & Review (For both User & Collector)
+router.get('/chats', auth, mobileCtrl.getChats);
 router.post('/order/:id/messages', auth, mobileCtrl.sendMessage);
 router.get('/order/:id/messages', auth, mobileCtrl.getMessages);
 router.delete('/message/:messageId', auth, mobileCtrl.deleteMessage);
 router.post('/order/:id/review', auth, mobileCtrl.addReview);
+router.get('/reviews', auth, mobileCtrl.getUserReviews);
 
 router.put('/location', auth, role('collector'), collectorCtrl.updateLocation);
 router.get('/nearby-orders', auth, role('collector'), collectorCtrl.getNearbyOrders);

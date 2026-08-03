@@ -1,156 +1,178 @@
-# 🚀 EcoPoint Flutter App - Progress & Development Report
+# EcoPoint App — Progress & Continuation Guide
 
-> **Last Updated:** 2026-08-02  
-> **Backend API:** `https://ecopoint-api.fly.dev/api`  
-> **Framework:** Flutter 3.35+ (Dart 3.9), Material Design 3  
+> **Last Updated**: 2026-08-03 06:12 UTC
 
 ---
 
-## 📌 Executive Summary
+## ✅ Apa yang Sudah Selesai
 
-Aplikasi **EcoPoint** telah mengalami perombakan besar (*overhaul*) baik pada arsitektur layer data, provider, navigasi router, hingga tampilan antarmuka (UI/UX). Aplikasi terhubung 100% secara langsung dengan live backend API Supabase/Node.js di `https://ecopoint-api.fly.dev/api`.
+### 1. Admin Dashboard — UI Overhaul & Fitur Manajemen User
+- **Dashboard Tab**: Statistik real-time (Total Warga, Pengepul, Pesanan, Pendapatan) dengan kartu animasi dan ikon.
+- **Kelola Pengguna Tab**: Daftar user dengan search bar, filter role badge (`Semua`, `Warga`, `Pengepul`).
+- **Fitur Lihat Detail User**: Bottom sheet menampilkan ID, email, nama, role, nomor HP, saldo wallet, poin.
+- **Fitur Reset Password**: Dialog modal input password baru + konfirmasi, dengan toggle visibilitas.
+- **Fitur Hapus User**: Dialog konfirmasi peringatan merah dengan info user yang akan dihapus.
 
----
+### 2. Backend API (Express + Supabase)
+- **Deployed ke Fly.io**: `https://ecopoint-api.fly.dev`
+- **Endpoint Admin** yang tersedia:
+  - `GET /api/admin/users` — List semua user
+  - `DELETE /api/admin/user/:userId` — Hapus user
+  - `POST /api/admin/reset-password` — Reset password user
+  - `GET /api/statistics` — Statistik dashboard
+- **Health check**: `GET /health` → `{"status":"ok"}`
 
-## ✅ Progress Pekerjaan Yang Telah Selesai
+### 3. Flutter App Build
+- `baseUrl` sudah diset ke **production**: `https://ecopoint-api.fly.dev`
+- `flutter analyze lib/` → **0 errors** (21 info/warnings, bukan error)
+- APK berhasil di-build:
+  - **ARM64**: 19.7 MB ≤ 20 MB ✅
+  - **ARMv7**: 17.4 MB ≤ 18 MB ✅
+  - **x86_64**: 21.0 MB (emulator only)
 
-### 1. 🏗️ **Pembaruan Model Data & API Layer**
-- [x] **`UserModel`**: Disesuaikan untuk mendukung objek registrasi Supabase Auth & tabel `users`. Ditambahkan properti `walletBalance`, `ecoPoints`, `phone`, `city`, `address`, `subdistrict`.
-- [x] **`OrderModel`**: Disesuaikan dengan struktur JSON backend (`item_type`, `est_weight`, `actual_weight`, `total_amount`, `pickup_address`, `notes`, `photo_url`, `collector_id`, `created_at`, `updated_at`).
-- [x] **`WalletModel`**: Memperbaiki pembacaan field `wallet_balance` dan `eco_points`.
-- [x] **`PriceModel`**: Model katalog harga sampah real-time (`item_name`, `current_price`, `unit`, `last_updated`, `trend`).
-- [x] **`TransactionModel`**: Model riwayat transaksi dompet (`amount`, `type`, `description`, `created_at`).
-- [x] **`ApiConstants`**: Menghubungkan seluruh 25+ endpoint API backend secara terpusat (termasuk `changePassword`, `deleteAccount`, `deleteMessage`, `collectorWallet`).
-- [x] **`CurrencyFormatter`**: Format Rupiah (`Rp xx.xxx`) dan berat (`x.x kg`) secara konsisten.
-
----
-
-### 2. ⚡ **Provider Layer & State Management**
-- [x] **`AuthProvider`**:
-  - Login & deteksi role otomatis (`user`, `collector`, `admin`).
-  - Registrasi 13 parameter lengkap (termasuk `city`, `subdistrict`, `consent_sorting_anorganic`, business data, & `ktp_url`).
-  - Fitur `forgotPassword` & manajemen token JWT di `SharedPreferences`.
-  - ✅ **BARU: `changePassword`** - Ganti password untuk semua role.
-  - ✅ **BARU: `deleteAccount`** - Hapus akun pengguna + logout otomatis.
-- [x] **`UserProvider`**:
-  - Fetching paralel dashboard (`fetchWallet`, `fetchOrders`, `fetchPrices`, `fetchTransactions`).
-  - `createOrder`: pembuatan pesanan dengan koordinat lokasi & jenis sampah.
-  - `cancelOrder`: pembatalan pesanan berstatus pending.
-  - `topUp` & `withdraw`: transaksi dompet digital.
-  - `redeemPoints`: penukaran Eco Points menjadi saldo.
-  - `updateProfile`: pembaruan nama & telepon.
-- [x] **`CollectorProvider`**:
-  - `updateLocation`: pembaruan koordinat GPS lat/lng & status `is_online`.
-  - `fetchNearbyOrders`: pencarian sampah warga berdasarkan radius lokasi.
-  - `acceptOrder` ➔ `enRouteOrder` ➔ `completeOrder`: alur penjemputan & pembayaran sampah warga.
-  - Calculation otomatis `walletBalance`, `totalEarnings`, & `totalOrders`.
-  - ✅ **BARU: `fetchCollectorWallet`** - Fetch saldo dompet pengepul.
-  - ✅ **BARU: `topUp`** - Top up saldo pengepul.
-  - ✅ **BARU: `withdraw`** - Penarikan saldo pengepul ke rekening bank.
-- [x] **`AdminProvider`**:
-  - Statistik real-time, manajemen daftar pengguna, pesanan admin, & pembaruan harga sampah.
-  - ✅ **BARU: `resetUserPassword`** - Reset password pengguna oleh Admin.
-  - ✅ **BARU: `deleteUser`** - Hapus akun pengguna oleh Admin.
-  - ✅ **BARU: `deleteOrderMessage`** - Hapus pesan order oleh Admin.
-- [x] **`AdminDashboardTab` & `AdminUsersTab`**:
-  - ✅ **BARU: Dashboard Admin Overhaul** - Tampilan statistik modern, responsif, & tidak blank.
-  - ✅ **BARU: Fitur Kelola Pengguna** - Popup menu pada tiap pengguna untuk Reset Password, Hapus Akun, & Top Up Saldo.
-  - ✅ **BARU: Fitur Kelola Pesan** - Admin dapat menghapus pesan order yang tidak diinginkan.
-  - ✅ **BARU: Tombol Logout Admin** - Tombol keluar akun yang mudah diakses.
+### 4. ADB Testing (Verified via Screenshots)
+Semua fitur interaktif diuji pada `emulator-5554`:
+- ✅ Login admin → navigasi ke admin dashboard
+- ✅ Dashboard tab menampilkan statistik
+- ✅ Pengguna tab menampilkan daftar user
+- ✅ Modal Lihat Detail User berfungsi
+- ✅ Modal Reset Password berfungsi
+- ✅ Modal Hapus User berfungsi
 
 ---
 
-### 3. 🎨 **UI/UX & Routing (Material 3)**
-- [x] **`AppRouter` (GoRouter)**:
-  - Routing terproteksi berdasarkan status login & role pengguna.
-  - SplashScreen interaktif dengan animasi entrance `flutter_animate`.
-- [x] **Alur Pengguna Warga (User)**:
-  - **Bottom Navigation**: Beranda, Pesanan, Dompet, Profil.
-  - **Beranda**: Ringkasan saldo, poin, quick action, pesanan terbaru.
-  - **Katalog Harga**: Grid harga sampah dengan tren & ikon kategori.
-  - **Buat Pesanan**: Upload foto + analisis otomatis jenis sampah via AI + lokasi.
-    - ✅ **BARU: 18 Kategori Sampah** (PET Plastic, HDPE, Paper, Electronic Waste, Battery, Textile, dll)
-    - ✅ **BARU: Keterangan Produk** - Field deskripsi/notes untuk produk.
-    - ✅ **BARU: Auto Fetch GPS** - Tombol otomatis ambil lokasi dari GPS.
-  - **Detail & Riwayat Pesanan**: Timeline status interaktif & tombol pembatalan.
-  - **Dompet & Poin**: Visualisasi kartu saldo gradient, modal Top Up, Withdraw Bank, & Redeem Points.
-  - ✅ **BARU: Profil Pengguna**:
-    - Edit hanya nomor telepon (nama read-only).
-    - Kota (city) dihapus dari tampilan.
-    - Ganti Password dengan dialog 3-field.
-    - Hapus Akun dengan konfirmasi dialog.
-    - Logout.
-- [x] **Alur Pengguna Pengepul (Collector)**:
-  - **Bottom Navigation**: Pesanan Terdekat, Tugas Aktif, **Dompet**, Profil.
-  - **Pesanan Terdekat**: Visualisasi Peta Interaktif `FlutterMap` + marker lokasi sampah.
-  - **Tugas Aktif**: Ringkasan pendapatan + modal timbang & bayar (`actual_weight`).
-  - **Registrasi Pengepul 3-Step**: Pilihan Peran ➔ Informasi Usaha ➔ Upload KTP.
-  - ✅ **BARU: Dompet Pengepul** - Tab khusus dompet dengan:
-    - Kartu saldo gradient hijau.
-    - Top Up modal (jumlah + metode pembayaran).
-    - Withdraw modal (jumlah + info bank).
-  - ✅ **BARU: Profil Pengepul**:
-    - Tampilan info lengkap (saldo, total pesanan, pendapatan).
-    - Edit hanya nomor telepon.
-    - Ganti Password.
-    - Logout.
-- [x] **Alur Admin**:
-  - Dashboard statistik grid, kelola pesanan, & topup saldo pengguna.
-  - ✅ **BARU: Tab Pengaturan Admin**:
-    - Profil admin (nama, email).
-    - Ganti Password.
-    - Logout.
+## ⚠️ Hal Penting yang Perlu Diketahui
+
+### Fly.io Machine Auto-Stop
+Server Fly.io dikonfigurasi dengan `auto_stop_machines = true` dan `min_machines_running = 0`.
+Artinya **machine akan otomatis berhenti jika tidak ada traffic**, tapi juga `auto_start_machines = true` yang artinya **machine akan otomatis start saat ada request masuk**.
+
+Jadi kalau buka aplikasi dan request pertama agak lambat (cold start ~5-10 detik), itu normal.
+
+Jika ingin machine selalu hidup, ubah di `backend-api/fly.toml`:
+```toml
+min_machines_running = 1
+```
+Lalu deploy ulang: `flyctl deploy` dari folder `backend-api/`.
+
+### Fly.io Deploy Error (Registry Push 401)
+Saat sesi ini, `flyctl deploy` gagal karena error `401 Unauthorized` di registry push (kemungkinan token expired).
+**Solusi**: Jalankan ulang:
+```bash
+cd /home/user/myapp/backend-api
+flyctl auth login
+flyctl deploy
+```
+
+### GoogleFonts Disabled
+`GoogleFonts` (package `google_fonts`) sudah **diganti dengan `TextStyle` biasa** di `lib/core/theme/app_theme.dart` karena menyebabkan crash `SocketException: Failed host lookup 'fonts.gstatic.com'` di emulator. Font default Flutter (`Roboto`) digunakan sebagai pengganti.
 
 ---
 
-### 4. 🔧 **Backend API Endpoints (Node.js + Supabase)**
-- [x] **Auth**: `POST /login`, `POST /register`, `POST /forgot-password`
-- [x] ✅ **BARU: `PUT /change-password`** - Ganti password untuk semua authenticated users.
-- [x] ✅ **BARU: `DELETE /account`** - Hapus akun (users table + Supabase auth).
-- [x] ✅ **BARU: `DELETE /message/:messageId`** - Hapus pesan order.
-- [x] ✅ **BARU: `GET /collector/wallet`** - Ambil saldo dompet pengepul.
-- [x] **User**: `GET /wallet`, `GET /orders`, `GET /prices`, `POST /order`, `PUT /order/:id/cancel`, `POST /redeem`
-- [x] **Wallet**: `POST /wallet/topup`, `POST /wallet/withdraw` (tersedia untuk user & collector)
-- [x] **Collector**: `PUT /location`, `GET /nearby-orders`, `POST /order/:id/accept`, `PUT /order/:id/en-route`, `POST /order/:id/pay`
-- [x] **Admin**: `GET /statistics`, `GET /admin/users`, `GET /admin/orders`, `POST /scrape-prices`, `POST /admin/user/balance`
-- [x] **Chat & Review**: `POST /order/:id/messages`, `GET /order/:id/messages`, `POST /order/:id/review`
+## 📁 File-File Utama yang Diubah
+
+| File | Perubahan |
+|------|-----------|
+| `lib/core/constants/api_constants.dart` | `baseUrl` = `https://ecopoint-api.fly.dev` (production) |
+| `lib/core/theme/app_theme.dart` | GoogleFonts → TextStyle biasa (fix crash) |
+| `lib/views/auth/login_screen.dart` | Pre-fill admin credentials + role-based routing |
+| `lib/views/admin/admin_dashboard_tab.dart` | Statistik dashboard + loading/error state |
+| `lib/views/admin/admin_users_tab.dart` | Kelola pengguna: search, filter, detail, reset pass, hapus |
+| `backend-api/src/routes/api.js` | Endpoint admin (users, delete, reset-password) |
+| `backend-api/fly.toml` | Fly.io deployment config |
 
 ---
 
-### 5. 🧪 **Pengujian & Verifikasi (100% Passed)**
-- [x] **`flutter analyze`**: 0 Error Kompilasi.
-- [x] **Live API Integration Test**: Lulus 100% (`Login`, `Register`, `Wallet`, `Prices`, `Orders`, `Transactions`, `Create Order`, `Cancel Order`).
-- [x] **Advanced Features Test**: Lulus 100% (`Collector Registration`, `Location Update`, `Radius Search`, `Accept Order`, `En-Route`, `Complete & Pay Transfer`, `TopUp`, `Withdraw`).
-- [x] **Android Emulator UI Interactive Test (`emulator-5554`)**: Lulus 100% di perangkat Android nyata.
+## 📦 Link Download APK Terakhir (Production)
+
+> ⚠️ Link `tmpfiles.org` expire setelah beberapa jam.
+
+| Arsitektur | Ukuran | Link |
+|------------|--------|------|
+| ARM64-v8a (Recommended) | 19.7 MB | `https://tmpfiles.org/dl/wTweRlNuB6Rh/app-arm64-v8a-release.apk` |
+| ARMv7 | 17.4 MB | `https://tmpfiles.org/dl/w2wVRSNjBbkk/app-armeabi-v7a-release.apk` |
+| x86_64 (Emulator) | 21.0 MB | `build/app/outputs/flutter-apk/app-x86_64-release.apk` |
+
+### Perubahan 2026-08-03
+- **AdminProvider**: `fetchDashboardData()` pagination loop — ambil semua halaman user (`limit=1000`), bukan default 20
+- **Backend `paginate.js`**: ceiling `limit` 100 → 1000
+- **AdminDashboardTab**: tap `Total Warga` → filter `user`, tap `Kolektor Aktif` → filter `collector` di tab Pengguna
+- **AdminUsersTab**: menerima `selectedRole` dari parent, auto-filter saat navigasi
+- **Backend**: deploy ulang via `flyctl deploy --depot=false`
 
 ---
 
-### 6. 📦 **Build & Rilis APK**
-- [x] **Ukuran Teroptimasi**: Diperkecil dari **53 MB menjadi ~18 MB** menggunakan *ABI Splitting* (`--split-per-abi`).
-- [x] **Link Download Available**:
-  - 📥 **ARM64 APK (HP Modern - 18.8 MB)**: [https://tmpfiles.org/dl/wTw1Rfu4vGxP/app-arm64-v8a-release.apk](https://tmpfiles.org/dl/wTw1Rfu4vGxP/app-arm64-v8a-release.apk)
-  - 📥 **ARM32 APK (HP Lama - 16.4 MB)**: [https://tmpfiles.org/dl/wowqRquLvDEk/app-armeabi-v7a-release.apk](https://tmpfiles.org/dl/wowqRquLvDEk/app-armeabi-v7a-release.apk)
-- [x] **Screenshot Bukti Uji ADB**:
-  - 🖼️ **Tab Radar Order**: [https://tmpfiles.org/dl/w6wMREu1tRDj/screenshot_collector_radar_order.png](https://tmpfiles.org/dl/w6wMREu1tRDj/screenshot_collector_radar_order.png)
-  - 🗺️ **Tab Peta Rute GPS**: [https://tmpfiles.org/dl/wlwARKu2thGd/screenshot_collector_peta_gps.png](https://tmpfiles.org/dl/wlwARKu2thGd/screenshot_collector_peta_gps.png)
+## 🔑 Kredensial Testing
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@ecopoint.id` | `admin123456` |
+| Warga | `test@ecopoint.id` | `test123456` |
+| Pengepul | `collector@ecopoint.id` | `test123456` |
 
 ---
 
-## 📋 Catatan / Yang Masih Bisa Ditingkatkan (Future Enhancements)
+## 🔄 Langkah untuk Melanjutkan Nanti
 
-Berikut adalah daftar item yang bisa dikembangkan lebih lanjut pada fase berikutnya (opsional):
+1. **Pastikan backend aktif**:
+   ```bash
+   curl https://ecopoint-api.fly.dev/health
+   ```
+   Jika tidak responsif, start manual:
+   ```bash
+   cd /home/user/myapp/backend-api
+   flyctl machine start 0800532f033448
+   ```
 
-1. 🔔 **Push Notifications (Firebase Cloud Messaging / WebSockets)**:
-   - Notifikasi real-time ke Pengepul saat ada Warga membuat pesanan baru di sekitar lokasi.
-   - Notifikasi ke Warga saat status pesanan diubah oleh Pengepul (*Accepted* / *En Route* / *Completed*).
-2. 🗺️ **GPS Auto-Tracking Real-time (Geolocator Live Stream)**:
-   - Mengganti input lokasi manual/simulasi dengan auto-tracking GPS live dari HP Pengepul saat perjalanan.
-3. 💬 **Fitur In-App Chat / WhatsApp Direct**:
-   - Integrasi tombol chat/telepon langsung antara Warga dan Pengepul yang ditugaskan.
-4. 🔐 **Verifikasi Admin Manual untuk Pengepul**:
-   - Dashboard Admin khusus untuk me-review foto KTP pengepul sebelum akun pengepul di-approve.
+## Work Completed
+
+1. **AI Vision Fixing & Category Mapping**:
+   - Fixed the issue where AI scan result was getting stuck on `Logam/Besi`.
+   - Added robust `_mapAiCategoryToIndonesian` logic mapping backend AI detection results (`PET Plastic`, `Cardboard`, `Metal/Aluminum`, `Cooking Oil`, etc.) into valid Indonesian waste categories (`Botol Plastik`, `Kardus`, `Logam/Besi`, `Minyak Jelantah`).
+   - Integrated this mapping in both `AiVisionPage` and `CreateOrderScreen`.
+
+2. **Manual Category Selection & Custom Price Editing**:
+   - Added a manual Dropdown selector for **Jenis Sampah** on `AiVisionPage`, allowing users to correct or manually choose any waste item type anytime.
+   - Added an editable text field for **Harga Satuan (Custom)**, enabling users to enter or adjust custom prices per kg/liter manually before proceeding to order.
+   - Forwarded selected category, custom price, and photo URL seamlessly to `/create-order`.
+
+3. **Peningkatan Rute Map Interaktif**:
+   - Menambahkan banner informasi fungsi **Rute Map** bagi warga.
+   - Menyiapkan fallback kolektor terdekat & penanda (marker) interaktif pada peta OpenStreetMap.
+   - Menambahkan gambar garis rute (**Polyline**) hijau yang menghubungkan lokasi rumah Warga dengan posisi kolektor yang dipilih.
+   - Menambahkan BottomSheet detail kolektor (Rating, Jarak km, Status Online/Offline) dengan tombol aksi cepat *"Chat Kolektor"* dan *"Pesan Penjemputan"*.
+
+4. **Perbaikan & Integrasi Fitur Rating & Ulasan**:
+   - Membuat `RatingState` (`lib/core/rating_state.dart`) untuk mengelola status ulasan secara presisten (SharedPreferences) & integrasi API backend `/api/order/:id/review`.
+   - Menghubungkan halaman `RatingPage` & `ReviewDetailPage` secara otomatis real-time via `ValueListenableBuilder`.
+   - Mengubah status peninjauan: saat warga memberikan ulasan 1-5 bintang & teks ulasan, item secara otomatis berpindah dari tab *"Belum diberikan Ulasan"* ke tab *"Cek Ulasan Anda"*.
+   - Menyediakan indikator loading & SnackBar pemberitahuan sukses pengiriman ulasan.
+
+5. **Testing & Verification**:
+   - Static analysis `flutter analyze lib/` passed dengan 0 errors.
+   - ADB Emulator testing terverifikasi via screenshot: pemberian bintang rating, penulisan ulasan teks, pengiriman ulasan, dan pergantian tab otomatis.
+
+6. **Release APK Builds**:
+   - ARM64 (`app-arm64-v8a-release.apk`): 19.7MB (Target ≤ 20MB)
+   - ARMv7 (`app-armeabi-v7a-release.apk`): 17.4MB (Target ≤ 18MB)
+
+4. **Jika perlu build ulang APK Flutter**:
+   ```bash
+   cd /home/user/myapp
+   flutter analyze lib/        # Pastikan 0 errors
+   flutter build apk --release --split-per-abi
+   ```
+
+5. **Jika perlu test di emulator**:
+   ```bash
+   adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-x86_64-release.apk
+   adb -s emulator-5554 shell am start -n com.ecopoint.app/.MainActivity
+   ```
 
 ---
 
-## 🟢 Kesimpulan Status Projek
-Aplikasi **EcoPoint** telah siap digunakan (*Production-Ready*) dengan kodingan bersih, performa ringan, tampilan Material 3 modern, dan konektivitas API 100% teruji.
+## 📝 Catatan Tambahan
+
+- APK sudah **mengarah ke server production live** (`https://ecopoint-api.fly.dev`), BUKAN localhost.
+- Login screen sudah **pre-fill** credentials admin untuk kemudahan testing (bisa dihapus untuk production).
+- Semua fitur admin (lihat detail, reset password, hapus user) sudah **verified working** via ADB screenshot testing.

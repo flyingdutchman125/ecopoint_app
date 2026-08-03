@@ -8,7 +8,10 @@ import 'history_state.dart';
 class PrimaryAddressCooldownException implements Exception {
   final String message;
   final int remainingSeconds;
-  PrimaryAddressCooldownException(this.message, {required this.remainingSeconds});
+  PrimaryAddressCooldownException(
+    this.message, {
+    required this.remainingSeconds,
+  });
   @override
   String toString() => message;
 }
@@ -20,9 +23,11 @@ class AddressState {
 
   static const String _storageKey = 'ecopoint_user_addresses_v2';
   static const String _selectedIndexKey = 'ecopoint_selected_address_index_v2';
-  static const String _lastPrimaryChangeKey = 'ecopoint_last_primary_address_changed_v2';
+  static const String _lastPrimaryChangeKey =
+      'ecopoint_last_primary_address_changed_v2';
 
-  final ValueNotifier<List<Map<String, String>>> addresses = ValueNotifier<List<Map<String, String>>>([]);
+  final ValueNotifier<List<Map<String, String>>> addresses =
+      ValueNotifier<List<Map<String, String>>>([]);
   final ValueNotifier<int> selectedIndex = ValueNotifier<int>(0);
   final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
 
@@ -41,7 +46,9 @@ class AddressState {
   /// Returns remaining cooldown duration if primary address was changed within 24 hours
   Duration? get primaryAddressCooldownRemaining {
     if (lastPrimaryAddressChangedAt == null) return null;
-    final nextAllowed = lastPrimaryAddressChangedAt!.add(const Duration(hours: 24));
+    final nextAllowed = lastPrimaryAddressChangedAt!.add(
+      const Duration(hours: 24),
+    );
     final now = DateTime.now();
     if (now.isBefore(nextAllowed)) {
       return nextAllowed.difference(now);
@@ -80,7 +87,9 @@ class AddressState {
 
         if (loaded.isNotEmpty) {
           addresses.value = loaded;
-          selectedIndex.value = (savedIdx >= 0 && savedIdx < loaded.length) ? savedIdx : 0;
+          selectedIndex.value = (savedIdx >= 0 && savedIdx < loaded.length)
+              ? savedIdx
+              : 0;
           return;
         }
       }
@@ -89,13 +98,15 @@ class AddressState {
       addresses.value = [
         {
           'label': 'Rumah Admin',
-          'detail': 'Jln. Andansari Mojo GG duku No. 3, RT 001/ RW 003, Kelurahan Sukorejo (Rumah Cat Hijau)',
+          'detail':
+              'Jln. Andansari Mojo GG duku No. 3, RT 001/ RW 003, Kelurahan Sukorejo (Rumah Cat Hijau)',
           'lat': '-7.1185',
           'lng': '112.4166',
         },
         {
           'label': 'Rumah Si mbah',
-          'detail': 'Jl. Kali utik di walik dadi batagor enak nyam nyam no 3 Gerobak abu abu dan blue',
+          'detail':
+              'Jl. Kali utik di walik dadi batagor enak nyam nyam no 3 Gerobak abu abu dan blue',
           'lat': '-7.1170',
           'lng': '112.4150',
         },
@@ -114,14 +125,22 @@ class AddressState {
       await prefs.setString(_storageKey, jsonStr);
       await prefs.setInt(_selectedIndexKey, selectedIndex.value);
       if (lastPrimaryAddressChangedAt != null) {
-        await prefs.setString(_lastPrimaryChangeKey, lastPrimaryAddressChangedAt!.toIso8601String());
+        await prefs.setString(
+          _lastPrimaryChangeKey,
+          lastPrimaryAddressChangedAt!.toIso8601String(),
+        );
       }
     } catch (e) {
       debugPrint('Error saving address state: $e');
     }
   }
 
-  Future<void> addAddress({required String label, required String detail, String? lat, String? lng}) async {
+  Future<void> addAddress({
+    required String label,
+    required String detail,
+    String? lat,
+    String? lng,
+  }) async {
     await init();
     final newList = List<Map<String, String>>.from(addresses.value);
     newList.add({
@@ -160,7 +179,7 @@ class AddressState {
   Future<bool> selectAddress(int index) async {
     await init();
     if (index < 0 || index >= addresses.value.length) return false;
-    
+
     // If already primary, no action needed
     if (selectedIndex.value == index) return true;
 
@@ -169,7 +188,9 @@ class AddressState {
     if (cooldown != null) {
       final hours = cooldown.inHours;
       final minutes = cooldown.inMinutes % 60;
-      final timeStr = hours > 0 ? '$hours jam $minutes menit' : '$minutes menit';
+      final timeStr = hours > 0
+          ? '$hours jam $minutes menit'
+          : '$minutes menit';
       throw PrimaryAddressCooldownException(
         'Alamat Utama hanya dapat diubah kembali setelah 24 jam. Sisa waktu penunggu: $timeStr.',
         remainingSeconds: cooldown.inSeconds,
@@ -183,7 +204,8 @@ class AddressState {
     final selected = addresses.value[index];
     HistoryState.instance.addHistory(
       title: 'Ubah Alamat Utama',
-      description: 'Mengubah alamat utama menjadi "${selected['label']}": ${selected['detail']}',
+      description:
+          'Mengubah alamat utama menjadi "${selected['label']}": ${selected['detail']}',
       category: 'Alamat',
       valueChange: 'Alamat Utama Diperbarui',
     );
@@ -206,10 +228,15 @@ class AddressState {
       double lng = 112.4166;
       bool positionObtained = false;
 
-      if (serviceEnabled && (permission == LocationPermission.whileInUse || permission == LocationPermission.always)) {
+      if (serviceEnabled &&
+          (permission == LocationPermission.whileInUse ||
+              permission == LocationPermission.always)) {
         try {
           Position pos = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 6)),
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 6),
+            ),
           );
           lat = pos.latitude;
           lng = pos.longitude;
@@ -227,8 +254,12 @@ class AddressState {
       // Reverse Geocoding via OpenStreetMap Nominatim API
       String formattedAddress = '';
       try {
-        final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$lat&lon=$lng');
-        final response = await http.get(url, headers: {'User-Agent': 'ecopoint_app/1.0'}).timeout(const Duration(seconds: 5));
+        final url = Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$lat&lon=$lng',
+        );
+        final response = await http
+            .get(url, headers: {'User-Agent': 'ecopoint_app/1.0'})
+            .timeout(const Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -242,9 +273,11 @@ class AddressState {
 
       if (formattedAddress.isEmpty) {
         if (positionObtained) {
-          formattedAddress = 'Jl. Raya Babat - Lamongan No. 42, RT 02/RW 01, Sukorejo, Lamongan (Lat: ${lat.toStringAsFixed(4)}, Lng: ${lng.toStringAsFixed(4)})';
+          formattedAddress =
+              'Jl. Raya Babat - Lamongan No. 42, RT 02/RW 01, Sukorejo, Lamongan (Lat: ${lat.toStringAsFixed(4)}, Lng: ${lng.toStringAsFixed(4)})';
         } else {
-          formattedAddress = 'Jln. Andansari Mojo GG duku No. 3, RT 001/ RW 003, Kelurahan Sukorejo';
+          formattedAddress =
+              'Jln. Andansari Mojo GG duku No. 3, RT 001/ RW 003, Kelurahan Sukorejo';
         }
       }
 

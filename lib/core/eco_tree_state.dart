@@ -9,7 +9,18 @@ class EcoTreeState {
 
   // Increased XP thresholds per level (Level 1 to Level 9)
   // Index 0 unused, Index 1: Lvl 1 (0 XP), Index 2: Lvl 2 (100 XP), ..., Index 9: Lvl 9 (35.000 XP)
-  final List<int> xpThresholds = [0, 0, 100, 500, 1500, 3500, 7000, 12000, 20000, 35000];
+  final List<int> xpThresholds = [
+    0,
+    0,
+    100,
+    500,
+    1500,
+    3500,
+    7000,
+    12000,
+    20000,
+    35000,
+  ];
 
   final ValueNotifier<int> xp = ValueNotifier<int>(0); // starting XP: 0
 
@@ -21,7 +32,8 @@ class EcoTreeState {
 
   int get currentXp => xp.value;
 
-  double get carbonReductionKg => xp.value * 0.41; // formula: XP * 0.41 = kg CO2 reduced
+  double get carbonReductionKg =>
+      xp.value * 0.41; // formula: XP * 0.41 = kg CO2 reduced
 
   int get level {
     final v = xp.value;
@@ -87,4 +99,3 @@ class EcoTreeState {
     addXp(gain);
   }
 }
-

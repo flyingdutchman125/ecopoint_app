@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +7,7 @@ import '../../core/eco_tree_state.dart';
 import '../../core/notification_state.dart';
 import '../../core/price_lock_state.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -34,9 +33,6 @@ class UserDashboard extends StatefulWidget {
 }
 
 class _UserDashboardState extends State<UserDashboard> {
-  Timer? _priceTicker;
-  final _random = Random();
-
   final List<_MenuItemData> _menuItems = const [
     _MenuItemData(Icons.local_shipping, 'Jemput', Color(0xFFE53935)),
     _MenuItemData(Icons.attach_money, 'Points', Color(0xFFFFC107)),
@@ -58,32 +54,29 @@ class _UserDashboardState extends State<UserDashboard> {
   @override
   void initState() {
     super.initState();
-    _priceTicker = Timer.periodic(const Duration(seconds: 4), (_) {
-      setState(() {
-        _prices = _prices.map((p) {
-          if (p.locked) return p;
-          final deltaPercent = (_random.nextDouble() * 4) - 2;
-          final newPrice = (p.pricePerKg * (1 + deltaPercent / 100)).roundToDouble();
-          return p.copyWith(pricePerKg: newPrice, change: deltaPercent);
-        }).toList();
-      });
+    Future.microtask(() {
+      if (mounted) {
+        context.read<UserProvider>().fetchPrices();
+      }
     });
   }
 
   @override
   void dispose() {
-    _priceTicker?.cancel();
     super.dispose();
   }
 
-  Future<void> _onLockTap(int index) async {
-    final item = _prices[index];
+  Future<void> _onLockTap(_PriceData item) async {
     final lockState = PriceLockState.instance;
 
     if (lockState.isLocked(item.name)) {
       final remaining = lockState.getRemainingDuration(item.name);
-      final durationStr = remaining != null ? _formatDuration(remaining) : 'beberapa saat';
-      _showSnack('Price lock untuk ${item.name} sedang aktif. Sisa waktu: $durationStr.');
+      final durationStr = remaining != null
+          ? _formatDuration(remaining)
+          : 'beberapa saat';
+      _showSnack(
+        'Price lock untuk ${item.name} sedang aktif. Sisa waktu: $durationStr.',
+      );
       return;
     }
 
@@ -91,20 +84,37 @@ class _UserDashboardState extends State<UserDashboard> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Kunci Harga ${item.name}', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
-        content: Text('Konfirmasi penguncian harga ${item.name} (Rp ${item.pricePerKg.toInt()}/kg) selama 24 jam?', style: _jakarta(fontSize: 14, color: Colors.black87)),
+        title: Text(
+          'Kunci Harga ${item.name}',
+          style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Konfirmasi penguncian harga ${item.name} (Rp ${item.pricePerKg.toInt()}/kg) selama 24 jam?',
+          style: _jakarta(fontSize: 14, color: Colors.black87),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.black54)),
+            child: Text(
+              'Batal',
+              style: _jakarta(
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF358C16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Ya, Kunci', style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white)),
+            child: Text(
+              'Ya, Kunci',
+              style: _jakarta(fontWeight: FontWeight.w600, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -119,7 +129,14 @@ class _UserDashboardState extends State<UserDashboard> {
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: _jakarta(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+        content: Text(
+          message,
+          style: _jakarta(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF1B3A1B),
         behavior: SnackBarBehavior.floating,
       ),
@@ -135,7 +152,7 @@ class _UserDashboardState extends State<UserDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF358C16), 
+      backgroundColor: const Color(0xFF358C16),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -146,7 +163,10 @@ class _UserDashboardState extends State<UserDashboard> {
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Color(0xFFF7F9FA),
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Column(
@@ -185,10 +205,28 @@ class _UserDashboardState extends State<UserDashboard> {
             children: [
               RichText(
                 text: TextSpan(
-                  style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  style: _jakarta(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                   children: [
-                    TextSpan(text: 'ECO ', style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                    TextSpan(text: 'POINT', style: _jakarta(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFFFFEB3B))),
+                    TextSpan(
+                      text: 'ECO ',
+                      style: _jakarta(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'POINT',
+                      style: _jakarta(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFFFEB3B),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -197,7 +235,11 @@ class _UserDashboardState extends State<UserDashboard> {
                   IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: const Icon(Icons.location_on, color: Colors.white, size: 24),
+                    icon: const Icon(
+                      Icons.location_on,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                     onPressed: () {
                       context.push('/address');
                     },
@@ -212,7 +254,11 @@ class _UserDashboardState extends State<UserDashboard> {
                           IconButton(
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            icon: const Icon(Icons.notifications, color: Colors.white, size: 24),
+                            icon: const Icon(
+                              Icons.notifications,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                             onPressed: () {
                               context.push('/notification');
                             },
@@ -227,11 +273,18 @@ class _UserDashboardState extends State<UserDashboard> {
                                   color: Colors.redAccent,
                                   shape: BoxShape.circle,
                                 ),
-                                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
                                 child: Text(
                                   '$count',
                                   textAlign: TextAlign.center,
-                                  style: _jakarta(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: _jakarta(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
@@ -246,10 +299,22 @@ class _UserDashboardState extends State<UserDashboard> {
           const SizedBox(height: 16),
           RichText(
             text: TextSpan(
-              style: _jakarta(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w400),
+              style: _jakarta(
+                fontSize: 15,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+              ),
               children: [
                 const TextSpan(text: 'Hai, '),
-                TextSpan(text: Provider.of<AuthProvider>(context).user?.name ?? 'Warga', style: _jakarta(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                TextSpan(
+                  text:
+                      Provider.of<AuthProvider>(context).user?.name ?? 'Warga',
+                  style: _jakarta(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -267,7 +332,13 @@ class _UserDashboardState extends State<UserDashboard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: const Color.fromRGBO(0, 0, 0, 0.06), blurRadius: 8, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromRGBO(0, 0, 0, 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -276,12 +347,20 @@ class _UserDashboardState extends State<UserDashboard> {
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: const BoxDecoration(
               color: Color(0xFFEAD247),
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
             ),
             child: Text(
               'Eco Warga Card',
               textAlign: TextAlign.center,
-              style: _jakarta(color: Colors.white, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, fontSize: 14),
+              style: _jakarta(
+                color: Colors.white,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ),
           Padding(
@@ -297,13 +376,23 @@ class _UserDashboardState extends State<UserDashboard> {
                       listenable: wallet.activeBalance,
                       builder: (context, _) {
                         final val = wallet.activeBalance.value.toInt();
-                        final valStr = val.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                        final valStr = val.toString().replaceAllMapped(
+                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                          (m) => '${m[1]}.',
+                        );
                         return _saldoPointItem('Saldo Aktif', 'Rp $valStr');
                       },
                     ),
                   ),
                 ),
-                const SizedBox(height: 36, child: VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5))),
+                const SizedBox(
+                  height: 36,
+                  child: VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: Color(0xFFE5E5E5),
+                  ),
+                ),
                 // Point Aktif -> Click to Convert
                 Expanded(
                   child: InkWell(
@@ -313,7 +402,10 @@ class _UserDashboardState extends State<UserDashboard> {
                       listenable: wallet.points,
                       builder: (context, _) {
                         final val = wallet.points.value;
-                        final valStr = val.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+                        final valStr = val.toString().replaceAllMapped(
+                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                          (m) => '${m[1]}.',
+                        );
                         return _saldoPointItem('Point Aktif', '$valStr Pts');
                       },
                     ),
@@ -337,10 +429,24 @@ class _UserDashboardState extends State<UserDashboard> {
                         final currentLvl = EcoTreeState.instance.level;
                         return RichText(
                           text: TextSpan(
-                            style: _jakarta(fontSize: 12.5, color: Colors.black87, fontStyle: FontStyle.italic),
+                            style: _jakarta(
+                              fontSize: 12.5,
+                              color: Colors.black87,
+                              fontStyle: FontStyle.italic,
+                            ),
                             children: [
-                              const TextSpan(text: 'Level Pertumbuhan Tunas : '),
-                              TextSpan(text: 'Level $currentLvl', style: _jakarta(fontSize: 12.5, color: const Color(0xFF5CB82B), fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
+                              const TextSpan(
+                                text: 'Level Pertumbuhan Tunas : ',
+                              ),
+                              TextSpan(
+                                text: 'Level $currentLvl',
+                                style: _jakarta(
+                                  fontSize: 12.5,
+                                  color: const Color(0xFF5CB82B),
+                                  fontWeight: FontWeight.bold,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -348,13 +454,30 @@ class _UserDashboardState extends State<UserDashboard> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(border: Border.all(color: const Color(0xFFCCCCCC)), borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFCCCCCC)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Lihat Perkembangan ', style: _jakarta(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.black54)),
-                        const Icon(Icons.arrow_forward_ios, size: 8, color: Colors.black54),
+                        Text(
+                          'Lihat Perkembangan ',
+                          style: _jakarta(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 8,
+                          color: Colors.black54,
+                        ),
                       ],
                     ),
                   ),
@@ -373,9 +496,23 @@ class _UserDashboardState extends State<UserDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: _jakarta(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w400)),
+          Text(
+            label,
+            style: _jakarta(
+              fontSize: 12,
+              color: Colors.black45,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: _jakarta(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+          Text(
+            value,
+            style: _jakarta(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
         ],
       ),
     );
@@ -387,7 +524,10 @@ class _UserDashboardState extends State<UserDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Menu Utama', style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            'Menu Utama',
+            style: _jakarta(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
@@ -408,22 +548,24 @@ class _UserDashboardState extends State<UserDashboard> {
                   if (item.label == 'Jemput') {
                     context.push('/create-order');
                   } else if (item.label == 'Points') {
-                    context.push('/points'); // INTEGRASI: Arahkan langsung ke halaman Points
+                    context.push(
+                      '/points',
+                    ); // INTEGRASI: Arahkan langsung ke halaman Points
                   } else if (item.label == 'Chat') {
                     context.push('/warga/chats');
                   } else if (item.label == 'Rute Map') {
                     context.push('/route-map');
-                                    } else if (item.label == 'EcoTree') {
-                                      context.push('/eco-tree');
-                                    } else if (item.label == 'Rating') {
-                                      context.push('/rating');
-                                    } else if (item.label == 'EcoBook') {
-                                      context.push('/eco-book');
-                                    } else if (item.label == 'Order') {
-                                      context.push('/orders');
-                                    } else {
-                                      _showSnack('Fitur ${item.label} sedang dalam pengembangan');
-                                    }
+                  } else if (item.label == 'EcoTree') {
+                    context.push('/eco-tree');
+                  } else if (item.label == 'Rating') {
+                    context.push('/rating');
+                  } else if (item.label == 'EcoBook') {
+                    context.push('/eco-book');
+                  } else if (item.label == 'Order') {
+                    context.push('/orders');
+                  } else {
+                    _showSnack('Fitur ${item.label} sedang dalam pengembangan');
+                  }
                 },
               );
             },
@@ -434,6 +576,17 @@ class _UserDashboardState extends State<UserDashboard> {
   }
 
   Widget _buildLivePriceFeed() {
+    final userProv = context.watch<UserProvider>();
+    final apiPrices = userProv.prices;
+
+    final List<_PriceData> displayPrices = apiPrices.isNotEmpty
+        ? apiPrices.map((p) => _PriceData(
+            name: p.itemName,
+            pricePerKg: p.currentPrice,
+            change: p.changePercent ?? 0.0,
+          )).toList()
+        : _prices;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -442,12 +595,25 @@ class _UserDashboardState extends State<UserDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('AI Live Dynamic Price Feed', style: _jakarta(fontSize: 14.5, fontWeight: FontWeight.bold)),
+              Expanded(
+                child: Text(
+                  'Katalog Harga Sampah',
+                  style: _jakarta(fontSize: 14.5, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 8),
               Row(
                 children: [
                   const CircleAvatar(radius: 4, backgroundColor: Colors.green),
                   const SizedBox(width: 4),
-                  Text('Live Market', style: _jakarta(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w500)),
+                  Text(
+                    'Harga Real-time',
+                    style: _jakarta(
+                      fontSize: 12,
+                      color: Colors.green,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -459,32 +625,46 @@ class _UserDashboardState extends State<UserDashboard> {
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: _prices.length,
+                itemCount: displayPrices.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                   childAspectRatio: 2.3,
                 ),
-                itemBuilder: (context, index) => _PriceCard(data: _prices[index], onLockTap: () => _onLockTap(index)),
+                itemBuilder: (context, index) => _PriceCard(
+                  data: displayPrices[index],
+                  onLockTap: () => _onLockTap(displayPrices[index]),
+                ),
               );
             },
           ),
           const SizedBox(height: 12),
           GestureDetector(
             onTap: () {
-              context.push('/ai-price'); 
+              context.push('/ai-price');
             },
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFEDEDED))),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEDEDED)),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Lihat Selengkapnya', style: _jakarta(fontSize: 12.5, color: Colors.black45)),
+                  Text(
+                    'Lihat Selengkapnya',
+                    style: _jakarta(fontSize: 12.5, color: Colors.black45),
+                  ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward, size: 14, color: Colors.black38),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: Colors.black38,
+                  ),
                 ],
               ),
             ),
@@ -526,7 +706,11 @@ class _MenuItemCard extends StatelessWidget {
               children: [
                 Icon(data.icon, color: data.color, size: 26),
                 const SizedBox(height: 8),
-                Text(data.label, textAlign: TextAlign.center, style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.w500)),
+                Text(
+                  data.label,
+                  textAlign: TextAlign.center,
+                  style: _jakarta(fontSize: 11.5, fontWeight: FontWeight.w500),
+                ),
               ],
             ),
           ),
@@ -539,16 +723,23 @@ class _MenuItemCard extends StatelessWidget {
 class _PriceData {
   final String name;
   final double pricePerKg;
-  final double change; 
+  final double change;
 
-  const _PriceData({required this.name, required this.pricePerKg, required this.change});
+  const _PriceData({
+    required this.name,
+    required this.pricePerKg,
+    required this.change,
+  });
 
   bool get locked => PriceLockState.instance.isLocked(name);
   DateTime? get lockedUntil => PriceLockState.instance.getLockedUntil(name);
   bool get isUp => change >= 0;
 
   String get formattedPrice {
-    final priceStr = pricePerKg.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+    final priceStr = pricePerKg.toInt().toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
     return 'Rp $priceStr/kg';
   }
 
@@ -584,8 +775,16 @@ class _PriceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: data.locked ? Border.all(color: const Color(0xFF358C16), width: 1.2) : null,
-        boxShadow: [BoxShadow(color: const Color.fromRGBO(0, 0, 0, 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        border: data.locked
+            ? Border.all(color: const Color(0xFF358C16), width: 1.2)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromRGBO(0, 0, 0, 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,13 +793,24 @@ class _PriceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text(data.name, style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w600))),
+              Expanded(
+                child: Text(
+                  data.name,
+                  style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w600),
+                ),
+              ),
               GestureDetector(
                 onTap: onLockTap,
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
                   padding: const EdgeInsets.all(2),
-                  child: Icon(data.locked ? Icons.lock : Icons.lock_open, size: 14, color: data.locked ? const Color(0xFF358C16) : Colors.black38),
+                  child: Icon(
+                    data.locked ? Icons.lock : Icons.lock_open,
+                    size: 14,
+                    color: data.locked
+                        ? const Color(0xFF358C16)
+                        : Colors.black38,
+                  ),
                 ),
               ),
             ],
@@ -608,13 +818,37 @@ class _PriceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(data.formattedPrice, style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w400)),
-              Text(data.formattedChange, style: _jakarta(fontSize: 12, fontWeight: FontWeight.bold, color: data.isUp ? Colors.green : Colors.red)),
+              Flexible(
+                child: Text(
+                  data.formattedPrice,
+                  style: _jakarta(fontSize: 12.5, fontWeight: FontWeight.w400),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  data.formattedChange,
+                  style: _jakarta(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: data.isUp ? Colors.green : Colors.red,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           if (data.locked) ...[
             const SizedBox(height: 4),
-            Text(data.lockedUntilLabel!, style: _jakarta(fontSize: 9.5, color: const Color(0xFF358C16), fontWeight: FontWeight.w500)),
+            Text(
+              data.lockedUntilLabel!,
+              style: _jakarta(
+                fontSize: 9.5,
+                color: const Color(0xFF358C16),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ],
       ),

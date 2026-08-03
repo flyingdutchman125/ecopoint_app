@@ -12,8 +12,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailCtrl = TextEditingController(text: 'anto@ecopoint.com');
-  final _passwordCtrl = TextEditingController(text: 'password123');
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl.text = 'admin@ecopoint.id';
+    _passwordCtrl.text = 'admin123456';
+  }
 
   @override
   void dispose() {
@@ -34,7 +41,16 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailCtrl.text.trim(),
       _passwordCtrl.text,
     );
-    if (!success && mounted && auth.error != null) {
+    if (success && mounted) {
+      final role = auth.user?.role;
+      if (role == 'admin') {
+        context.go('/admin');
+      } else if (role == 'collector') {
+        context.go('/collector');
+      } else {
+        context.go('/user');
+      }
+    } else if (!success && mounted && auth.error != null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(auth.error!)));
@@ -46,12 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     // Auto register admin if not exists
-    final email = _emailCtrl.text.trim().isEmpty
-        ? 'admin@ecopoint.id'
-        : _emailCtrl.text.trim();
-    final password = _passwordCtrl.text.isEmpty
-        ? 'password123'
-        : _passwordCtrl.text;
+    const email = 'admin@ecopoint.id';
+    const password = 'admin123456';
 
     _emailCtrl.text = email;
     _passwordCtrl.text = password;

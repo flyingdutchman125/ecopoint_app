@@ -11,7 +11,8 @@ class PriceLockState {
   static const String _storageKey = 'ecopoint_price_locks_v1';
 
   // Map of normalized commodity key -> DateTime lockedUntil
-  final ValueNotifier<Map<String, String>> lockedPrices = ValueNotifier<Map<String, String>>({});
+  final ValueNotifier<Map<String, String>> lockedPrices =
+      ValueNotifier<Map<String, String>>({});
 
   bool _initialized = false;
 
@@ -24,10 +25,18 @@ class PriceLockState {
   /// Maps alias names to canonical keys so Dashboard and AI Price Page share state
   String _normalizeKey(String rawName) {
     final lower = rawName.trim().toLowerCase();
-    if (lower.contains('kardus') || lower.contains('cardboard')) return 'cardboard';
-    if (lower.contains('logam') || lower.contains('besi') || lower.contains('metal')) return 'metal';
-    if (lower.contains('plastik') || lower.contains('pet')) return 'pet_plastic';
-    if (lower.contains('minyak') || lower.contains('jelantah') || lower.contains('cooking')) return 'cooking_oil';
+    if (lower.contains('kardus') || lower.contains('cardboard'))
+      return 'cardboard';
+    if (lower.contains('logam') ||
+        lower.contains('besi') ||
+        lower.contains('metal'))
+      return 'metal';
+    if (lower.contains('plastik') || lower.contains('pet'))
+      return 'pet_plastic';
+    if (lower.contains('minyak') ||
+        lower.contains('jelantah') ||
+        lower.contains('cooking'))
+      return 'cooking_oil';
     return lower.replaceAll(RegExp(r'[^a-z0-9_]'), '_');
   }
 
@@ -89,7 +98,7 @@ class PriceLockState {
   Future<bool> lockCommodity(String commodityName, {double? price}) async {
     final key = _normalizeKey(commodityName);
     final until = DateTime.now().add(const Duration(hours: 24));
-    
+
     final currentMap = Map<String, String>.from(lockedPrices.value);
     currentMap[key] = until.toIso8601String();
     lockedPrices.value = currentMap;
@@ -107,7 +116,8 @@ class PriceLockState {
     NotificationState.instance.addNotification(
       category: 'Kunci Harga',
       title: 'Harga $commodityName Berhasil Dikunci!',
-      subtitle: 'Harga $commodityName terjamin tidak akan turun selama 24 jam ke depan.',
+      subtitle:
+          'Harga $commodityName terjamin tidak akan turun selama 24 jam ke depan.',
     );
 
     return true;

@@ -16,7 +16,7 @@ class OrderDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final userProv = context.watch<UserProvider>();
-    
+
     final orderList = userProv.orders.where((o) => o.id == orderId).toList();
     final OrderModel? order = orderList.isNotEmpty ? orderList.first : null;
 
@@ -30,7 +30,10 @@ class OrderDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text('Detail Pesanan', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Detail Pesanan',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -42,9 +45,13 @@ class OrderDetailScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 children: [
@@ -89,16 +96,37 @@ class OrderDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 32),
-                    _buildInfoRow(context, Icons.category_rounded, 'Jenis', order.itemType ?? '-'),
+                    _buildInfoRow(
+                      context,
+                      Icons.category_rounded,
+                      'Jenis',
+                      order.itemType ?? '-',
+                    ),
                     const SizedBox(height: 16),
-                    _buildInfoRow(context, Icons.scale_rounded, 'Estimasi Berat', CurrencyFormatter.formatWeight(order.estWeight)),
+                    _buildInfoRow(
+                      context,
+                      Icons.scale_rounded,
+                      'Estimasi Berat',
+                      CurrencyFormatter.formatWeight(order.estWeight),
+                    ),
                     if (order.actualWeight != null) ...[
                       const SizedBox(height: 16),
-                      _buildInfoRow(context, Icons.monitor_weight_rounded, 'Berat Aktual', CurrencyFormatter.formatWeight(order.actualWeight)),
+                      _buildInfoRow(
+                        context,
+                        Icons.monitor_weight_rounded,
+                        'Berat Aktual',
+                        CurrencyFormatter.formatWeight(order.actualWeight),
+                      ),
                     ],
                     if (order.totalAmount != null) ...[
                       const SizedBox(height: 16),
-                      _buildInfoRow(context, Icons.payments_rounded, 'Total Didapat', CurrencyFormatter.formatRupiah(order.totalAmount!), isHighlight: true),
+                      _buildInfoRow(
+                        context,
+                        Icons.payments_rounded,
+                        'Total Didapat',
+                        CurrencyFormatter.formatRupiah(order.totalAmount!),
+                        isHighlight: true,
+                      ),
                     ],
                   ],
                 ),
@@ -130,11 +158,16 @@ class OrderDetailScreen extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.location_on_rounded, color: theme.colorScheme.primary),
+                        Icon(
+                          Icons.location_on_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            order.pickupAddress.isNotEmpty ? order.pickupAddress : '-',
+                            order.pickupAddress.isNotEmpty
+                                ? order.pickupAddress
+                                : '-',
                             style: GoogleFonts.inter(fontSize: 15),
                           ),
                         ),
@@ -164,7 +197,9 @@ class OrderDetailScreen extends StatelessWidget {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: const Text('Batalkan Pesanan'),
-                      content: const Text('Apakah Anda yakin ingin membatalkan pesanan ini?'),
+                      content: const Text(
+                        'Apakah Anda yakin ingin membatalkan pesanan ini?',
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
@@ -172,7 +207,9 @@ class OrderDetailScreen extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, true),
-                          style: TextButton.styleFrom(foregroundColor: Colors.red),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
                           child: const Text('Ya, Batalkan'),
                         ),
                       ],
@@ -180,16 +217,25 @@ class OrderDetailScreen extends StatelessWidget {
                   );
 
                   if (confirm == true && context.mounted) {
-                    final success = await context.read<UserProvider>().cancelOrder(order.id);
+                    final success = await context
+                        .read<UserProvider>()
+                        .cancelOrder(order.id);
                     if (context.mounted) {
                       if (success) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Pesanan berhasil dibatalkan')),
+                          const SnackBar(
+                            content: Text('Pesanan berhasil dibatalkan'),
+                          ),
                         );
                         context.pop();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.read<UserProvider>().error ?? 'Gagal membatalkan pesanan')),
+                          SnackBar(
+                            content: Text(
+                              context.read<UserProvider>().error ??
+                                  'Gagal membatalkan pesanan',
+                            ),
+                          ),
                         );
                       }
                     }
@@ -201,7 +247,9 @@ class OrderDetailScreen extends StatelessWidget {
                   backgroundColor: Colors.red.shade600,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
           ],
@@ -210,17 +258,27 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value, {bool isHighlight = false}) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 20, color: isHighlight ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+        Icon(
+          icon,
+          size: 20,
+          color: isHighlight
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 12),
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: GoogleFonts.inter(color: theme.colorScheme.onSurfaceVariant),
         ),
         const Spacer(),
         Text(
@@ -228,7 +286,9 @@ class OrderDetailScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
             fontSize: isHighlight ? 16 : 14,
-            color: isHighlight ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+            color: isHighlight
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
           ),
         ),
       ],

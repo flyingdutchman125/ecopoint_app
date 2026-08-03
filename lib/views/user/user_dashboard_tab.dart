@@ -77,8 +77,8 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                         (user?.name != null && user!.name!.isNotEmpty)
                             ? user.name!.substring(0, 1).toUpperCase()
                             : (user?.email != null && user!.email.isNotEmpty)
-                                ? user.email.substring(0, 1).toUpperCase()
-                                : 'W',
+                            ? user.email.substring(0, 1).toUpperCase()
+                            : 'W',
                         style: TextStyle(
                           color: theme.colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.bold,
@@ -87,9 +87,9 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                     ),
                   ],
                 ).animate().fade().slideY(begin: -0.2),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Wallet Card
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -133,7 +133,9 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                               ),
                             )
                           : Text(
-                              CurrencyFormatter.formatRupiah(wallet?.balance ?? 0),
+                              CurrencyFormatter.formatRupiah(
+                                wallet?.balance ?? 0,
+                              ),
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
                                 fontSize: 32,
@@ -216,42 +218,45 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                 userProv.isLoading && userProv.orders.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : userProv.orders.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32.0),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.receipt_long_rounded,
-                                    size: 64,
-                                    color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Belum ada pesanan',
-                                    style: GoogleFonts.inter(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.receipt_long_rounded,
+                                size: 64,
+                                color: theme.colorScheme.outline.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: userProv.orders.length > 3
-                                ? 3
-                                : userProv.orders.length,
-                            itemBuilder: (context, index) {
-                              final order = userProv.orders[index];
-                              return Card(
+                              const SizedBox(height: 16),
+                              Text(
+                                'Belum ada pesanan',
+                                style: GoogleFonts.inter(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: userProv.orders.length > 3
+                            ? 3
+                            : userProv.orders.length,
+                        itemBuilder: (context, index) {
+                          final order = userProv.orders[index];
+                          return Card(
                                 margin: const EdgeInsets.only(bottom: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: ListTile(
-                                  onTap: () => context.push('/order/${order.id}'),
+                                  onTap: () =>
+                                      context.push('/order/${order.id}'),
                                   contentPadding: const EdgeInsets.all(16),
                                   leading: Container(
                                     padding: const EdgeInsets.all(12),
@@ -261,7 +266,8 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                                     ),
                                     child: Icon(
                                       Icons.recycling_rounded,
-                                      color: theme.colorScheme.onPrimaryContainer,
+                                      color:
+                                          theme.colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                   title: Text(
@@ -271,7 +277,8 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                                     ),
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 4),
                                       Text(
@@ -297,7 +304,9 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(order.status).withValues(alpha: 0.1),
+                                      color: _getStatusColor(
+                                        order.status,
+                                      ).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -310,9 +319,16 @@ class _UserDashboardTabState extends State<UserDashboardTab> {
                                     ),
                                   ),
                                 ),
-                              ).animate().fade(delay: Duration(milliseconds: 300 + (100 * index))).slideX(begin: 0.1);
-                            },
-                          ),
+                              )
+                              .animate()
+                              .fade(
+                                delay: Duration(
+                                  milliseconds: 300 + (100 * index),
+                                ),
+                              )
+                              .slideX(begin: 0.1);
+                        },
+                      ),
               ],
             ),
           ),
