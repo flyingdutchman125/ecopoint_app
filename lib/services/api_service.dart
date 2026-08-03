@@ -16,7 +16,7 @@ class ApiConnectionException implements Exception {
 }
 
 class ApiService {
-  static const Duration _timeout = Duration(seconds: 15);
+  static const Duration _timeout = Duration(seconds: 4);
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();

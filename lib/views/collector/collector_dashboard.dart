@@ -37,7 +37,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF7CB342),
+      backgroundColor: const Color(0xFFF57C00), // Cohesive Collector Amber Orange Theme
       body: SafeArea(
         child: IndexedStack(
           index: _bottomNavIndex,
@@ -171,70 +171,27 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           ),
         ),
         const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _isOnline = !_isOnline;
-            });
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.verified, color: Colors.white, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                'Mitra Resmi',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _isOnline ? 'Online' : 'Offline',
-                  style: GoogleFonts.outfit(
-                    color: _isOnline
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFF666666),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 36,
-                  height: 20,
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: _isOnline
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFCCCCCC),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: AnimatedAlign(
-                    duration: const Duration(milliseconds: 200),
-                    alignment: _isOnline
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(color: Colors.black12, blurRadius: 2),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -1525,7 +1482,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   Widget _buildBottomNavigationBar() {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF28530C), // Dark green background from PIC
+        color: Color(0xFFBF360C), // Cohesive Collector Deep Amber Rust Orange
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),

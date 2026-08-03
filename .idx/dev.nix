@@ -17,6 +17,7 @@
     pkgs.flyctl
     pkgs.htop
     pkgs.ripgrep
+    pkgs.ncdu
   ];
   # Sets environment variables i the workspace
   env = {

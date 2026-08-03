@@ -39,12 +39,17 @@ class WalletState {
   final List<Map<String, dynamic>> conversionHistory = [];
   final List<Map<String, dynamic>> withdrawalHistory = [];
 
-  // Bank account data (demo)
   final Map<String, dynamic> bankAccount = {
     'bank': 'Dana',
     'phone': '0895341381130',
     'name': 'Ahmad Syifa\'ul Falakhul Khayyi',
   };
+
+  void setBankAccount({required String bank, required String phone, required String name}) {
+    bankAccount['bank'] = bank;
+    bankAccount['phone'] = phone;
+    bankAccount['name'] = name;
+  }
 
   double get currentBalance => activeBalance.value;
   int get currentPoints => points.value;

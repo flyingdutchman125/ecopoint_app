@@ -1,14 +1,19 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'constants/api_constants.dart';
+import '../services/api_service.dart';
 import 'notification_state.dart';
 
-/// Simple in-memory singleton state for EcoTree progress.
-/// Holds current XP and computed level. Other widgets can listen to "notifier" to update UI.
+/// Central singleton state for EcoTree progress.
+/// Holds current XP and computed level, persisted in SharedPreferences & synced with backend API.
 class EcoTreeState {
-  EcoTreeState._internal();
+  EcoTreeState._internal() {
+    init();
+  }
   static final EcoTreeState instance = EcoTreeState._internal();
 
   // Increased XP thresholds per level (Level 1 to Level 9)
-  // Index 0 unused, Index 1: Lvl 1 (0 XP), Index 2: Lvl 2 (100 XP), ..., Index 9: Lvl 9 (35.000 XP)
   final List<int> xpThresholds = [
     0,
     0,
@@ -22,9 +27,7 @@ class EcoTreeState {
     35000,
   ];
 
-  final ValueNotifier<int> xp = ValueNotifier<int>(0); // starting XP: 0
-
-  // User display name for the EcoTree card
+  final ValueNotifier<int> xp = ValueNotifier<int>(0);
   final ValueNotifier<String> name = ValueNotifier<String>('');
 
   ValueNotifier<int> get notifier => xp;
@@ -32,8 +35,7 @@ class EcoTreeState {
 
   int get currentXp => xp.value;
 
-  double get carbonReductionKg =>
-      xp.value * 0.41; // formula: XP * 0.41 = kg CO2 reduced
+  double get carbonReductionKg => xp.value * 0.41;
 
   int get level {
     final v = xp.value;
@@ -68,9 +70,48 @@ class EcoTreeState {
     }
   }
 
+  Future<void> init() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedXp = prefs.getInt('ecopoint_ecotree_xp_v1');
+      if (savedXp != null) {
+        xp.value = savedXp;
+      }
+      await syncFromApi();
+    } catch (_) {}
+  }
+
+  Future<void> syncFromApi() async {
+    try {
+      final res = await ApiService.get('${ApiConstants.baseUrl}/dashboard');
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true && body['data'] != null) {
+          final data = body['data'];
+          final totalCarbon = (data['total_carbon_reduction'] as num?)?.toDouble() ?? 0.0;
+          final completedOrders = (data['completed_orders'] as num?)?.toInt() ?? 0;
+          
+          // XP formula: (total carbon reduction * 10) + (completed orders * 50)
+          final apiXp = (totalCarbon * 10).round() + (completedOrders * 50);
+          if (apiXp > xp.value) {
+            setXp(apiXp);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveXp() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('ecopoint_ecotree_xp_v1', xp.value);
+    } catch (_) {}
+  }
+
   void addXp(int amount) {
     final oldLevel = level;
     xp.value = xp.value + amount;
+    _saveXp();
     final newLevel = level;
     if (newLevel > oldLevel) {
       NotificationState.instance.addNotification(
@@ -83,18 +124,15 @@ class EcoTreeState {
 
   void setXp(int value) {
     xp.value = value;
+    _saveXp();
   }
 
   void setName(String newName) {
     name.value = newName;
   }
 
-  /// When an order completes and AI sorting reports N kilograms processed,
-  /// call this method to register processed waste. By design carbon reduction
-  /// is (kg * 0.41) and XP is derived so that XP * 0.41 == carbonReduction.
-  /// Therefore we add XP equal to the rounded kilograms processed.
   void addProcessedWasteKg(double kg) {
-    final gain = kg.round();
+    final gain = (kg * 10).round();
     if (gain <= 0) return;
     addXp(gain);
   }

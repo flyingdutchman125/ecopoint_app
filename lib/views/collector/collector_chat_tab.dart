@@ -426,23 +426,17 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: TextField(
-                        controller: _messageCtrl,
-                        onSubmitted: (_) => _sendMessage(),
-                        textInputAction: TextInputAction.send,
-                        decoration: InputDecoration(
-                          hintText: 'Balas pesan warga...',
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                    child: TextField(
+                      controller: _messageCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'Tulis pesan balasan...',
+                        hintStyle: GoogleFonts.inter(color: Colors.grey.shade400),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        fillColor: const Color(0xFFF5F5F5),
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
@@ -450,7 +444,7 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
                   const SizedBox(width: 8),
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor: const Color(0xFF7CB342),
+                    backgroundColor: const Color(0xFFF57C00),
                     child: IconButton(
                       icon: const Icon(Icons.send, color: Colors.white, size: 20),
                       onPressed: _sendMessage,
@@ -477,10 +471,10 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF7CB342) : Colors.white,
+          color: isSelected ? const Color(0xFFF57C00) : Colors.white,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7CB342) : Colors.grey.shade300,
+            color: isSelected ? const Color(0xFFF57C00) : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -511,8 +505,8 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
         onTap: onTap,
         leading: CircleAvatar(
           radius: 24,
-          backgroundColor: const Color(0xFF7CB342).withOpacity(0.15),
-          child: const Icon(Icons.person, color: Color(0xFF558B2F)),
+          backgroundColor: const Color(0xFFF57C00).withValues(alpha: 0.15),
+          child: const Icon(Icons.person, color: Color(0xFFE65100)),
         ),
         title: Padding(
           padding: const EdgeInsets.only(bottom: 4.0),
@@ -603,7 +597,7 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
               maxWidth: MediaQuery.of(context).size.width * 0.70,
             ),
             decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF7CB342) : Colors.white,
+              color: isMe ? const Color(0xFFF57C00) : Colors.white,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),

@@ -105,21 +105,21 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _isLoading = false;
       _isEditing = false;
-      _isPendingApproval = true;
+      _isPendingApproval = false; // Directly applied without admin approval!
     });
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Permintaan perubahan data berhasil disimpan! Menunggu persetujuan admin.',
+            'Profil berhasil diperbarui!',
             style: _jakarta(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),
-          backgroundColor: const Color(0xFF1B3A1B),
+          backgroundColor: const Color(0xFF4CAF50),
           behavior: SnackBarBehavior.floating,
         ),
       );

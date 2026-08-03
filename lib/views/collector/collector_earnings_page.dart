@@ -38,7 +38,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF82E23B), Color(0xFF52A41F)],
+            colors: [Color(0xFFF57C00), Color(0xFFE65100)],
           ),
         ),
         child: SafeArea(

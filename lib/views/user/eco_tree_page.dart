@@ -35,6 +35,7 @@ class _EcoTreePageState extends State<EcoTreePage> {
   @override
   void initState() {
     super.initState();
+    state.syncFromApi();
   }
 
   int _nextThreshold() {

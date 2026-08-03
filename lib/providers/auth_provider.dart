@@ -205,6 +205,26 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setMockSession({
+    required String email,
+    required String name,
+    required String role,
+    String id = '5505090',
+  }) async {
+    _token = 'dev_mock_token_${DateTime.now().millisecondsSinceEpoch}';
+    _user = UserModel(
+      id: id,
+      email: email,
+      name: name,
+      role: role,
+      phone: '08123456789',
+      walletBalance: 200000.0,
+      ecoPoints: 1250,
+    );
+    await _saveAuthData();
+    notifyListeners();
+  }
+
   Future<void> updateUserProfile({
     String? name,
     String? phone,

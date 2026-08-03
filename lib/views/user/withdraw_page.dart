@@ -29,19 +29,42 @@ class WithdrawPage extends StatefulWidget {
 class _WithdrawPageState extends State<WithdrawPage> {
   final wallet = WalletState.instance;
   final TextEditingController _amountController = TextEditingController();
+  late TextEditingController _accountNumberController;
+  late TextEditingController _accountNameController;
+  
   double? _withdrawAmount;
   bool _tarikSemua = false;
+  String _selectedMethod = 'DANA';
+
+  final List<Map<String, dynamic>> _methods = const [
+    {'name': 'DANA', 'color': Color(0xFF1E88E5), 'icon': Icons.account_balance_wallet},
+    {'name': 'OVO', 'color': Color(0xFF4A148C), 'icon': Icons.account_balance_wallet},
+    {'name': 'GoPay', 'color': Color(0xFF00897B), 'icon': Icons.account_balance_wallet},
+    {'name': 'ShopeePay', 'color': Color(0xFFE64A19), 'icon': Icons.account_balance_wallet},
+    {'name': 'Bank BCA', 'color': Color(0xFF0D47A1), 'icon': Icons.account_balance},
+    {'name': 'Bank Mandiri', 'color': Color(0xFF01579B), 'icon': Icons.account_balance},
+    {'name': 'Bank BRI', 'color': Color(0xFF1565C0), 'icon': Icons.account_balance},
+    {'name': 'Bank BNI', 'color': Color(0xFFE65100), 'icon': Icons.account_balance},
+  ];
 
   @override
   void initState() {
     super.initState();
     _amountController.addListener(_onAmountChanged);
+    _accountNumberController = TextEditingController(
+      text: wallet.bankAccount['phone'] as String? ?? '0895341381130',
+    );
+    _accountNameController = TextEditingController(
+      text: wallet.bankAccount['name'] as String? ?? 'Ahmad Syifa\'ul',
+    );
   }
 
   @override
   void dispose() {
     _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
+    _accountNumberController.dispose();
+    _accountNameController.dispose();
     super.dispose();
   }
 
@@ -65,7 +88,6 @@ class _WithdrawPageState extends State<WithdrawPage> {
       if (_tarikSemua) {
         final bal = wallet.activeBalance.value;
         _withdrawAmount = bal;
-        // Format with thousand separator
         final balStr = bal.toInt().toString().replaceAllMapped(
           RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]}.',
@@ -78,7 +100,6 @@ class _WithdrawPageState extends State<WithdrawPage> {
     });
   }
 
-  // Format input with thousand separator dynamically while typing
   void _formatInputText(String val) {
     if (val.isEmpty) return;
     final cleanVal = val.replaceAll('.', '');
@@ -90,7 +111,6 @@ class _WithdrawPageState extends State<WithdrawPage> {
       (m) => '${m[1]}.',
     );
 
-    // Prevent infinite loop by checking if text is already formatted
     if (_amountController.text != formatted) {
       _amountController.text = formatted;
       _amountController.selection = TextSelection.fromPosition(
@@ -114,7 +134,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Withdraw',
+          'Withdraw / Tarik Saldo',
           style: _jakarta(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -131,7 +151,6 @@ class _WithdrawPageState extends State<WithdrawPage> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Main White Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -180,7 +199,6 @@ class _WithdrawPageState extends State<WithdrawPage> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Nominal Input Box
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFF5F5F5),
@@ -225,7 +243,6 @@ class _WithdrawPageState extends State<WithdrawPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Tarik Semua Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -245,96 +262,125 @@ class _WithdrawPageState extends State<WithdrawPage> {
                     const Divider(height: 24, color: Color(0xFFEEEEEE)),
 
                     Text(
-                      'Transfer Ke',
+                      'Pilih Metode Transfer',
                       style: _jakarta(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                    // Transfer Destination Card
+                    // Grid/Wrap of Methods
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _methods.map((m) {
+                        final bool isSelected = _selectedMethod == m['name'];
+                        final Color itemColor = m['color'] as Color;
+                        return ChoiceChip(
+                          avatar: Icon(
+                            m['icon'] as IconData,
+                            size: 16,
+                            color: isSelected ? Colors.white : itemColor,
+                          ),
+                          label: Text(
+                            m['name'] as String,
+                            style: _jakarta(
+                              fontSize: 12,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: itemColor,
+                          backgroundColor: const Color(0xFFF5F5F5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: isSelected ? itemColor : Colors.grey.shade300,
+                            ),
+                          ),
+                          onSelected: (val) {
+                            if (val) {
+                              setState(() {
+                                _selectedMethod = m['name'] as String;
+                              });
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Text(
+                      _selectedMethod.startsWith('Bank') ? 'Nomor Rekening Tujuan' : 'Nomor HP e-Wallet',
+                      style: _jakarta(fontSize: 12, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 14,
-                      ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
+                        color: const Color(0xFFF5F5F5),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Row(
-                        children: [
-                          // DANA Logo placeholder (blue rounded shape with standard look)
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF1E88E5), // Dana Blue
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.account_balance_wallet,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: TextField(
+                        controller: _accountNumberController,
+                        keyboardType: TextInputType.number,
+                        style: _jakarta(fontSize: 13, fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          hintText: _selectedMethod.startsWith('Bank') ? 'Contoh: 1234567890' : 'Contoh: 081234567890',
+                          hintStyle: _jakarta(fontSize: 12, color: Colors.black38),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
 
-                          // Bank name and phone number
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  wallet.bankAccount['bank'] as String? ??
-                                      'Dana',
-                                  style: _jakarta(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  wallet.bankAccount['phone'] as String? ??
-                                      '0895341381130',
-                                  style: _jakarta(
-                                    fontSize: 11,
-                                    color: Colors.black45,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                    const SizedBox(height: 14),
 
-                          // Account Holder Name
-                          Text(
-                            'Ahmad Syifa\'ul Falakhul Khayyi',
-                            style: _jakarta(
-                              fontSize: 10,
-                              color: Colors.black45,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'Nama Pemilik Akun / Rekening',
+                      style: _jakarta(fontSize: 12, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: TextField(
+                        controller: _accountNameController,
+                        style: _jakarta(fontSize: 13, fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          hintText: 'Nama lengkap pemilik',
+                          hintStyle: _jakarta(fontSize: 12, color: Colors.black38),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 28),
 
-                    // Lanjut Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed:
                             (_withdrawAmount == null ||
                                 _withdrawAmount! < 10000 ||
-                                _withdrawAmount! > wallet.activeBalance.value)
+                                _withdrawAmount! > wallet.activeBalance.value ||
+                                _accountNumberController.text.trim().isEmpty ||
+                                _accountNameController.text.trim().isEmpty)
                             ? null
                             : () {
+                                wallet.setBankAccount(
+                                  bank: _selectedMethod,
+                                  phone: _accountNumberController.text.trim(),
+                                  name: _accountNameController.text.trim(),
+                                );
                                 context.push(
                                   '/withdraw/confirm',
                                   extra: {'amount': _withdrawAmount},
@@ -351,14 +397,15 @@ class _WithdrawPageState extends State<WithdrawPage> {
                           ),
                         ),
                         child: Text(
-                          'Lanjut',
+                          'Lanjut ke Konfirmasi',
                           style: _jakarta(
                             fontWeight: FontWeight.bold,
                             color:
                                 (_withdrawAmount == null ||
                                     _withdrawAmount! < 10000 ||
-                                    _withdrawAmount! >
-                                        wallet.activeBalance.value)
+                                    _withdrawAmount! > wallet.activeBalance.value ||
+                                    _accountNumberController.text.trim().isEmpty ||
+                                    _accountNameController.text.trim().isEmpty)
                                 ? Colors.black26
                                 : Colors.white,
                             fontSize: 14,
