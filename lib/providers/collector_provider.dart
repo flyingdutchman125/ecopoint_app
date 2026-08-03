@@ -5,7 +5,7 @@ import '../models/order_model.dart';
 import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
 
-class CollectorProvider with ChangeNotifier {
+  bool _isOnline = true;
   Position? _currentPosition;
   List<OrderModel> _nearbyOrders = [];
   List<OrderModel> _myOrders = [];
@@ -14,6 +14,7 @@ class CollectorProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  bool get isOnline => _isOnline;
   Position? get currentPosition => _currentPosition;
   List<OrderModel> get nearbyOrders => _nearbyOrders;
   List<OrderModel> get myOrders => _myOrders;
@@ -23,6 +24,23 @@ class CollectorProvider with ChangeNotifier {
   int get totalOrders => _myOrders.length;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Future<bool> setOnlineStatus(bool online) async {
+    _isOnline = online;
+    notifyListeners();
+    try {
+      final double lat = _currentPosition?.latitude ?? -7.1185;
+      final double lng = _currentPosition?.longitude ?? 112.4166;
+      final res = await ApiService.put(ApiConstants.location, {
+        'lat': lat,
+        'lng': lng,
+        'is_online': online,
+      });
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<void> fetchCollectorWallet() async {
     try {
@@ -116,7 +134,7 @@ class CollectorProvider with ChangeNotifier {
       await ApiService.put(ApiConstants.location, {
         'lat': position.latitude,
         'lng': position.longitude,
-        'status': 'online',
+        'is_online': _isOnline,
       });
 
       // 3. Fetch Nearby Orders

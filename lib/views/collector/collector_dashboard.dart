@@ -66,6 +66,10 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
         children: [
           // 1. TOP HEADER (PROFILE & STATUS SWITCH)
           _buildTopHeader(user),
+          const SizedBox(height: 12),
+
+          // 1.5 ONLINE / OFFLINE TOGGLE BANNER
+          _buildOnlineToggleCard(collectorProv),
           const SizedBox(height: 16),
 
           // 2. SALDO ESTIMATION CARD
@@ -83,6 +87,91 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
             _buildPetaRuteGpsContent(collectorProv),
 
           const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // --- 1.5 ONLINE / OFFLINE TOGGLE BANNER ---
+  Widget _buildOnlineToggleCard(CollectorProvider collectorProv) {
+    final isOnline = collectorProv.isOnline;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isOnline ? const Color(0xFF2E7D32) : const Color(0xFF374151),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isOnline ? Icons.sensors_rounded : Icons.sensors_off_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isOnline ? 'STATUS: ONLINE (Siap Jemput)' : 'STATUS: OFFLINE (Istirahat)',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isOnline
+                      ? 'Terhubung dengan Rute Map Warga'
+                      : 'Aktifkan untuk dapat menerima order sampah',
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: isOnline,
+            activeColor: Colors.amber,
+            activeTrackColor: Colors.lightGreenAccent.shade700,
+            inactiveThumbColor: Colors.grey.shade300,
+            inactiveTrackColor: Colors.grey.shade600,
+            onChanged: (val) async {
+              final success = await collectorProv.setOnlineStatus(val);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      val
+                          ? '🟢 Status Anda ONLINE - Siap menerima pesanan'
+                          : '⚪ Status Anda OFFLINE - Mode Istirahat',
+                    ),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: val ? const Color(0xFF2E7D32) : Colors.black87,
+                  ),
+                );
+              }
+            },
+          ),
         ],
       ),
     );

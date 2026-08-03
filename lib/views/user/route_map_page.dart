@@ -19,9 +19,19 @@ class RouteMapPage extends StatefulWidget {
 class _RouteMapPageState extends State<RouteMapPage> {
   final MapController _mapController = MapController();
   bool _loading = false;
+  int _filterIndex = 0; // 0 = Semua, 1 = Hanya Online
   List<Map<String, dynamic>> _collectors = [];
   LatLng? _selectedCollectorPoint;
   String? _selectedCollectorName;
+
+  List<Map<String, dynamic>> get _filteredCollectors {
+    if (_filterIndex == 1) {
+      return _collectors
+          .where((c) => c['status'] == 'online' || c['is_online'] == true)
+          .toList();
+    }
+    return _collectors;
+  }
 
   // Default User location (Lamongan / Surabaya area)
   final LatLng _userLocation = LatLng(-7.1185, 112.4166);
@@ -35,6 +45,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
       'lng': 112.4200,
       'distance_km': 0.8,
       'status': 'online',
+      'is_online': true,
       'phone': '081234567890',
     },
     {
@@ -45,6 +56,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
       'lng': 112.4100,
       'distance_km': 1.4,
       'status': 'online',
+      'is_online': true,
       'phone': '081987654321',
     },
     {
@@ -55,6 +67,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
       'lng': 112.4250,
       'distance_km': 2.1,
       'status': 'offline',
+      'is_online': false,
       'phone': '085711223344',
     },
     {
@@ -65,6 +78,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
       'lng': 112.4220,
       'distance_km': 2.8,
       'status': 'online',
+      'is_online': true,
       'phone': '082199887766',
     },
   ];
@@ -86,10 +100,16 @@ class _RouteMapPageState extends State<RouteMapPage> {
             ? decoded['data'] as List
             : [];
         if (data.isNotEmpty) {
+          final list = List<Map<String, dynamic>>.from(
+            data.map((e) => Map<String, dynamic>.from(e)),
+          );
+          list.sort((a, b) {
+            final aOnline = (a['status'] == 'online' || a['is_online'] == true) ? 1 : 0;
+            final bOnline = (b['status'] == 'online' || b['is_online'] == true) ? 1 : 0;
+            return bOnline.compareTo(aOnline);
+          });
           setState(() {
-            _collectors = List<Map<String, dynamic>>.from(
-              data.map((e) => Map<String, dynamic>.from(e)),
-            );
+            _collectors = list;
           });
         } else {
           setState(() => _collectors = List.from(_defaultCollectors));
@@ -379,23 +399,24 @@ class _RouteMapPageState extends State<RouteMapPage> {
                           ),
                         ),
                         // Collector Markers
-                        ..._collectors.map((c) {
+                        ..._filteredCollectors.map((c) {
                           final lat = (c['lat'] as num).toDouble();
                           final lng = (c['lng'] as num).toDouble();
                           final status = c['status'] ?? 'offline';
+                          final isOnline = status == 'online' || c['is_online'] == true;
                           final isSelected = _selectedCollectorName == c['name'];
 
                           return Marker(
                             point: LatLng(lat, lng),
-                            width: 42,
-                            height: 42,
+                            width: 44,
+                            height: 44,
                             child: GestureDetector(
                               onTap: () => _selectCollector(c),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: status == 'online'
-                                      ? (isSelected ? const Color(0xFF2E7D32) : const Color(0xFF7CB342))
-                                      : Colors.grey,
+                                  color: isOnline
+                                      ? (isSelected ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32))
+                                      : Colors.grey.shade600,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: isSelected ? Colors.amber : Colors.white,
@@ -408,7 +429,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
                                 child: const Icon(
                                   Icons.moped,
                                   color: Colors.white,
-                                  size: 20,
+                                  size: 22,
                                 ),
                               ),
                             ),
@@ -423,7 +444,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -444,7 +465,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
                         )
                       : const Icon(Icons.refresh, size: 16, color: Color(0xFF7CB342)),
                   label: Text(
-                    'Refresh',
+                    'Refresh Status',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -456,76 +477,175 @@ class _RouteMapPageState extends State<RouteMapPage> {
             ),
           ),
 
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              itemCount: _collectors.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final c = _collectors[index];
-                final isOnline = c['status'] == 'online';
-                final isSelected = _selectedCollectorName == c['name'];
-
-                return Card(
-                  elevation: 1,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: isSelected ? const Color(0xFF7CB342) : const Color(0xFFEEEEEE),
-                      width: isSelected ? 1.5 : 1.0,
+          // Filter Chips (Semua / Hanya Online)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            child: Row(
+              children: [
+                ChoiceChip(
+                  label: Text(
+                    'Semua (${_collectors.length})',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _filterIndex == 0 ? Colors.white : Colors.black87,
                     ),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    leading: CircleAvatar(
-                      backgroundColor: isOnline ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
-                      child: Icon(
-                        Icons.moped,
-                        color: isOnline ? const Color(0xFF7CB342) : Colors.grey,
-                      ),
-                    ),
-                    title: Text(
-                      c['name'] ?? '-',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    subtitle: Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${c['rating'] ?? 4.8}',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                  selected: _filterIndex == 0,
+                  selectedColor: const Color(0xFF7CB342),
+                  onSelected: (selected) {
+                    if (selected) setState(() => _filterIndex = 0);
+                  },
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF2E7D32),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '• ${c['distance_km'] ?? '1.0'} km',
-                          style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isOnline ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        isOnline ? 'Online' : 'Offline',
+                      const SizedBox(width: 6),
+                      Text(
+                        'Hanya Online (${_collectors.where((c) => c['status'] == 'online' || c['is_online'] == true).length})',
                         style: GoogleFonts.inter(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: isOnline ? const Color(0xFF2E7D32) : Colors.grey,
+                          color: _filterIndex == 1 ? Colors.white : const Color(0xFF2E7D32),
                         ),
                       ),
-                    ),
-                    onTap: () => _selectCollector(c),
+                    ],
                   ),
-                );
-              },
+                  selected: _filterIndex == 1,
+                  selectedColor: const Color(0xFF2E7D32),
+                  onSelected: (selected) {
+                    if (selected) setState(() => _filterIndex = 1);
+                  },
+                ),
+              ],
             ),
+          ),
+          const SizedBox(height: 6),
+
+          Expanded(
+            child: _filteredCollectors.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.sensors_off, size: 48, color: Colors.grey),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Tidak ada kolektor Online saat ini',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Silakan ganti filter ke "Semua" untuk melihat daftar mitra',
+                            style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    itemCount: _filteredCollectors.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final c = _filteredCollectors[index];
+                      final isOnline = c['status'] == 'online' || c['is_online'] == true;
+                      final isSelected = _selectedCollectorName == c['name'];
+
+                      return Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected ? const Color(0xFF7CB342) : const Color(0xFFEEEEEE),
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          leading: CircleAvatar(
+                            backgroundColor: isOnline ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
+                            child: Icon(
+                              Icons.moped,
+                              color: isOnline ? const Color(0xFF2E7D32) : Colors.grey,
+                            ),
+                          ),
+                          title: Text(
+                            c['name'] ?? '-',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${c['rating'] ?? 4.8}',
+                                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '• ${c['distance_km'] ?? '1.0'} km',
+                                style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isOnline ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isOnline ? const Color(0xFFA5D6A7) : Colors.grey.shade300,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: isOnline ? const Color(0xFF2E7D32) : Colors.grey,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  isOnline ? 'Online' : 'Offline',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isOnline ? const Color(0xFF2E7D32) : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          onTap: () => _selectCollector(c),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

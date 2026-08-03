@@ -424,7 +424,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selamat Datang, ${authUser?.name ?? "Admin"} 👋',
+                      'Selamat Datang, ${authUser?.name ?? "Admin"}',
                       style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontSize: 20,
