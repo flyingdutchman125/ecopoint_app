@@ -11,6 +11,7 @@ import '../../core/constants/api_constants.dart';
 import '../../core/utils/image_picker_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../core/utils/alert_helper.dart';
 
 class CollectorBusinessScreen extends StatefulWidget {
   final Map<String, dynamic>? extra;
@@ -38,14 +39,7 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
     if (_businessCtrl.text.trim().isEmpty ||
         _vehicleCtrl.text.trim().isEmpty ||
         _plateCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan lengkapi nama usaha, jenis kendaraan, dan nomor plat.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan lengkapi nama usaha, jenis kendaraan, dan nomor plat.');
       return;
     }
 
@@ -72,25 +66,18 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(
-              child: Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF59B41C),
-                  borderRadius: BorderRadius.circular(8),
+            for (int i = 1; i <= 4; i++) ...[
+              Expanded(
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i <= 3 ? const Color(0xFF59B41C) : const Color(0xFFE7F9D9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE7F9D9),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+              if (i < 4) const SizedBox(width: 6),
+            ]
           ],
         ),
       ],
@@ -180,7 +167,7 @@ class _CollectorBusinessScreenState extends State<CollectorBusinessScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'LANGKAH 1 DARI 2 : NAMA USAHA & KENDARAAN',
+                            'LANGKAH 3 DARI 4 : NAMA USAHA & KENDARAAN',
                             style: GoogleFonts.outfit(
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w600,
@@ -312,14 +299,7 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     final picked = await ImagePickerHelper.pickImage(source);
     if (picked == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Izin kamera/galeri ditolak atau foto tidak dipilih.',
-              style: GoogleFonts.outfit(),
-            ),
-          ),
-        );
+        AppAlerts.showError(context, 'Izin kamera/galeri ditolak atau foto tidak dipilih.');
       }
       return;
     }
@@ -343,25 +323,11 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
           );
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Foto KTP berhasil diunggah.',
-                style: GoogleFonts.outfit(),
-              ),
-            ),
-          );
+          AppAlerts.showSuccess(context, 'Foto KTP berhasil diunggah.');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Gagal mengunggah KTP. Silakan coba lagi.',
-                style: GoogleFonts.outfit(),
-              ),
-            ),
-          );
+          AppAlerts.showError(context, 'Gagal mengunggah KTP. Silakan coba lagi.');
         }
       }
     } catch (e) {
@@ -369,9 +335,7 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
         final message = e is ApiConnectionException
             ? e.message
             : 'Error unggah KTP: ${e.toString()}';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message, style: GoogleFonts.outfit())),
-        );
+        AppAlerts.showError(context, message);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -439,38 +403,17 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     if (address.trim().isEmpty ||
         subdistrict.trim().isEmpty ||
         password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Lengkapi alamat, kecamatan, dan kata sandi sebelum melanjutkan.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Lengkapi alamat, kecamatan, dan kata sandi sebelum melanjutkan.');
       return;
     }
 
     if (!_agree) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan setujui pernyataan sebelum melanjutkan.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan setujui pernyataan sebelum melanjutkan.');
       return;
     }
 
     if (_uploadedKtpUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan unggah foto KTP.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan unggah foto KTP.');
       return;
     }
 
@@ -491,19 +434,10 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
     );
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pendaftaran kolektor dikirim. Tunggu verifikasi admin.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showSuccess(context, 'Pendaftaran kolektor dikirim. Tunggu verifikasi admin.');
       context.go('/login');
     } else if (mounted && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!, style: GoogleFonts.outfit())),
-      );
+      AppAlerts.showError(context, auth.error!);
     }
   }
 
@@ -521,25 +455,18 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(
-              child: Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF59B41C),
-                  borderRadius: BorderRadius.circular(8),
+            for (int i = 1; i <= 4; i++) ...[
+              Expanded(
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF59B41C), // Step 4, so all are green
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF59B41C),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+              if (i < 4) const SizedBox(width: 6),
+            ]
           ],
         ),
       ],
@@ -630,7 +557,7 @@ class _CollectorKtpScreenState extends State<CollectorKtpScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'LANGKAH 2 DARI 2 : KTP',
+                            'LANGKAH 4 DARI 4 : KTP',
                             style: GoogleFonts.outfit(
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w600,

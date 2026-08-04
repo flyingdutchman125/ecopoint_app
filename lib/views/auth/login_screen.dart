@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/utils/alert_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,9 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan isi email dan kata sandi')),
-      );
+      AppAlerts.showError(context, 'Silakan isi email dan kata sandi');
       return;
     }
     final auth = context.read<AuthProvider>();
@@ -177,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextSpan(
                           text: 'POINT',
                           style: GoogleFonts.outfit(
-                            color: const Color(0xFF9CC63A),
+                            color: const Color(0xFFE7D741),
                             fontWeight: FontWeight.bold,
                             fontSize: 32,
                           ),
@@ -384,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.outfit(color: Colors.grey),
                         ),
                         GestureDetector(
-                          onTap: () => context.push('/register/collector'),
+                          onTap: () => context.push('/register', extra: {'role': 'collector'}),
                           child: Text(
                             'Daftar Kolektor',
                             style: GoogleFonts.outfit(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/wallet_state.dart';
+import '../../core/utils/alert_helper.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -211,27 +212,11 @@ class _ConvertPageState extends State<ConvertPage> {
                                             'Batas penarikan mingguan untuk nominal ini sudah habis (0/1).';
                                       }
                                     }
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          reason,
-                                          style: _jakarta(color: Colors.white),
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
+                                    AppAlerts.showWarning(context, reason);
                                     return;
                                   }
                                   if (!hasEnoughPoints) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Poin Anda tidak cukup (butuh $pointsNeeded Pts).',
-                                          style: _jakarta(color: Colors.white),
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
+                                    AppAlerts.showError(context, 'Poin Anda tidak cukup (butuh $pointsNeeded Pts).');
                                     return;
                                   }
                                   setState(() {

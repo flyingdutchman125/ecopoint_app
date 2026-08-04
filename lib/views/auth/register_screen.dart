@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/utils/alert_helper.dart';
 
 class RegisterScreen extends StatefulWidget {
   final String role;
@@ -39,14 +40,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_nameCtrl.text.trim().isEmpty ||
         _phoneCtrl.text.trim().isEmpty ||
         _emailCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan lengkapi nama, nomor WhatsApp, dan email.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan lengkapi nama, nomor WhatsApp, dan email.');
       return;
     }
 
@@ -65,26 +59,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_addressCtrl.text.trim().isEmpty ||
         _subdistrictCtrl.text.trim().isEmpty ||
         _passwordCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.');
       return;
     }
 
     if (!_agreeSorting) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan setujui pernyataan penyortiran sampah anorganik.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan setujui pernyataan penyortiran sampah anorganik.');
       return;
     }
 
@@ -102,19 +82,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pendaftaran berhasil. Silakan login.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showSuccess(context, 'Pendaftaran berhasil. Silakan login.');
       context.go('/login');
     } else if (mounted && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!, style: GoogleFonts.outfit())),
-      );
+      AppAlerts.showError(context, auth.error!);
     }
   }
 
@@ -122,26 +93,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_addressCtrl.text.trim().isEmpty ||
         _subdistrictCtrl.text.trim().isEmpty ||
         _passwordCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan lengkapi alamat, kecamatan/kelurahan, dan kata sandi.');
       return;
     }
 
     if (!_agreeSorting) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Silakan setujui pernyataan penyortiran sampah anorganik.',
-            style: GoogleFonts.outfit(),
-          ),
-        ),
-      );
+      AppAlerts.showError(context, 'Silakan setujui pernyataan penyortiran sampah anorganik.');
       return;
     }
 
@@ -178,29 +135,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(
-              child: Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: _step >= 1
-                      ? const Color(0xFF59B41C)
-                      : const Color(0xFFE7F9D9),
-                  borderRadius: BorderRadius.circular(8),
+            for (int i = 1; i <= (widget.role == 'collector' ? 4 : 2); i++) ...[
+              Expanded(
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: _step >= i
+                        ? const Color(0xFF59B41C)
+                        : const Color(0xFFE7F9D9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: _step >= 2
-                      ? const Color(0xFF59B41C)
-                      : const Color(0xFFE7F9D9),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+              if (i < (widget.role == 'collector' ? 4 : 2))
+                const SizedBox(width: 6),
+            ]
           ],
         ),
       ],
@@ -301,8 +250,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           Text(
                             _step == 1
-                                ? 'LANGKAH 1 DARI 2 : IDENTITAS'
-                                : 'LANGKAH 2 DARI 2 : ALAMAT & SANDI',
+                                ? 'LANGKAH 1 DARI ${widget.role == 'collector' ? '4' : '2'} : IDENTITAS'
+                                : 'LANGKAH 2 DARI ${widget.role == 'collector' ? '4' : '2'} : ALAMAT & SANDI',
                             style: GoogleFonts.outfit(
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w600,

@@ -5,6 +5,7 @@ import '../models/order_model.dart';
 import '../services/api_service.dart';
 import '../core/constants/api_constants.dart';
 
+class CollectorProvider with ChangeNotifier {
   bool _isOnline = true;
   Position? _currentPosition;
   List<OrderModel> _nearbyOrders = [];

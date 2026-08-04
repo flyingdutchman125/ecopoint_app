@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/wallet_state.dart';
+import '../../core/utils/alert_helper.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -388,65 +389,15 @@ class _ConvertConfirmPageState extends State<ConvertConfirmPage> {
 
                                   if (!context.mounted) return;
                                   if (success) {
-                                    // Show custom success dialog
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (ctx) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                        ),
-                                        title: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.check_circle,
-                                              color: Color(0xFF4CAF50),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Berhasil',
-                                              style: _jakarta(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        content: Text(
-                                          'Konversi poin berhasil! Rp $balanceStr ditambahkan ke saldo aktif Anda.',
-                                          style: _jakarta(),
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              navigator.pop(); // Close dialog
-                                              goRouter
-                                                  .pop(); // Close confirm bottom sheet
-                                              goRouter
-                                                  .pop(); // Back to Points/Dashboard page
-                                            },
-                                            child: Text(
-                                              'OK',
-                                              style: _jakarta(
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color(0xFFEADB3F),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    AppAlerts.showSuccess(context, 'Konversi poin berhasil! Rp $balanceStr ditambahkan ke saldo aktif Anda.');
+                                    Future.delayed(const Duration(milliseconds: 1500), () {
+                                      if (context.mounted) {
+                                        goRouter.pop(); // Close confirm bottom sheet
+                                        goRouter.pop(); // Back to Points/Dashboard page
+                                      }
+                                    });
                                   } else {
-                                    scaffoldMessenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Konversi gagal. Saldo Poin tidak mencukupi.',
-                                          style: _jakarta(color: Colors.white),
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
+                                    AppAlerts.showError(context, 'Konversi gagal. Saldo Poin tidak mencukupi.');
                                   }
                                 },
                           style: ElevatedButton.styleFrom(

@@ -89,7 +89,11 @@ class AppRouter {
         GoRoute(
           path: '/register',
           name: 'register',
-          builder: (context, state) => const RegisterScreen(),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final role = extra?['role'] as String? ?? 'user';
+            return RegisterScreen(role: role);
+          },
         ),
         GoRoute(
           path: '/collector-register',

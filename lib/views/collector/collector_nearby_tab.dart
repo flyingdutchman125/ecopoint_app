@@ -1,3 +1,4 @@
+import '../../core/utils/alert_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -223,9 +224,7 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
     try {
       await provider.acceptOrder(orderId);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pesanan berhasil diterima')),
-        );
+        AppAlerts.showSuccess(context, 'Pesanan berhasil diterima');
       }
     } catch (e) {
       if (context.mounted) {

@@ -1,3 +1,4 @@
+import '../../core/utils/alert_helper.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -95,20 +96,7 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Data profil kolektor berhasil diperbarui!',
-            style: GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          backgroundColor: const Color(0xFF1B3A1B),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppAlerts.showSuccess(context, 'Data profil kolektor berhasil diperbarui!');
     }
   }
 
@@ -304,16 +292,7 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
       valueChange: 'Foto Diperbarui',
     );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Foto profil kolektor berhasil diperbarui!',
-            style: GoogleFonts.inter(color: Colors.white),
-          ),
-          backgroundColor: const Color(0xFF1B3A1B),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppAlerts.showSuccess(context, 'Foto profil kolektor berhasil diperbarui!');
     }
   }
 

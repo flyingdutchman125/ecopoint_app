@@ -1,3 +1,4 @@
+import '../../core/utils/alert_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -157,18 +158,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
             onChanged: (val) async {
               final success = await collectorProv.setOnlineStatus(val);
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      val
-                          ? '🟢 Status Anda ONLINE - Siap menerima pesanan'
-                          : '⚪ Status Anda OFFLINE - Mode Istirahat',
-                    ),
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: val ? const Color(0xFF2E7D32) : Colors.black87,
-                  ),
-                );
+                AppAlerts.showSuccess(context, val ? '🟢 Status Anda ONLINE - Siap menerima pesanan' : '⚪ Status Anda OFFLINE - Mode Istirahat');
               }
             },
           ),
@@ -921,16 +911,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                       ),
                     ),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Penjemputan diterima'),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
+                      AppAlerts.showSuccess(context, 'Penjemputan diterima');
                     },
                     child: Text(
                       'Terima Penjemputan',
@@ -1467,11 +1448,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   extra: activeOrder.toJson(),
                 );
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tidak ada order aktif untuk ditampilkan'),
-                  ),
-                );
+                AppAlerts.showError(context, 'Tidak ada order aktif untuk ditampilkan');
               }
             },
             child: Row(
@@ -1625,16 +1602,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
   void _acceptOrder(BuildContext context, String id) async {
     final success = await context.read<CollectorProvider>().acceptOrder(id);
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Order Accepted successfully!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      AppAlerts.showSuccess(context, 'Order Accepted successfully!');
     }
   }
 

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/collector_provider.dart';
+import '../../core/utils/currency_formatter.dart';
 
 class CollectorEarningsPage extends StatefulWidget {
   const CollectorEarningsPage({super.key});
@@ -10,6 +14,7 @@ class CollectorEarningsPage extends StatefulWidget {
 
 class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
   String selectedCategory = 'Logam/Besi';
+  int _selectedWeek = 1;
 
   final List<String> categories = [
     'Logam/Besi',
@@ -18,18 +23,118 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
     'Minyak Jelantah',
   ];
 
-  final List<Map<String, dynamic>> dailyData = [
-    {'day': 'Sen', 'weight': 13.0},
-    {'day': 'Sel', 'weight': 12.0},
-    {'day': 'Rab', 'weight': 12.3},
-    {'day': 'Kam', 'weight': 14.1},
-    {'day': 'Jum', 'weight': 13.0},
-    {'day': 'Sab', 'weight': 11.5},
-    {'day': 'Min', 'weight': 11.0},
-  ];
+  DateTime _selectedDate = DateTime(2026, 8, 1);
+
+  String get _formattedWeekRange {
+    final int day = _selectedDate.day;
+    int week = ((day - 1) ~/ 7) + 1;
+    if (week > 4) week = 4;
+    
+    int startDay = (week - 1) * 7 + 1;
+    int endDay = week * 7;
+    
+    final List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '$startDay - $endDay ${months[_selectedDate.month - 1]} ${_selectedDate.year}';
+  }
+
+  void _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF7CB342),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _selectedWeek = ((picked.day - 1) ~/ 7) + 1;
+        if (_selectedWeek > 4) _selectedWeek = 4;
+      });
+    }
+  }
+
+  final Map<int, String> _weekDates = {
+    1: '1 - 7 Agustus 2026',
+    2: '8 - 14 Agustus 2026',
+    3: '15 - 21 Agustus 2026',
+    4: '22 - 28 Agustus 2026',
+  };
+
+  final Map<int, List<Map<String, dynamic>>> _weeklyData = {
+    1: [
+      {'day': 'Sen', 'income': 130000},
+      {'day': 'Sel', 'income': 120000},
+      {'day': 'Rab', 'income': 123000},
+      {'day': 'Kam', 'income': 141000},
+      {'day': 'Jum', 'income': 130000},
+      {'day': 'Sab', 'income': 115000},
+      {'day': 'Min', 'income': 110000},
+    ],
+    2: [
+      {'day': 'Sen', 'income': 140000},
+      {'day': 'Sel', 'income': 110000},
+      {'day': 'Rab', 'income': 103000},
+      {'day': 'Kam', 'income': 121000},
+      {'day': 'Jum', 'income': 140000},
+      {'day': 'Sab', 'income': 105000},
+      {'day': 'Min', 'income': 120000},
+    ],
+    3: [
+      {'day': 'Sen', 'income': 110000},
+      {'day': 'Sel', 'income': 130000},
+      {'day': 'Rab', 'income': 143000},
+      {'day': 'Kam', 'income': 111000},
+      {'day': 'Jum', 'income': 120000},
+      {'day': 'Sab', 'income': 135000},
+      {'day': 'Min', 'income': 100000},
+    ],
+    4: [
+      {'day': 'Sen', 'income': 120000},
+      {'day': 'Sel', 'income': 140000},
+      {'day': 'Rab', 'income': 113000},
+      {'day': 'Kam', 'income': 101000},
+      {'day': 'Jum', 'income': 110000},
+      {'day': 'Sab', 'income': 145000},
+      {'day': 'Min', 'income': 130000},
+    ],
+  };
 
   @override
   Widget build(BuildContext context) {
+    final collectorProv = context.watch<CollectorProvider>();
+    final authProv = context.watch<AuthProvider>();
+    final user = authProv.user;
+    
+    final String rawName = user?.name ?? '';
+    final String name = rawName.trim().isNotEmpty ? rawName : 'Bang Ridwan';
+    final city = (user?.city != null && user!.city.toString().isNotEmpty) ? user.city : 'Lamongan';
+    final String ratingStr = (user?.rating != null) ? (user!.rating as num).toStringAsFixed(1) : '4.9';
+
+    // Simulate monthly values by multiplying weekly by 4
+    final double monthlyEarnings = (collectorProv.earnings > 0 ? collectorProv.earnings : 500000) * 4.0;
+    final String earningsText = CurrencyFormatter.formatRupiah(monthlyEarnings.toInt());
+
+    final completedOrders = collectorProv.myOrders.where((o) => o.status == 'completed').toList();
+    final completedCount = completedOrders.length > 0 ? completedOrders.length * 4 : 72;
+    
+    final double realWeightSum = completedOrders.fold(0.0, (sum, order) => sum + (order.weightKg ?? 0.0));
+    final String displayWeightText = realWeightSum > 0 ? '${(realWeightSum * 4).toStringAsFixed(1)} Kg' : '284.5 Kg';
+
+    final double realHoursSum = completedOrders.length > 0 ? (completedOrders.length * 0.6) * 4 : 90.20;
+    final String displayHoursText = '${realHoursSum.toStringAsFixed(2)} Jam';
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -50,7 +155,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                 Row(
                   children: [
                     Text(
-                      'Bang Ridwan',
+                      name,
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -61,7 +166,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                     const Icon(Icons.star, color: Colors.amber, size: 20),
                     const SizedBox(width: 4),
                     Text(
-                      '4.9',
+                      ratingStr,
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -72,7 +177,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Mitra Pengepul - Wilayah Lamongan',
+                  'Mitra Pengepul - Wilayah $city',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.9),
@@ -97,7 +202,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Estimasi Saldo yang didapatkan Minggu Ini',
+                        'Estimasi Saldo yang didapatkan Bulan Ini',
                         style: GoogleFonts.outfit(
                           fontSize: 13,
                           color: Colors.grey[800],
@@ -106,7 +211,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Rp 2,000,000',
+                        earningsText,
                         style: GoogleFonts.outfit(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -118,11 +223,11 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          _buildStatBadge('Selesai', '72 Order'),
+                          _buildStatBadge('Selesai', '$completedCount Order'),
                           const SizedBox(width: 8),
-                          _buildStatBadge('Total Berat', '284.5 Kg'),
+                          _buildStatBadge('Total Berat', displayWeightText),
                           const SizedBox(width: 8),
-                          _buildStatBadge('Jam Kerja', '90,20 Jam'),
+                          _buildStatBadge('Jam Kerja', displayHoursText),
                         ],
                       ),
                     ],
@@ -148,44 +253,35 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // WEEK SELECTOR
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         child: Row(
-                          children: categories.map((category) {
-                            final isSelected = selectedCategory == category;
+                          children: [1, 2, 3, 4].map((week) {
+                            final isSelected = _selectedWeek == week;
                             return GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  selectedCategory = category;
+                                  _selectedWeek = week;
                                 });
                               },
                               child: Container(
                                 margin: const EdgeInsets.only(right: 8),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? const Color(0xFF7CB342)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: isSelected ? const Color(0xFF7CB342) : Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: const Color(0xFF7CB342),
-                                    width: 1,
+                                    color: isSelected ? const Color(0xFF7CB342) : Colors.grey[300]!,
                                   ),
                                 ),
                                 child: Text(
-                                  category,
+                                  'Minggu $week',
                                   style: GoogleFonts.outfit(
-                                    fontSize: 11,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : const Color(0xFF7CB342),
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    color: isSelected ? Colors.white : Colors.grey[700],
                                   ),
                                 ),
                               ),
@@ -193,7 +289,37 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                           }).toList(),
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 16),
+                      // DATE INDICATOR
+                      GestureDetector(
+                        onTap: _selectDate,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F8E9),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF7CB342).withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.calendar_month, size: 16, color: Color(0xFF7CB342)),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formattedWeekRange,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF7CB342),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_drop_down, size: 16, color: Color(0xFF7CB342)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       _buildCustomBarChart(),
                       const SizedBox(height: 16),
                       Row(
@@ -272,6 +398,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
   }
 
   Widget _buildCustomBarChart() {
+    final dataForWeek = _weeklyData[_selectedWeek]!;
     return SizedBox(
       height: 200,
       child: Row(
@@ -279,10 +406,10 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
         children: [
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(9, (index) {
-              int labelValue = 15 - index;
+            children: List.generate(5, (index) {
+              int labelValue = 150 - (index * 25); // 150k, 125k, 100k, 75k, 50k
               return Text(
-                '${labelValue.toString().padLeft(2, '0')} Kg',
+                '${labelValue}rb',
                 style: GoogleFonts.outfit(
                   fontSize: 10,
                   color: Colors.grey[600],
@@ -297,7 +424,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
               children: [
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(9, (index) {
+                  children: List.generate(5, (index) {
                     return Container(height: 0.8, color: Colors.grey[200]);
                   }),
                 ),
@@ -305,14 +432,14 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: dailyData.map<Widget>((data) {
-                      double currentWeight = double.parse(
-                        data['weight'].toString(),
+                    children: dataForWeek.map<Widget>((data) {
+                      double currentIncome = double.parse(
+                        data['income'].toString(),
                       );
-                      double minGridScale = 6.5;
-                      double maxGridScale = 15.0;
+                      double minGridScale = 50000;
+                      double maxGridScale = 150000;
                       double heightFactor =
-                          (currentWeight - minGridScale) /
+                          (currentIncome - minGridScale) /
                           (maxGridScale - minGridScale);
                       heightFactor = heightFactor.clamp(0.0, 1.0);
 
@@ -324,7 +451,9 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                               alignment: Alignment.bottomCenter,
                               child: FractionallySizedBox(
                                 heightFactor: heightFactor,
-                                child: Container(
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
                                   width: 14,
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF7CB342),

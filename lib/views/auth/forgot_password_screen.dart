@@ -1,3 +1,4 @@
+import '../../core/utils/alert_helper.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -59,15 +60,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Terjadi kesalahan')),
-        );
+        AppAlerts.showError(context, data['message'] ?? 'Terjadi kesalahan');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal terhubung ke server')),
-        );
+        AppAlerts.showError(context, 'Gagal terhubung ke server');
       }
     } finally {
       if (mounted) {

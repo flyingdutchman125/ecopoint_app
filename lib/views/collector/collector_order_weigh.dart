@@ -1,3 +1,4 @@
+import '../../core/utils/alert_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -28,9 +29,7 @@ class _CollectorOrderWeighPageState extends State<CollectorOrderWeighPage> {
   Future<void> _submitWeight() async {
     final weight = double.tryParse(_weightCtrl.text);
     if (weight == null || weight <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Masukkan berat aktual yang valid')),
-      );
+      AppAlerts.showError(context, 'Masukkan berat aktual yang valid');
       return;
     }
 
@@ -42,16 +41,10 @@ class _CollectorOrderWeighPageState extends State<CollectorOrderWeighPage> {
     setState(() => _isSubmitting = false);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order berhasil diselesaikan')),
-      );
+      AppAlerts.showSuccess(context, 'Order berhasil diselesaikan');
       context.go('/collector');
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal menyelesaikan order. Silakan coba lagi.'),
-        ),
-      );
+      AppAlerts.showError(context, 'Gagal menyelesaikan order. Silakan coba lagi.');
     }
   }
 
