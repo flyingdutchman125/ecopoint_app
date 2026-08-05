@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../models/order_model.dart';
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/chat_store.dart';
 
 class CollectorChatTab extends StatefulWidget {
   final OrderModel? activeOrder;
@@ -206,88 +207,61 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
       });
     }
 
+    ChatStore.instance.seedInitialIfEmpty(orderId, [
+      {
+        'text': 'Halo mas kolektor, posisi di mana? Pesanan penjemputan sampah saya sudah siap ya.',
+        'time': '12.15',
+        'isMe': false,
+      },
+      {
+        'text': 'Halo kak, saya sedang dalam perjalanan menuju lokasi Anda. Perkiraan 3-5 menit lagi sampai.',
+        'time': '12.16',
+        'isMe': true,
+      },
+    ]);
+
     try {
       final url = ApiConstants.orderMessages(orderId);
       final resp = await ApiService.get(url);
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
         final List msgs = data['data'] ?? data['messages'] ?? [];
-
-        final newMsgs = <Map<String, dynamic>>[];
         for (final m in msgs) {
           final isMe = m['isMe'] == true || (m['sender_role'] == 'collector');
           final timeStr = m['time'] ?? (m['created_at'] != null && m['created_at'].toString().length >= 16
               ? m['created_at'].toString().substring(11, 16)
               : '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}');
 
-          newMsgs.add({
+          ChatStore.instance.addMessage(orderId, {
             'id': m['id'],
             'text': m['message'] ?? m['text'] ?? '',
             'time': timeStr,
             'isMe': isMe,
           });
         }
-
-        if (mounted) {
-          final pendingMsgs = _activeMessages.where((m) => m['pending'] == true || m['isMe'] == true).toList();
-          setState(() {
-            _activeMessages = newMsgs;
-            for (final p in pendingMsgs) {
-              if (!_activeMessages.any((m) => m['text'] == p['text'])) {
-                _activeMessages.add(p);
-              }
-            }
-            if (_activeMessages.isEmpty) {
-              _activeMessages = [
-                {
-                  'text': 'Halo mas kolektor, posisi di mana? Pesanan penjemputan sampah saya sudah siap ya.',
-                  'time': '12.15',
-                  'isMe': false,
-                },
-                {
-                  'text': 'Halo kak, saya sedang dalam perjalanan menuju lokasi Anda. Perkiraan 3-5 menit lagi sampai.',
-                  'time': '12.16',
-                  'isMe': true,
-                },
-              ];
-            }
-          });
-          if (initial) {
-            _scrollToBottom();
-          }
-        }
       }
-    } catch (e) {
-      if (_activeMessages.isEmpty && mounted) {
-        setState(() {
-          _activeMessages = [
-            {
-              'text': 'Halo kak, saya dari tim penjemputan. Perkiraan estimasi 5 menit.',
-              'time': '12.10',
-              'isMe': true,
-            },
-            {
-              'text': 'Baik pak, sampah kardus dan botol plastik sudah siap.',
-              'time': '12.15',
-              'isMe': false,
-            },
-            {'text': 'Siap, terima kasih kak.', 'time': '12.18', 'isMe': true},
-          ];
-        });
-      }
+    } catch (_) {
     } finally {
-      if (initial && mounted) {
+      if (mounted) {
         setState(() {
-          _loadingMessages = false;
+          _activeMessages = ChatStore.instance.getMessages(orderId);
+          if (initial) {
+            _loadingMessages = false;
+          }
         });
-        _scrollToBottom();
+        if (initial) {
+          _scrollToBottom();
+        }
       }
     }
   }
 
   Future<void> _sendMessage() async {
     final text = _messageCtrl.text.trim();
-    if (text.isEmpty || _activeOrderId == null) return;
+    if (text.isEmpty) return;
+
+    _activeOrderId ??= (_threads.isNotEmpty ? _threads.first['order_id'] : 'EP-982103');
+    _messageCtrl.clear();
 
     final nowStr = '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
     final newMsg = {
@@ -297,14 +271,15 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
       'pending': true,
     };
 
+    ChatStore.instance.addMessage(_activeOrderId!, newMsg);
+
     setState(() {
-      _activeMessages.add(newMsg);
+      _activeMessages = ChatStore.instance.getMessages(_activeOrderId!);
       final threadIdx = _threads.indexWhere((t) => t['order_id'] == _activeOrderId);
       if (threadIdx != -1) {
         _threads[threadIdx]['last_message'] = text;
         _threads[threadIdx]['last_message_time'] = nowStr;
       }
-      _messageCtrl.clear();
     });
     _scrollToBottom();
 
@@ -312,7 +287,7 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
       final url = ApiConstants.orderMessages(_activeOrderId!);
       await ApiService.post(url, {'message': text, 'text': text});
     } catch (e) {
-      // Local addition remains
+      // Local addition remains saved in ChatStore
     }
   }
 
@@ -534,6 +509,8 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
                   Expanded(
                     child: TextField(
                       controller: _messageCtrl,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _sendMessage(),
                       decoration: InputDecoration(
                         hintText: 'Tulis pesan balasan...',
                         hintStyle: GoogleFonts.inter(color: Colors.grey.shade400),

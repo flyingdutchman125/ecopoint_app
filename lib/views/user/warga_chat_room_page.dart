@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/chat_store.dart';
 
 class WargaChatRoomPage extends StatefulWidget {
   final Map<String, dynamic>? extra;
@@ -66,71 +67,52 @@ class _WargaChatRoomPageState extends State<WargaChatRoomPage> {
       });
     }
 
+    ChatStore.instance.seedInitialIfEmpty(_orderId!, [
+      {
+        'text': 'Halo kak, saya dari tim penjemputan sampah mitra resmi ya, perkiraan estimasi 5 menit lagi sampai.',
+        'time': '12.10',
+        'isMe': false,
+      },
+      {
+        'text': 'Baik pak, sampah kardus dan botol plastik sudah siap di depan rumah.',
+        'time': '12.16',
+        'isMe': true,
+      },
+    ]);
+
     try {
       final url = ApiConstants.orderMessages(_orderId!);
       final resp = await ApiService.get(url);
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
         final List msgs = data['data'] ?? data['messages'] ?? (data is List ? data : []);
-
-        final newMessages = <Map<String, dynamic>>[];
         for (final m in msgs) {
-          final textStr = m['message'] ?? m['text'] ?? '';
+          final isMe = m['isMe'] == true || (m['sender_role'] == 'user');
           final timeStr = m['time'] ?? (m['created_at'] != null && m['created_at'].toString().length >= 16
               ? m['created_at'].toString().substring(11, 16)
               : '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}');
-          final isMe = m['isMe'] == true || (m['sender_role'] == 'user');
 
-          newMessages.add({
+          ChatStore.instance.addMessage(_orderId!, {
             'id': m['id'],
-            'text': textStr,
+            'text': m['message'] ?? m['text'] ?? '',
             'time': timeStr,
             'isMe': isMe,
-            'raw': m,
           });
         }
-
-        if (mounted) {
-          final pendingMsgs = _messages.where((m) => m['pending'] == true).toList();
-          setState(() {
-            _messages.clear();
-            _messages.addAll(newMessages);
-            for (final p in pendingMsgs) {
-              if (!_messages.any((m) => m['text'] == p['text'])) {
-                _messages.add(p);
-              }
-            }
-          });
-          if (initial || newMessages.length > _messages.length) {
-            _scrollToBottom();
-          }
-        }
       }
-    } catch (e) {
-      if (_messages.isEmpty && mounted) {
-        setState(() {
-          _messages.addAll([
-            {
-              'text':
-                  'Halo kak saya dari tim penjemputan sampah Pak Sutarjo ya, perkiraan estimasi 10 menit, siap siap ya kak',
-              'time': '12.10',
-              'isMe': false,
-            },
-            {
-              'text': 'Baik pak, ini saya juga sedang memilah, sampah - sampahnya',
-              'time': '12.16',
-              'isMe': true,
-            },
-            {'text': 'Baik kak, kami luncur ke lokasi.', 'time': '12.18', 'isMe': false},
-          ]);
-        });
-      }
+    } catch (_) {
     } finally {
-      if (mounted && initial) {
+      if (mounted) {
         setState(() {
-          _loading = false;
+          _messages.clear();
+          _messages.addAll(ChatStore.instance.getMessages(_orderId!));
+          if (initial) {
+            _loading = false;
+          }
         });
-        _scrollToBottom();
+        if (initial) {
+          _scrollToBottom();
+        }
       }
     }
   }
@@ -140,15 +122,20 @@ class _WargaChatRoomPageState extends State<WargaChatRoomPage> {
     if (text.isEmpty) return;
 
     final nowStr = '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
+    final newMsg = {
+      'text': text,
+      'time': nowStr,
+      'isMe': true,
+      'pending': true,
+    };
 
-    // Optimistic UI update
+    if (_orderId != null) {
+      ChatStore.instance.addMessage(_orderId!, newMsg);
+    }
+
     setState(() {
-      _messages.add({
-        'text': text,
-        'time': nowStr,
-        'isMe': true,
-        'pending': true,
-      });
+      _messages.clear();
+      _messages.addAll(ChatStore.instance.getMessages(_orderId!));
       _messageController.clear();
     });
     _scrollToBottom();
@@ -157,16 +144,8 @@ class _WargaChatRoomPageState extends State<WargaChatRoomPage> {
 
     try {
       final url = ApiConstants.orderMessages(_orderId!);
-      final resp = await ApiService.post(url, {'message': text, 'text': text});
-
-      if (resp.statusCode == 200 || resp.statusCode == 201) {
-        await _loadMessages();
-      } else {
-        _triggerDemoResponse(text);
-      }
-    } catch (e) {
-      _triggerDemoResponse(text);
-    }
+      await ApiService.post(url, {'message': text, 'text': text});
+    } catch (_) {}
   }
 
   void _triggerDemoResponse(String userMsg) {

@@ -16,20 +16,22 @@ import 'collector_profile_tab.dart';
 import 'collector_chat_tab.dart';
 
 class CollectorDashboard extends StatefulWidget {
-  const CollectorDashboard({super.key});
+  final int initialIndex;
+  const CollectorDashboard({super.key, this.initialIndex = 0});
 
   @override
   State<CollectorDashboard> createState() => _CollectorDashboardState();
 }
 
 class _CollectorDashboardState extends State<CollectorDashboard> {
-  int _bottomNavIndex = 0;
+  late int _bottomNavIndex;
   int _selectedTopTab = 0; // 0 = Radar Order, 1 = Peta Rute GPS
   final MapController _mapController = MapController();
 
   @override
   void initState() {
     super.initState();
+    _bottomNavIndex = widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CollectorProvider>().updateLocationAndFetchNearby();
     });
@@ -1838,31 +1840,36 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _bottomNavIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _bottomNavIndex = index;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFFFACC15) : Colors.white70,
-            size: 24,
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            _bottomNavIndex = index;
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? const Color(0xFFFACC15) : Colors.white70,
+                size: 24,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? const Color(0xFFFACC15) : Colors.white70,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? const Color(0xFFFACC15) : Colors.white70,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

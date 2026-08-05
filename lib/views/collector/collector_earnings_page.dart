@@ -314,8 +314,20 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      _buildCustomBarChart(),
+                      Builder(
+                        builder: (context) {
+                          final collectorProv = context.watch<CollectorProvider>();
+                          final baseList = _weeklyData[_selectedWeek] ?? _weeklyData[1]!;
+                          final chartData = baseList.map((item) => Map<String, dynamic>.from(item)).toList();
+                          for (final order in collectorProv.myOrders) {
+                            if (order.status == 'completed' && order.totalPrice != null) {
+                              final dayIdx = (order.createdAt.weekday - 1).clamp(0, 6);
+                              chartData[dayIdx]['income'] = (double.tryParse(chartData[dayIdx]['income'].toString()) ?? 0) + order.totalPrice!;
+                            }
+                          }
+                          return _buildCustomBarChart(chartData);
+                        },
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -392,8 +404,21 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
     );
   }
 
-  Widget _buildCustomBarChart() {
-    final dataForWeek = _weeklyData[_selectedWeek]!;
+  Widget _buildCustomBarChart(List<Map<String, dynamic>> dataForWeek) {
+    double maxIncome = 150000;
+    for (final d in dataForWeek) {
+      final inc = double.tryParse(d['income'].toString()) ?? 0;
+      if (inc > maxIncome) maxIncome = inc;
+    }
+
+    final labels = [
+      '${(maxIncome / 1000).toInt()}rb',
+      '${(maxIncome * 0.75 / 1000).toInt()}rb',
+      '${(maxIncome * 0.50 / 1000).toInt()}rb',
+      '${(maxIncome * 0.25 / 1000).toInt()}rb',
+      '0rb',
+    ];
+
     return SizedBox(
       height: 200,
       child: Row(
@@ -401,17 +426,16 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
         children: [
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(5, (index) {
-              int labelValue = 150 - (index * 25); // 150k, 125k, 100k, 75k, 50k
+            children: labels.map((label) {
               return Text(
-                '${labelValue}rb',
+                label,
                 style: GoogleFonts.outfit(
                   fontSize: 10,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
               );
-            }),
+            }).toList(),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -428,46 +452,61 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: dataForWeek.map<Widget>((data) {
-                      double currentIncome = double.parse(
-                        data['income'].toString(),
-                      );
-                      double minGridScale = 50000;
-                      double maxGridScale = 150000;
-                      double heightFactor =
-                          (currentIncome - minGridScale) /
-                          (maxGridScale - minGridScale);
-                      heightFactor = heightFactor.clamp(0.0, 1.0);
+                      final double currentIncome = double.tryParse(data['income'].toString()) ?? 0.0;
+                      double heightFactor = maxIncome > 0 ? (currentIncome / maxIncome) : 0.0;
+                      heightFactor = heightFactor.clamp(0.08, 1.0);
 
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: FractionallySizedBox(
-                                heightFactor: heightFactor,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                  width: 14,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF7CB342),
-                                    borderRadius: BorderRadius.circular(4),
+                      final isHighest = currentIncome == maxIncome;
+
+                      return Tooltip(
+                        message: '${data['day']}: ${CurrencyFormatter.formatRupiah(currentIncome.toInt())}',
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${(currentIncome / 1000).toStringAsFixed(0)}k',
+                              style: GoogleFonts.outfit(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: isHighest ? const Color(0xFFF57C00) : Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: FractionallySizedBox(
+                                  heightFactor: heightFactor,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                    width: 16,
+                                    decoration: BoxDecoration(
+                                      color: isHighest ? const Color(0xFFF57C00) : const Color(0xFF7CB342),
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isHighest ? const Color(0xFFF57C00) : const Color(0xFF7CB342)).withValues(alpha: 0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            data['day'].toString(),
-                            style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              color: Colors.grey[800],
-                              fontWeight: FontWeight.w500,
+                            const SizedBox(height: 8),
+                            Text(
+                              data['day'].toString(),
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: isHighest ? Colors.black : Colors.grey[700],
+                                fontWeight: isHighest ? FontWeight.bold : FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     }).toList(),
                   ),

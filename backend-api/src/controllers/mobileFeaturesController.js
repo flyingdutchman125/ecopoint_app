@@ -166,6 +166,7 @@ async function getMessages(req, res, next) {
   try {
     const { id: order_id } = req.params;
     const currentUserId = req.user?.id || 'demo_user';
+    const currentUserRole = req.user?.role || 'user';
 
     let dbMessages = [];
     try {
@@ -180,7 +181,32 @@ async function getMessages(req, res, next) {
       }
     } catch (e) {}
 
-    const localMsgs = localMessagesMap.get(order_id) || [];
+    let localMsgs = localMessagesMap.get(order_id);
+    if (!localMsgs || localMsgs.length === 0) {
+      localMsgs = [
+        {
+          id: 'msg_seed_1',
+          order_id,
+          sender_id: 'user_1',
+          sender_role: 'user',
+          message: 'Halo mas kolektor, posisi di mana? Pesanan penjemputan sampah saya sudah siap ya.',
+          text: 'Halo mas kolektor, posisi di mana? Pesanan penjemputan sampah saya sudah siap ya.',
+          created_at: new Date().toISOString(),
+          time: '12:15'
+        },
+        {
+          id: 'msg_seed_2',
+          order_id,
+          sender_id: 'collector_1',
+          sender_role: 'collector',
+          message: 'Halo kak, saya sedang dalam perjalanan menuju lokasi Anda. Perkiraan 3-5 menit lagi sampai.',
+          text: 'Halo kak, saya sedang dalam perjalanan menuju lokasi Anda. Perkiraan 3-5 menit lagi sampai.',
+          created_at: new Date().toISOString(),
+          time: '12:16'
+        }
+      ];
+      localMessagesMap.set(order_id, localMsgs);
+    }
     
     // Merge DB messages and local messages, avoiding duplicates by id
     const messageMap = new Map();
@@ -190,6 +216,7 @@ async function getMessages(req, res, next) {
         id: m.id,
         order_id: m.order_id,
         sender_id: m.sender_id,
+        sender_role: m.sender_role || 'user',
         message: m.message,
         text: m.message,
         created_at: m.created_at,
@@ -202,7 +229,7 @@ async function getMessages(req, res, next) {
       if (!messageMap.has(m.id)) {
         messageMap.set(m.id, {
           ...m,
-          isMe: m.sender_id === currentUserId
+          isMe: m.sender_id === currentUserId || (currentUserRole === 'collector' ? m.sender_role === 'collector' : m.sender_role === 'user')
         });
       }
     }
