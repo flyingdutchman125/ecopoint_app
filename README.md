@@ -1,95 +1,142 @@
-# EcoPoint
+# 🌿 EcoPoint — Platform Manajemen Sampah Berbasis Ekonomi Sirkular
 
-Aplikasi Manajemen Sampah berbasis Ekonomi Sirkular. Memiliki fitur Warga (menyetorkan sampah untuk ditukar menjadi poin/uang) dan Mitra Pengepul (menjemput sampah dan memverifikasi timbangan).
-
-Project ini merupakan struktur **Monorepo**:
-- **Frontend Web:** React + Vite (folder `frontend`)
-- **Backend:** Node.js (Express, MySQL/SQLite fallback)
-- **Mobile App:** Flutter (folder `lib`/`android`/`ios`, opsi lama)
+EcoPoint adalah platform ekosistem pengelolaan sampah digital berbasis **Ekonomi Sirkular**. Aplikasi ini mengintegrasikan **Warga** (penyetor sampah), **Mitra Pengepul** (Kolektor penjemput), dan **Admin** melalui aplikasi mobile Flutter modern dan RESTful API Backend.
 
 ---
 
-## Persiapan (Prerequisites)
+## 🚀 Fitur Utama & Peran Pengguna (Role-based Features)
 
-Sebelum menjalankan project ini, pastikan kamu telah menginstal perangkat lunak berikut:
-1. **Flutter SDK** (versi terbaru).
-2. **Node.js** (v14 atau lebih baru).
-3. **MySQL Server** (XAMPP / MySQL standalone).
-4. Emulator Android / Device Fisik (Pastikan terhubung di satu jaringan WiFi yang sama dengan komputer server).
+### 👤 1. Warga (User / Resident)
+- **AI Trash Scanner (AI Vision)**: Deteksi otomatis jenis sampah (plastik, kardus, logam, dll.) via kamera/galeri dengan pemetaan kategori otomatis dan estimasi harga/poin.
+- **Poin & E-Wallet**: Penukaran poin hasil setor sampah menjadi saldo e-wallet, konversi pulsa/e-money, dan penarikan tunai.
+- **Peta Interaktif & Rute Kolektor**: Visualisasi lokasi kolektor terdekat di OpenStreetMap dengan garis rute (**Polyline**) dari rumah Warga ke lokasi Pengepul.
+- **Setor & Penjemputan Sampah**: Pembuatan order penjemputan dengan estimasi berat, alamat kustom, serta foto sampah.
+- **Rating & Ulasan**: Pemberian bintang dan ulasan teks untuk kolektor setelah transaksi selesai, tersinkronisasi secara real-time.
+- **EcoTree & Carbon Tracker**: Edukasi & visualisasi dampak pengurangan jejak karbon serta pertumbuhan pohon virtual.
+- **EcoBook**: Modul edukasi sirkular ekonomi dan pengelolaan limbah.
+- **Chat Real-time**: Komunikasi langsung antara Warga dan Pengepul penjemput.
+
+### 🚚 2. Mitra Pengepul (Collector)
+- **Manajemen Pesanan**: Menerima pesanan penjemputan terdekat dan memproses status pesanan.
+- **Timbangan & Verifikasi**: Input berat pasti dan kalkulasi total imbalan di lokasi penjemputan.
+- **Dashboard & Ringkasan Penghasilan**: Pemantauan total pendapatan harian/bulanan, riwayat penjemputan, dan dompet kolektor.
+- **Status Kendaraan & Online**: Pengaturan ketersediaan (online/offline) serta detail armada kendaraan.
+- **Chat Penjemputan**: Komunikasi langsung dengan Warga lokasi penjemputan.
+
+### 🛡️ 3. Admin (Dashboard & Control)
+- **Statistik Real-time**: Grafik & counter statistik total Warga, Pengepul Aktif, Pesanan Berlangsung, dan Total Pendapatan.
+- **Kelola Pengguna**: Pencarian, filter berdasarkan role (`Warga`, `Pengepul`), dan modal detail pengguna (saldo, poin, kontak).
+- **Manajemen Keamanan**: Reset password pengguna dan hapus akun pengguna terintegrasi ke backend.
+- **Manajemen Pesanan**: Pemantauan status transaksi seluruh sistem secara terpusat.
 
 ---
 
-## Cara Instalasi & Menjalankan (Installation & Setup)
+## 🏗️ Arsitektur & Teknologi
 
-### 1. Konfigurasi Backend (Node.js)
+Project ini mengusung struktur **Monorepo**:
 
-1. Masuk ke folder backend:
-   ```bash
-   cd backend
-   ```
-2. Instal dependensi NPM:
-   ```bash
-   npm install
-   ```
-3. Buat database MySQL dengan nama **`ecopoint`**. (Skema tabel `users` akan terbuat otomatis secara konsep, namun pastikan struktur SQL sudah sesuai).
+```text
+ecopoint_app/
+├── lib/                   # Flutter Mobile Application (Warga, Collector, Admin)
+├── backend-api/           # Primary Backend API (Node.js Express + Supabase/PostgreSQL/SQLite)
+├── backend/               # Legacy Backend API (Node.js Express + MySQL)
+├── frontend/              # Admin Web Interface (React + Vite)
+├── android/ & ios/        # Platform Native Enablers
+└── assets/ & fonts/       # Asset Media & Custom Typography
+```
 
-   Jika MySQL tidak tersedia di lingkungan Anda, backend akan otomatis menggunakan SQLite fallback di folder `backend/data`.
+### Tech Stack:
+- **Mobile Client**: Flutter 3.x, Dart (State Management: Provider, Routing: GoRouter, Maps: Flutter Map + LatLong2, UI Effects: Flutter Animate, Shimmer, Toastification).
+- **Backend Production**: Node.js, Express.js, Supabase / PostgreSQL (dengan SQLite fallback), JSON Web Token (JWT) Auth.
+- **Deployment Backend**: Fly.io (`https://ecopoint-api.fly.dev`).
+- **Web Portal**: React + Vite.
 
-4. Buat file `.env` di dalam folder `backend/` dan isi konfigurasi koneksi database:
-   ```env
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=jacki123 # Sesuaikan dengan password MySQL kamu
-   DB_NAME=ecopoint
-   JWT_SECRET=supersecretkey
-   PORT=3000
-   ```
-5. Buat folder untuk menampung file upload KTP:
-   ```bash
-   mkdir uploads
-   ```
-6. Jalankan server:
-   ```bash
-   node server.js
-   ```
+---
 
-*(Opsional: Jalankan `node seedAdmin.js` di folder backend untuk membuat akun admin dummy: `admin@ecopoint.com` / `admin123`).*
+## 🔑 Kredensial Testing Default
 
-### 2. Konfigurasi Frontend Web (React + Vite)
+Aplikasi mobile sudah terkonfigurasi secara otomatis ke server production live (`https://ecopoint-api.fly.dev`).
 
-1. Buka tab terminal baru dan masuk ke folder `frontend`.
-   ```bash
-   cd frontend
-   ```
-2. Instal dependensi NPM:
-   ```bash
-   npm install
-   ```
-3. Jalankan aplikasi web:
-   ```bash
-   npm run dev
-   ```
-4. Buka browser dan akses alamat yang ditampilkan oleh Vite. Frontend akan memanggil API backend di `http://localhost:3000/api`.
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@ecopoint.id` | `admin123456` |
+| **Warga** | `test@ecopoint.id` | `test123456` |
+| **Pengepul** | `collector@ecopoint.id` | `test123456` |
 
-### 3. Konfigurasi Frontend Mobile (Flutter)
+---
 
-1. Buka tab terminal baru dan kembali ke root folder `ecopoint`.
-2. Download dependensi Flutter:
+## 💻 Panduan Instalasi & Cara Jalankan
+
+### Prerequisites
+1. **Flutter SDK** (`^3.9.0`)
+2. **Node.js** (`v18+`) & **npm**
+3. **Android Studio / Emulator** (`emulator-5554` atau Perangkat Fisik)
+
+---
+
+### 1. Menjalankan Flutter Mobile App
+
+1. Install dependensi Flutter:
    ```bash
    flutter pub get
    ```
-3. **PENTING:** Karena berjalan di jaringan lokal, buka file `lib/controllers/auth_controller.dart` serta file controller lainnya dan ubah IP lokal pada variabel `baseUrl` sesuai dengan IP komputer/laptop server kamu (cek menggunakan perintah `ipconfig` di Windows atau `ip a` di Linux):
-   ```dart
-   final String baseUrl = 'http://192.168.1.182:3000/api/auth';
+
+2. Jalankan Static Analysis untuk memastikan zero error:
+   ```bash
+   flutter analyze lib/
    ```
-4. Jalankan aplikasi di Emulator atau Device Fisik:
+
+3. Jalankan aplikasi di emulator atau perangkat fisik:
    ```bash
    flutter run
    ```
 
+> 💡 **Konfigurasi Server**:
+> Aplikasi membaca file [api_constants.dart](file:///c:/Users/ASUS/Documents/code/ecopoint_app/lib/core/constants/api_constants.dart) yang telah diatur secara default ke Live Server:
+> `https://ecopoint-api.fly.dev`
+
 ---
 
-## Role Akses (Features)
-- **Admin**: Verifikasi pendaftaran mitra pengepul, manajemen data (Login default: `admin@ecopoint.com`).
-- **User (Warga)**: Request penjemputan sampah, melihat history transaksi, menukarkan poin (Redeem), cek jejak karbon.
-- **Collector (Mitra Pengepul)**: Mendaftar dengan data kendaraan dan KTP, menunggu verifikasi Admin, dan menerima order dari Warga.
+### 2. Menjalankan Backend API Lokal (`backend-api`) *(Opsional)*
+
+Jika ingin menjalankan server backend secara lokal:
+
+1. Masuk ke folder `backend-api`:
+   ```bash
+   cd backend-api
+   ```
+2. Instal dependensi:
+   ```bash
+   npm install
+   ```
+3. Salin file `.env.example` menjadi `.env` dan sesuaikan konfigurasi.
+4. Jalankan server lokal:
+   ```bash
+   npm start
+   ```
+5. Akses dokumentasi Swagger API di `http://localhost:3000/api-docs` atau cek endpoint kesehatan `http://localhost:3000/health`.
+
+---
+
+### 3. Build Release APK
+
+Untuk membagikan atau menguji rilis APK Android, jalankan perintah build dengan pemisahan per ABI:
+
+```bash
+flutter analyze lib/
+flutter build apk --release --split-per-abi
+```
+
+Hasil output build APK:
+- **ARM64 (Recommended)**: `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` (Target size ≤ 20 MB)
+- **ARMv7**: `build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk` (Target size ≤ 18 MB)
+- **x86_64 (Emulator)**: `build/app/outputs/flutter-apk/app-x86_64-release.apk`
+
+---
+
+## ⚡ Quality Assurance & Verifikasi
+
+Project ini dipastikan memenuhi standar:
+- **Static Analysis**: `flutter analyze lib/` **0 errors**.
+- **ADB Interactive Testing**: Seluruh alur (Login, Scan AI Sampah, Peta Rute & Polyline, Penjemputan, Rating & Ulasan, Manajemen User Admin) telah lulus verifikasi pada emulator.
+
