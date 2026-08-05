@@ -33,6 +33,7 @@ class UserProvider with ChangeNotifier {
     } else {
       _wallet = WalletModel(balance: 0.0, ecoPoints: points);
     }
+    WalletState.instance.addPoints(points);
     notifyListeners();
   }
 
@@ -87,8 +88,16 @@ class UserProvider with ChangeNotifier {
 
       if (walletRes.statusCode == 200) {
         final data = jsonDecode(walletRes.body);
-        if (data['success'] == true) {
+        if (data['success'] == true && data['data'] != null) {
           _wallet = WalletModel.fromJson(data['data']);
+          if (_wallet != null) {
+            if (_wallet!.balance > 0) {
+              WalletState.instance.activeBalance.value = _wallet!.balance;
+            }
+            if (_wallet!.ecoPoints > 0) {
+              WalletState.instance.points.value = _wallet!.ecoPoints;
+            }
+          }
         }
       }
     } catch (e) {

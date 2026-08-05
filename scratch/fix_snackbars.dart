@@ -53,7 +53,7 @@ void main() async {
       
       // Extract text inside Text(...)
       String text = "'Terjadi Kesalahan'";
-      RegExp textRegex = RegExp(r"Text\((['\"].*?['\"])(?:,.*?)?\)");
+      RegExp textRegex = RegExp(r"Text\((['\"].*?['"])(?:,.*?)?)");
       var match = textRegex.firstMatch(block);
       if (match != null) {
         text = match.group(1)!;

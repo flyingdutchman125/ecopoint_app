@@ -68,33 +68,42 @@ class OrderModel {
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    String? parseUserName() {
+      if (json['user_name'] != null) return json['user_name'].toString();
+      final u = json['user'];
+      if (u is Map) return u['name']?.toString();
+      if (u is List && u.isNotEmpty && u.first is Map) return u.first['name']?.toString();
+      return null;
+    }
+
     return OrderModel(
-      id: json['id'] ?? '',
-      userId: json['user_id'] ?? '',
-      collectorId: json['collector_id'],
-      status: json['status'] ?? 'pending',
-      photoUrl: json['photo_url'],
+      id: json['id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      collectorId: json['collector_id']?.toString(),
+      status: json['status']?.toString() ?? 'pending',
+      photoUrl: json['photo_url']?.toString(),
       category: _translateToIndonesian(json['category'] ?? json['item_type']),
       weightKg: (json['weight_kg'] ?? json['est_weight']) != null
-          ? double.parse((json['weight_kg'] ?? json['est_weight']).toString())
+          ? double.tryParse((json['weight_kg'] ?? json['est_weight']).toString())
           : null,
       totalPrice: (json['total_price'] ?? json['total_amount']) != null
-          ? double.parse(
+          ? double.tryParse(
               (json['total_price'] ?? json['total_amount']).toString(),
             )
           : null,
       lat: (json['lat'] ?? json['pickup_lat']) != null
-          ? double.parse((json['lat'] ?? json['pickup_lat']).toString())
+          ? double.tryParse((json['lat'] ?? json['pickup_lat']).toString()) ?? 0.0
           : 0.0,
       lng: (json['lng'] ?? json['pickup_lng']) != null
-          ? double.parse((json['lng'] ?? json['pickup_lng']).toString())
+          ? double.tryParse((json['lng'] ?? json['pickup_lng']).toString()) ?? 0.0
           : 0.0,
-      address: json['address'] ?? json['pickup_address'] ?? '',
-      statusHistory: json['status_history'] ?? [],
-      createdAt: DateTime.parse(
-        json['created_at'] ?? DateTime.now().toIso8601String(),
-      ),
-      userName: json['user_name'] ?? json['user']?['name'],
+      address: json['address']?.toString() ?? json['pickup_address']?.toString() ?? '',
+      statusHistory: json['status_history'] is List ? json['status_history'] : [],
+      createdAt: DateTime.tryParse(
+            json['created_at']?.toString() ?? '',
+          ) ??
+          DateTime.now(),
+      userName: parseUserName(),
     );
   }
 

@@ -143,7 +143,8 @@ class CollectorOrderDetailPage extends StatelessWidget {
                           elevation: 0,
                         ),
                         child: Text(
-                          'Lakukan Penimbangan',
+                          'Penimbangan & Validasi',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -1,8 +1,8 @@
-import '../../core/utils/alert_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -146,19 +146,17 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     Color primaryColor,
   ) {
     // Safely extract stats with fallback
-    final orders = stats['orders'] is Map<String, dynamic>
-        ? stats['orders'] as Map<String, dynamic>
-        : <String, dynamic>{};
-    final users = stats['users'] is Map<String, dynamic>
-        ? stats['users'] as Map<String, dynamic>
-        : <String, dynamic>{};
+    final orders = stats['orders'] is Map ? (stats['orders'] as Map) : {};
+    final users = stats['users'] is Map ? (stats['users'] as Map) : {};
 
     double revenue = 0.0;
     if (stats['revenue'] != null) {
       if (stats['revenue'] is Map && stats['revenue']['total'] != null) {
-        revenue = (stats['revenue']['total'] as num).toDouble();
+        revenue = double.tryParse(stats['revenue']['total'].toString()) ?? 0.0;
       } else if (stats['revenue'] is num) {
         revenue = (stats['revenue'] as num).toDouble();
+      } else if (stats['revenue'] is String) {
+        revenue = double.tryParse(stats['revenue'] as String) ?? 0.0;
       }
     }
 
@@ -242,8 +240,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 ),
                 _buildStatCard(
                   context,
-                  'Kolektor Aktif',
-                  '${users['online_collectors'] ?? 0}/${users['collectors'] ?? 0}',
+                  'Total Kolektor',
+                  '${users['collectors'] ?? 0}',
                   Icons.directions_bike_rounded,
                   const Color(0xFFF59E0B),
                   isDark,
@@ -416,7 +414,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 child: const Icon(
                   Icons.admin_panel_settings_rounded,
                   color: Colors.white,
-                  size: 34,
+                  size: 28,
                 ),
               ),
               const SizedBox(width: 16),
@@ -1427,9 +1425,12 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.read<AuthProvider>().logout();
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
             },
             child: const Text('Keluar'),
           ),

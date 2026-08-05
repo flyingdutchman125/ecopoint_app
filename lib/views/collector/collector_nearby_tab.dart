@@ -221,16 +221,26 @@ class _CollectorNearbyTabState extends State<CollectorNearbyTab> {
     String orderId,
     CollectorProvider provider,
   ) async {
+    if (!provider.isOnline) {
+      AppAlerts.showError(
+        context,
+        'Status Anda sedang OFFLINE. Aktifkan status ONLINE terlebih dahulu untuk menerima pesanan!',
+      );
+      return;
+    }
     try {
-      await provider.acceptOrder(orderId);
-      if (context.mounted) {
-        AppAlerts.showSuccess(context, 'Pesanan berhasil diterima');
+      final success = await provider.acceptOrder(orderId);
+      if (success && context.mounted) {
+        AppAlerts.showSuccess(
+          context,
+          'Pesanan berhasil diterima! Masuk ke Orderan Aktif.',
+        );
+      } else if (context.mounted) {
+        AppAlerts.showError(context, provider.error ?? 'Gagal menerima pesanan');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        AppAlerts.showError(context, e.toString());
       }
     }
   }

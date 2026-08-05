@@ -142,8 +142,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     validator: (val) {
-                      if (val == null || val.isEmpty)
+                      if (val == null || val.isEmpty) {
                         return 'Email tidak boleh kosong';
+                      }
                       if (!val.contains('@')) return 'Email tidak valid';
                       return null;
                     },

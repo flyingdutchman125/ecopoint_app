@@ -88,7 +88,7 @@ void main() async {
         // calculate relative path
         int depth = file.path.split('/').length - 2; // -1 for 'lib', -1 for filename
         String relativePath = depth == 0 ? 'core/utils/alert_helper.dart' : '${List.filled(depth, '..').join('/')}/core/utils/alert_helper.dart';
-        content = "import '$relativePath';\n" + content;
+        content = "import '$relativePath';\n$content";
       }
       await file.writeAsString(content);
       print('Updated \${file.path}');

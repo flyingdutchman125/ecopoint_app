@@ -377,10 +377,7 @@ class _ConvertConfirmPageState extends State<ConvertConfirmPage> {
                           onPressed: _isProcessing
                               ? null
                               : () async {
-                                  final navigator = Navigator.of(context);
                                   final goRouter = GoRouter.of(context);
-                                  final scaffoldMessenger =
-                                      ScaffoldMessenger.of(context);
 
                                   setState(() => _isProcessing = true);
                                   final success = await wallet

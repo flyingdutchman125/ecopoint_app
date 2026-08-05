@@ -50,21 +50,58 @@ class UserModel {
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    String? parseName() {
+      if (json['name'] != null) return json['name'].toString();
+      final meta = json['user_metadata'];
+      if (meta is Map) return meta['name']?.toString();
+      return null;
+    }
+
+    String parseRole() {
+      final roleStr = json['role']?.toString();
+      if (roleStr != null &&
+          roleStr != 'authenticated' &&
+          ['user', 'collector', 'admin'].contains(roleStr.toLowerCase())) {
+        return roleStr.toLowerCase();
+      }
+      final meta = json['user_metadata'];
+      if (meta is Map && meta['role'] != null) {
+        final metaRole = meta['role'].toString().toLowerCase();
+        if (['user', 'collector', 'admin'].contains(metaRole)) {
+          return metaRole;
+        }
+      }
+      return 'user';
+    }
+
+    double? parseRating() {
+      if (json['rating'] != null) {
+        return double.tryParse(json['rating'].toString());
+      }
+      final meta = json['user_metadata'];
+      if (meta is Map && meta['rating'] != null) {
+        return double.tryParse(meta['rating'].toString());
+      }
+      return null;
+    }
+
     return UserModel(
-      id: json['id'] ?? '',
-      email: json['email'] ?? '',
-      name: json['user_metadata']?['name'] ?? json['name'],
-      role: json['user_metadata']?['role'] ?? json['role'] ?? 'user',
-      phone: json['phone'],
-      city: json['city'],
-      address: json['address'],
-      subdistrict: json['subdistrict'],
-      avatarUrl: json['avatar_url'],
-      walletBalance: (json['wallet_balance'] as num?)?.toDouble() ?? 0.0,
-      ecoPoints: (json['eco_points'] as num?)?.toInt() ?? 0,
-      rating:
-          (json['rating'] as num?)?.toDouble() ??
-          (json['user_metadata']?['rating'] as num?)?.toDouble(),
+      id: json['id']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      name: parseName(),
+      role: parseRole(),
+      phone: json['phone']?.toString(),
+      city: json['city']?.toString(),
+      address: json['address']?.toString(),
+      subdistrict: json['subdistrict']?.toString(),
+      avatarUrl: json['avatar_url']?.toString(),
+      walletBalance: (json['wallet_balance'] != null)
+          ? (double.tryParse(json['wallet_balance'].toString()) ?? 0.0)
+          : 0.0,
+      ecoPoints: (json['eco_points'] != null)
+          ? (int.tryParse(json['eco_points'].toString()) ?? 0)
+          : 0,
+      rating: parseRating(),
     );
   }
 

@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/utils/image_picker_helper.dart';
-import '../../core/history_state.dart';
 
 class CollectorProfileTab extends StatefulWidget {
   const CollectorProfileTab({super.key});
@@ -23,7 +20,6 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
-  late TextEditingController _plateController;
 
   @override
   void initState() {
@@ -31,7 +27,6 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _emailController = TextEditingController();
-    _plateController = TextEditingController(text: 'S 1928 JZ');
   }
 
   @override
@@ -39,10 +34,10 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     super.didChangeDependencies();
     final user = context.read<AuthProvider>().user;
     if (user != null) {
-      _nameController.text = user.name ?? 'Ahmad Syifa’ul Falakhul K.';
+      _nameController.text = user.name ?? 'Mitra Kolektor';
       _emailController.text = user.email.isNotEmpty
           ? user.email
-          : 'syifaul@ecopoint.com';
+          : 'kolektor@ecopoint.com';
 
       String rawPhone = user.phone ?? '895123456130';
       if (rawPhone.startsWith('+62')) {
@@ -54,9 +49,9 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
       }
       _phoneController.text = rawPhone;
     } else {
-      _nameController.text = 'Ahmad Syifa’ul Falakhul K.';
+      _nameController.text = 'Mitra Kolektor';
       _phoneController.text = '895123456130';
-      _emailController.text = 'syifaul@ecopoint.com';
+      _emailController.text = 'kolektor@ecopoint.com';
     }
   }
 
@@ -65,7 +60,6 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _plateController.dispose();
     super.dispose();
   }
 
@@ -150,15 +144,6 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
                   _buildFieldLabel('SANDI AKUN'),
                   const SizedBox(height: 8),
                   _buildDefaultTextField('*********', isPassword: true),
-                  const SizedBox(height: 20),
-
-                  // PLAT KENDARAAN
-                  _buildFieldLabel('PLAT KENDARAAN'),
-                  const SizedBox(height: 8),
-                  _buildEditableTextField(
-                    _plateController,
-                    enabled: _isEditing,
-                  ),
                   const SizedBox(height: 32),
 
                   // 3. ACTION BUTTONS
@@ -212,90 +197,6 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
     );
   }
 
-  Future<void> _pickProfileImage() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Ubah Foto Profil Kolektor',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(
-                Icons.camera_alt_outlined,
-                color: Color(0xFF7CB342),
-              ),
-              title: Text(
-                'Ambil Foto (Kamera)',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picked = await ImagePickerHelper.pickImage(
-                  ImageSource.camera,
-                );
-                if (picked != null) {
-                  await _updateAvatar(picked.path);
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.photo_library_outlined,
-                color: Color(0xFF7CB342),
-              ),
-              title: Text(
-                'Pilih dari Galeri HP',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picked = await ImagePickerHelper.pickImage(
-                  ImageSource.gallery,
-                );
-                if (picked != null) {
-                  await _updateAvatar(picked.path);
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateAvatar(String path) async {
-    await context.read<AuthProvider>().updateUserProfile(avatarUrl: path);
-    HistoryState.instance.addHistory(
-      title: 'Ubah Foto Profil Kolektor',
-      description: 'Berhasil memperbarui foto profil akun kolektor.',
-      category: 'Akun',
-      valueChange: 'Foto Diperbarui',
-    );
-    if (mounted) {
-      AppAlerts.showSuccess(context, 'Foto profil kolektor berhasil diperbarui!');
-    }
-  }
-
   Widget _buildProfileHeader(String name, String idText, String? avatarUrl) {
     ImageProvider? avatarImage;
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
@@ -325,49 +226,26 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: _pickProfileImage,
-            child: Stack(
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300, width: 1),
-                    color: Colors.grey[200],
-                    image: avatarImage != null
-                        ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
-                        : null,
-                  ),
-                  child: avatarImage == null
-                      ? const ClipOval(
-                          child: Icon(
-                            Icons.person,
-                            size: 44,
-                            color: Colors.black38,
-                          ),
-                        )
-                      : null,
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_outlined,
-                      size: 14,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ),
-              ],
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              color: Colors.grey[200],
+              image: avatarImage != null
+                  ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
+                  : null,
             ),
+            child: avatarImage == null
+                ? const ClipOval(
+                    child: Icon(
+                      Icons.person,
+                      size: 44,
+                      color: Colors.black38,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 16),
           // Nama & ID Kolektor (Awalan 000)

@@ -1,4 +1,3 @@
-import '../../core/utils/alert_helper.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -450,7 +449,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Jemputan berhasil dibuat! Menunggu kolektor.'),
+            content: const Text('Jemputan berhasil dibuat! Membuka Halaman Tracking...'),
             backgroundColor: const Color(0xFF7BC143),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -458,7 +457,18 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
             ),
           ),
         );
+        final newOrder = {
+          'id': 'EP-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+          'name': 'Budi Kolektor (Mitra Resmi)',
+          'summary': '$_category (${_weightCtrl.text.trim()} $_selectedUnit)',
+          'code': 'EP-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+          'completed': false,
+          'category': _category,
+          'weight': weight,
+          'address': _addressCtrl.text.trim(),
+        };
         context.pop();
+        context.push('/orders/tracking', extra: {'order': newOrder});
       }
     } catch (e) {
       if (!mounted) return;

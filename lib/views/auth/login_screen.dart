@@ -68,19 +68,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _quickRegisterAdmin() async {
     final auth = context.read<AuthProvider>();
-    const email = 'admin@ecopoint.id';
-    const password = 'admin123456';
+    const email = 'admin_master@ecopoint.id';
+    const password = 'password123';
 
     setState(() {
       _emailCtrl.text = email;
       _passwordCtrl.text = password;
     });
 
-    await auth.setMockSession(
-      email: email,
-      name: 'Admin Master',
-      role: 'admin',
-    );
+    final success = await auth.login(email, password);
+    if (!success) {
+      await auth.setMockSession(
+        email: email,
+        name: 'Admin Master EcoPoint',
+        role: 'admin',
+        id: '168712d8-4141-4b40-88c9-d7d06d4e06e6',
+      );
+    }
     if (mounted) {
       context.go('/admin');
     }
@@ -96,11 +100,14 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordCtrl.text = password;
     });
 
-    await auth.setMockSession(
-      email: email,
-      name: 'Anto Warga',
-      role: 'user',
-    );
+    final success = await auth.login(email, password);
+    if (!success) {
+      await auth.setMockSession(
+        email: email,
+        name: 'Anto Warga',
+        role: 'user',
+      );
+    }
     if (mounted) {
       context.go('/user');
     }
@@ -108,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _quickRegisterCollector() async {
     final auth = context.read<AuthProvider>();
-    const email = 'budi@ecopoint.com';
+    const email = 'test_collector_1785933917006@ecopoint.id';
     const password = 'password123';
 
     setState(() {
@@ -116,12 +123,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordCtrl.text = password;
     });
 
-    await auth.setMockSession(
-      email: email,
-      name: 'Budi Kolektor',
-      role: 'collector',
-      id: '0005090',
-    );
+    final success = await auth.login(email, password);
+    if (!success) {
+      await auth.setMockSession(
+        email: email,
+        name: 'Budi Kolektor',
+        role: 'collector',
+        id: '0005090',
+      );
+    }
     if (mounted) {
       context.go('/collector');
     }
@@ -161,7 +171,23 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFDEFFB8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.recycling,
+                        size: 38,
+                        color: Color(0xFF59B41C),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Text.rich(
                     TextSpan(
                       children: [

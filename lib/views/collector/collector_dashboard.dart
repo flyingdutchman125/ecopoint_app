@@ -13,6 +13,7 @@ import '../../models/order_model.dart';
 import '../../core/utils/currency_formatter.dart';
 import 'collector_earnings_page.dart'; //  Ubah import ke halaman pendapatan baru
 import 'collector_profile_tab.dart';
+import 'collector_chat_tab.dart';
 
 class CollectorDashboard extends StatefulWidget {
   const CollectorDashboard({super.key});
@@ -24,7 +25,6 @@ class CollectorDashboard extends StatefulWidget {
 class _CollectorDashboardState extends State<CollectorDashboard> {
   int _bottomNavIndex = 0;
   int _selectedTopTab = 0; // 0 = Radar Order, 1 = Peta Rute GPS
-  bool _isOnline = true;
   final MapController _mapController = MapController();
 
   @override
@@ -37,6 +37,23 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final collectorProv = context.watch<CollectorProvider>();
+    final activeOrder = collectorProv.myOrders.firstWhere(
+      (o) => o.status == 'accepted' || o.status == 'en_route',
+      orElse: () => OrderModel(
+        id: 'EP-982103',
+        userId: 'u1',
+        userName: 'Budi Santoso (Warga)',
+        category: 'Plastik PET Bening (10 Kg)',
+        status: 'accepted',
+        lat: -7.1185,
+        lng: 112.4166,
+        address: 'Jl. Andansari Mojo (1.2 Km)',
+        statusHistory: [],
+        createdAt: DateTime.now(),
+      ),
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF57C00), // Cohesive Collector Amber Orange Theme
       body: SafeArea(
@@ -44,7 +61,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           index: _bottomNavIndex,
           children: [
             _buildBerandaTab(),
-            _buildChatTab(),
+            CollectorChatTab(activeOrder: activeOrder),
             const CollectorEarningsPage(), //  Sudah diganti dari CollectorWalletTab() ke halaman baru
             const CollectorProfileTab(),
           ],
@@ -156,7 +173,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
             inactiveThumbColor: Colors.grey.shade300,
             inactiveTrackColor: Colors.grey.shade600,
             onChanged: (val) async {
-              final success = await collectorProv.setOnlineStatus(val);
+              await collectorProv.setOnlineStatus(val);
               if (mounted) {
                 AppAlerts.showSuccess(context, val ? '🟢 Status Anda ONLINE - Siap menerima pesanan' : '⚪ Status Anda OFFLINE - Mode Istirahat');
               }
@@ -192,6 +209,12 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const Icon(
+          Icons.recycling,
+          color: Colors.white,
+          size: 30,
+        ),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,27 +302,21 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   // --- 2. SALDO CARD ---
   Widget _buildEstimasiSaldoCard(CollectorProvider collectorProv) {
-    final earningsText = collectorProv.earnings > 0
-        ? CurrencyFormatter.formatRupiah(collectorProv.earnings)
-        : 'Rp 2,000,000';
+    final earningsText = CurrencyFormatter.formatRupiah(collectorProv.earnings);
 
     final completedOrders = collectorProv.myOrders
         .where((o) => o.status == 'completed')
         .toList();
     final completedCount = completedOrders.length;
-    final displayCompletedCount = completedCount > 0 ? completedCount : 72;
+    final displayCompletedCount = completedCount;
 
     final double realWeightSum = completedOrders.fold(
       0.0,
       (sum, order) => sum + (order.weightKg ?? 0.0),
     );
-    final String displayWeightText = realWeightSum > 0
-        ? '${realWeightSum.toStringAsFixed(1)} Kg'
-        : '284.5 Kg';
+    final String displayWeightText = '${realWeightSum.toStringAsFixed(1)} Kg';
 
-    final double realHoursSum = completedCount > 0
-        ? (completedCount * 0.6)
-        : 90.20;
+    final double realHoursSum = (completedCount * 0.6);
     final String displayHoursText = '${realHoursSum.toStringAsFixed(2)} Jam';
 
     return Container(
@@ -505,9 +522,30 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   // --- 4. RADAR ORDER CONTENT ---
   Widget _buildRadarOrderContent(CollectorProvider collectorProv) {
+    final activeOrders = collectorProv.myOrders.where((o) {
+      final st = (o.status).toLowerCase();
+      return st == 'accepted' || st == 'in_progress' || st == 'en_route' || st == 'pending';
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (activeOrders.isNotEmpty) ...[
+          Text(
+            'Orderan Aktif Penjemputan (${activeOrders.length})',
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...activeOrders.map((o) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildActiveOrderCard(o),
+              )),
+          const SizedBox(height: 16),
+        ],
         Text(
           'Permintaan Penjemputan Masuk',
           style: GoogleFonts.outfit(
@@ -517,21 +555,120 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
           ),
         ),
         const SizedBox(height: 12),
-        if (collectorProv.isLoading)
+        if (!collectorProv.isOnline)
+          _buildOfflineNotice()
+        else if (collectorProv.isLoading)
           _buildShimmerBox(height: 220)
         else if (collectorProv.nearbyOrders.isNotEmpty)
           ...collectorProv.nearbyOrders.map((order) => _buildPickupCard(order))
+        else if (activeOrders.isNotEmpty)
+          _buildNoPendingOrdersNotice()
         else
           _buildSamplePickupCard(collectorProv),
       ],
     ).animate().fadeIn(duration: 300.ms);
   }
 
+  Widget _buildOfflineNotice() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.amber.shade400, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.do_not_disturb_on_rounded,
+            size: 44,
+            color: Colors.amber,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Status Anda Sedang OFFLINE',
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Aktifkan sakelar STATUS ONLINE di bagian atas untuk dapat menerima dan melihat permintaan penjemputan dari warga.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoPendingOrdersNotice() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF7CB342), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 44,
+            color: Color(0xFF7CB342),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Semua Pesanan Sudah Ditangani! 🎉',
+            style: GoogleFonts.outfit(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tidak ada permintaan baru saat ini.\nFokus selesaikan orderan aktif Anda.',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPickupCard(OrderModel order) {
     final String displayName =
         (order.userName != null && order.userName!.isNotEmpty)
         ? order.userName!
-        : "Ahmad Syifa'ul Falakhul K.";
+        : "Warga EcoPoint";
     final String displayAddress = order.address.isNotEmpty
         ? order.address
         : "Jl. Andansari Mojo";
@@ -911,7 +1048,32 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                       ),
                     ),
                     onPressed: () {
-                      AppAlerts.showSuccess(context, 'Penjemputan diterima');
+                      if (!collectorProv.isOnline) {
+                        AppAlerts.showError(
+                          context,
+                          'Status Anda sedang OFFLINE. Aktifkan status ONLINE terlebih dahulu untuk menerima pesanan!',
+                        );
+                        return;
+                      }
+                      final sampleOrder = OrderModel(
+                        id: 'ORD-${DateTime.now().millisecondsSinceEpoch}',
+                        userId: 'usr-budi',
+                        userName: 'Budi Santoso',
+                        category: 'Plastik PET Bening',
+                        weightKg: 10.0,
+                        totalPrice: 39000,
+                        status: 'accepted',
+                        lat: -7.1185,
+                        lng: 112.4166,
+                        address: 'Jl. Andansari Mojo (1.2 Km)',
+                        statusHistory: const [],
+                        createdAt: DateTime.now(),
+                      );
+                      collectorProv.addOrderToActive(sampleOrder);
+                      AppAlerts.showSuccess(
+                        context,
+                        'Penjemputan Budi Santoso berhasil diterima! Pesanan telah masuk ke Orderan Aktif.',
+                      );
                     },
                     child: Text(
                       'Terima Penjemputan',
@@ -960,9 +1122,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order.userId.isNotEmpty
-                          ? 'Pelanggan Aktif'
-                          : 'Order Aktif',
+                      order.userName ?? 'Pelanggan Aktif',
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -1086,6 +1246,19 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
     final double myLng = collectorProv.currentPosition?.longitude ?? 112.4162;
     final myCenter = LatLng(myLat, myLng);
 
+    final activeOrders = collectorProv.myOrders.where((o) {
+      final st = (o.status).toLowerCase();
+      return st == 'accepted' || st == 'in_progress' || st == 'en_route';
+    }).toList();
+
+    final activeOrder = activeOrders.isNotEmpty ? activeOrders.first : null;
+    final LatLng? activeTarget = activeOrder != null
+        ? LatLng(
+            activeOrder.latitude != 0 ? activeOrder.latitude : (myLat - 0.0020),
+            activeOrder.longitude != 0 ? activeOrder.longitude : (myLng + 0.0025),
+          )
+        : null;
+
     final List<Marker> markers = [
       // Collector marker (Yellow pin with car icon at actual GPS location)
       Marker(
@@ -1111,8 +1284,47 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
       ),
     ];
 
-    // Add nearby order markers
-    if (collectorProv.nearbyOrders.isNotEmpty) {
+    if (activeTarget != null && activeOrder != null) {
+      markers.add(
+        Marker(
+          point: activeTarget,
+          width: 150,
+          height: 75,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7CB342),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'Tujuan: ${activeOrder.userName ?? "Warga"}',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Icon(
+                Icons.location_on,
+                color: Color(0xFF388E3C),
+                size: 36,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (collectorProv.nearbyOrders.isNotEmpty) {
       for (var o in collectorProv.nearbyOrders) {
         if (o.latitude != 0 && o.longitude != 0) {
           markers.add(
@@ -1171,7 +1383,6 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
         }
       }
     } else {
-      // Dynamic fallback markers centered relative to real collector GPS
       markers.addAll([
         Marker(
           point: LatLng(myLat - 0.0012, myLng + 0.0013),
@@ -1215,22 +1426,143 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
             ],
           ),
         ),
-        Marker(
-          point: LatLng(myLat + 0.0015, myLng - 0.0010),
-          width: 50,
-          height: 50,
-          child: const Icon(
-            Icons.location_on,
-            color: Color(0xFF7CB342),
-            size: 36,
-          ),
-        ),
       ]);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (activeOrder != null) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1E293B), Color(0xFF334155)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF22C55E),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'RUTE NAVIGASI AKTIF GPS',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF22C55E),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFACC15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '1.2 Km • ~5 min',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  activeOrder.userName ?? 'Pelanggan Warga',
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  activeOrder.address,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Colors.grey.shade300,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _bottomNavIndex = 1;
+                          });
+                        },
+                        icon: const Icon(Icons.chat, size: 16),
+                        label: const Text('Chat Warga'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7CB342),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          context.push(
+                            '/collector/order-detail',
+                            extra: activeOrder.toJson(),
+                          );
+                        },
+                        icon: const Icon(Icons.navigation, size: 16),
+                        label: const Text('Detail Order'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFACC15),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
         Text(
           'Lokasi Orderan Sekitar',
           style: GoogleFonts.outfit(
@@ -1267,7 +1599,7 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                       FlutterMap(
                         mapController: _mapController,
                         options: MapOptions(
-                          initialCenter: myCenter,
+                          initialCenter: activeTarget ?? myCenter,
                           initialZoom: 15.0,
                         ),
                         children: [
@@ -1276,6 +1608,16 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
                                 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                             userAgentPackageName: 'com.example.ecopoint',
                           ),
+                          if (activeTarget != null)
+                            PolylineLayer(
+                              polylines: [
+                                Polyline(
+                                  points: [myCenter, activeTarget],
+                                  color: const Color(0xFF388E3C),
+                                  strokeWidth: 4.5,
+                                ),
+                              ],
+                            ),
                           MarkerLayer(markers: markers),
                         ],
                       ),
@@ -1471,79 +1813,6 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
     ).animate().fadeIn(duration: 300.ms);
   }
 
-  // --- TAB 1: CHAT ---
-  Widget _buildChatTab() {
-    final chatThreads = [
-      {
-        'name': 'Bu Kris',
-        'lastMessage': 'Sudah sampai depan rumah bapak?',
-        'timestamp': '09:41',
-        'preview': 'Iya dik, sebentar lagi sampai',
-      },
-      {
-        'name': 'Pak Dedi',
-        'lastMessage': 'Apakah barangnya sudah dipisahkan?',
-        'timestamp': '08:25',
-        'preview': 'Sudah, tinggal dijemput saja.',
-      },
-    ];
-
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          AppBar(
-            title: Text(
-              'Pesan & Chat',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            foregroundColor: Colors.black,
-            automaticallyImplyLeading: false,
-          ),
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: chatThreads.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final thread = chatThreads[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF7CB342),
-                    child: Text(
-                      thread['name']![0],
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  title: Text(
-                    thread['name']!,
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(thread['preview']!),
-                  trailing: Text(
-                    thread['timestamp']!,
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
-                  ),
-                  onTap: () {
-                    context.push(
-                      '/collector/chat-detail',
-                      extra: {
-                        'name': thread['name'],
-                        'preview': thread['preview'],
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // --- BOTTOM NAVIGATION BAR ---
   Widget _buildBottomNavigationBar() {
     return Container(
@@ -1600,9 +1869,22 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   // Helper actions
   void _acceptOrder(BuildContext context, String id) async {
-    final success = await context.read<CollectorProvider>().acceptOrder(id);
+    final collectorProv = context.read<CollectorProvider>();
+    if (!collectorProv.isOnline) {
+      AppAlerts.showError(
+        context,
+        'Status Anda sedang OFFLINE. Aktifkan status ONLINE terlebih dahulu untuk menerima pesanan!',
+      );
+      return;
+    }
+    final success = await collectorProv.acceptOrder(id);
     if (success && mounted) {
-      AppAlerts.showSuccess(context, 'Order Accepted successfully!');
+      AppAlerts.showSuccess(
+        context,
+        'Penjemputan berhasil diterima! Pesanan telah masuk ke Orderan Aktif.',
+      );
+    } else if (mounted) {
+      AppAlerts.showError(context, collectorProv.error ?? 'Gagal menerima pesanan');
     }
   }
 

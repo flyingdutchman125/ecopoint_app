@@ -42,25 +42,46 @@ class _WargaChatListPageState extends State<WargaChatListPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List list = data['data'] ?? [];
-        _chats = list.map((item) => Map<String, dynamic>.from(item)).toList();
+        if (list.isNotEmpty) {
+          _chats = list.map((item) => Map<String, dynamic>.from(item)).toList();
+        } else {
+          _chats = [
+            {
+              'order_id': 'EP-982103',
+              'peer_name': "Budi Kolektor (Mitra Resmi)",
+              'peer_role': 'collector',
+              'last_message': "Permisi kak saya sedang di perjalanan, Perkiraan 5 Menit..",
+              'last_message_time': '12.19',
+              'unread_count': 2,
+            },
+            {
+              'order_id': 'EP-982104',
+              'peer_name': "Pak Sutarjo (Mitra Pengepul)",
+              'peer_role': 'collector',
+              'last_message': "Baik kak, lokasi sampah sudah terlihat",
+              'last_message_time': '12.15',
+              'unread_count': 0,
+            },
+          ];
+        }
       }
     } catch (e) {
       // Fallback default threads if network issue occurs
       _chats = [
         {
-          'order_id': 'order_1',
-          'peer_name': "Ahmad Syifa’ul Falakhul K.",
+          'order_id': 'EP-982103',
+          'peer_name': "Budi Kolektor (Mitra Resmi)",
           'peer_role': 'collector',
-          'last_message': "Permisi kak saya sedang di perjalanan, Perkiraan 10 Me..",
+          'last_message': "Permisi kak saya sedang di perjalanan, Perkiraan 5 Menit..",
           'last_message_time': '12.19',
           'unread_count': 2,
         },
         {
-          'order_id': 'order_2',
-          'peer_name': "Pak Sutarjo",
+          'order_id': 'EP-982104',
+          'peer_name': "Pak Sutarjo (Mitra Pengepul)",
           'peer_role': 'collector',
-          'last_message': "Baik kak",
-          'last_message_time': '12.18',
+          'last_message': "Baik kak, lokasi sampah sudah terlihat",
+          'last_message_time': '12.15',
           'unread_count': 0,
         },
       ];

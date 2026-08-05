@@ -1,13 +1,9 @@
-import '../../core/utils/alert_helper.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/utils/image_picker_helper.dart';
-import '../../core/history_state.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -239,93 +235,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _pickProfileImage() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Ubah Foto Profil',
-              style: _jakarta(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(
-                Icons.camera_alt_outlined,
-                color: Color(0xFF5CB82B),
-              ),
-              title: Text(
-                'Ambil Foto (Kamera)',
-                style: _jakarta(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picked = await ImagePickerHelper.pickImage(
-                  ImageSource.camera,
-                );
-                if (picked != null) {
-                  await _updateAvatar(picked.path);
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.photo_library_outlined,
-                color: Color(0xFF5CB82B),
-              ),
-              title: Text(
-                'Pilih dari Galeri HP',
-                style: _jakarta(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picked = await ImagePickerHelper.pickImage(
-                  ImageSource.gallery,
-                );
-                if (picked != null) {
-                  await _updateAvatar(picked.path);
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateAvatar(String path) async {
-    await context.read<AuthProvider>().updateUserProfile(avatarUrl: path);
-    HistoryState.instance.addHistory(
-      title: 'Ubah Foto Profil',
-      description: 'Berhasil memperbarui foto profil akun EcoPoint.',
-      category: 'Akun',
-      valueChange: 'Foto Diperbarui',
-    );
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Foto profil berhasil diperbarui!',
-            style: _jakarta(color: Colors.white),
-          ),
-          backgroundColor: const Color(0xFF1B3A1B),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
   Widget _buildHeader(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
     final displayName = user?.name ?? _nameController.text;
@@ -365,57 +274,26 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: _pickProfileImage,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.grey[200],
-                    border: Border.all(color: Colors.black12, width: 0.5),
-                    image: avatarImage != null
-                        ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
-                        : null,
-                  ),
-                  child: avatarImage == null
-                      ? const ClipOval(
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Colors.black38,
-                          ),
-                        )
-                      : null,
-                ),
-                Positioned(
-                  top: 0,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 2,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_outlined,
-                      size: 11,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ],
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey[200],
+              border: Border.all(color: Colors.black12, width: 0.5),
+              image: avatarImage != null
+                  ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
+                  : null,
             ),
+            child: avatarImage == null
+                ? const ClipOval(
+                    child: Icon(
+                      Icons.person,
+                      size: 40,
+                      color: Colors.black38,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 18),
           Expanded(

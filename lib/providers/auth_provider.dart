@@ -15,7 +15,7 @@ class AuthProvider with ChangeNotifier {
   String? get token => _token;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get isAuthenticated => _token != null;
+  bool get isAuthenticated => _token != null && _user != null;
 
   Future<void> initAuth() async {
     _isLoading = true;

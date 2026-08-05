@@ -56,7 +56,7 @@ class _OrderPageState extends State<OrderPage>
     ongoing = [
       _OrderItem(
         id: 'EP0001',
-        name: 'Bapak Sutarjo Sangar',
+        name: 'Pak Sutarjo (Mitra Resmi)',
         summary: 'Kardus 12kg',
         code: 'EP 0001',
         completed: false,
@@ -65,7 +65,7 @@ class _OrderPageState extends State<OrderPage>
     completed = [
       _OrderItem(
         id: 'EP0000',
-        name: 'Bapak Sutarjo Sangar',
+        name: 'Pak Sutarjo (Mitra Resmi)',
         summary: 'Kardus 12kg',
         code: 'EP 0000',
         completed: true,

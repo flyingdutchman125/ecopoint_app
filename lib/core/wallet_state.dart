@@ -42,7 +42,7 @@ class WalletState {
   final Map<String, dynamic> bankAccount = {
     'bank': 'Dana',
     'phone': '0895341381130',
-    'name': 'Ahmad Syifa\'ul Falakhul Khayyi',
+    'name': 'Pengguna EcoPoint',
   };
 
   void setBankAccount({required String bank, required String phone, required String name}) {
@@ -135,8 +135,9 @@ class WalletState {
 
   /// Withdraw from active balance to bank account
   Future<bool> withdrawBalance(double amount) async {
-    if (amount <= 0 || amount > activeBalance.value || amount < 10000)
+    if (amount <= 0 || amount > activeBalance.value || amount < 10000) {
       return false;
+    }
     if (!canWithdraw) return false;
 
     // Simulate API call

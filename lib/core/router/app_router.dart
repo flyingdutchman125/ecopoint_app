@@ -52,15 +52,19 @@ class AppRouter {
         // Wait for auth init
         if (authProvider.isLoading) return null;
 
+        // Allow splash screen to render and manage its own transition timer
+        if (isSplash) return null;
+
         if (!isLoggedIn && !isAuthRoute) {
           return '/login';
         }
 
-        if (isLoggedIn && (isAuthRoute || isSplash)) {
+        if (isLoggedIn && isAuthRoute) {
           final role = authProvider.user?.role;
           if (role == 'collector') return '/collector';
           if (role == 'admin') return '/admin';
-          return '/user';
+          if (role == 'user') return '/user';
+          return '/login';
         }
 
         return null;

@@ -40,7 +40,7 @@ class RatingState {
           {
             'id': 'r1',
             'orderId': 'EP_0003',
-            'name': 'Bapak Sutarjo Sangar',
+            'name': 'Pak Sutarjo (Mitra Resmi)',
             'detail': 'Kardus, 12kg',
             'time': '14.50',
             'date': '03 Agustus 2026',
@@ -50,7 +50,7 @@ class RatingState {
           {
             'id': 'r4',
             'orderId': 'EP_0004',
-            'name': 'Pak Anto Pengepul Sukorejo',
+            'name': 'Pak Anto (Kolektor Sukorejo)',
             'detail': 'Minyak Jelantah, 5 Liter',
             'time': '10.15',
             'date': '02 Agustus 2026',
@@ -70,26 +70,26 @@ class RatingState {
           {
             'id': 'r2',
             'orderId': 'EP_0002',
-            'name': 'Hendra Pengepul gantenk',
+            'name': 'Pak Hendra (Mitra Kolektor)',
             'detail': 'Kardus, 2kg',
             'rating': 5,
             'time': '12.20',
             'date': '21 Juli 2026',
             'avatar': null,
             'text':
-                'Pelayanan bagus, orangnya ramah top markotop pokonya buat Bang Hendra!',
+                'Pelayanan sangat cepat, orangnya ramah dan penimbangan sangat akurat.',
             'orderCode': 'EP 0002',
           },
           {
             'id': 'r3',
             'orderId': 'EP_0001',
-            'name': 'Bapak Muftar',
+            'name': 'Bapak Muftar (Mitra Resmi)',
             'detail': 'Botol Plastik, 2kg',
             'rating': 4,
             'time': '14.20',
             'date': '20 Juli 2026',
             'avatar': null,
-            'text': 'Cepat dan rapi, recommended banget!',
+            'text': 'Cepat dan rapi, pelayanan sangat memuaskan!',
             'orderCode': 'EP 0001',
           },
         ];

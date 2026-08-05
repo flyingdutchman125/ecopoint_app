@@ -65,12 +65,7 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
     }
   }
 
-  final Map<int, String> _weekDates = {
-    1: '1 - 7 Agustus 2026',
-    2: '8 - 14 Agustus 2026',
-    3: '15 - 21 Agustus 2026',
-    4: '22 - 28 Agustus 2026',
-  };
+
 
   final Map<int, List<Map<String, dynamic>>> _weeklyData = {
     1: [
@@ -122,17 +117,17 @@ class _CollectorEarningsPageState extends State<CollectorEarningsPage> {
     final city = (user?.city != null && user!.city.toString().isNotEmpty) ? user.city : 'Lamongan';
     final String ratingStr = (user?.rating != null) ? (user!.rating as num).toStringAsFixed(1) : '4.9';
 
-    // Simulate monthly values by multiplying weekly by 4
-    final double monthlyEarnings = (collectorProv.earnings > 0 ? collectorProv.earnings : 500000) * 4.0;
+    // Calculate monthly values from collector provider
+    final double monthlyEarnings = collectorProv.earnings * 4.0;
     final String earningsText = CurrencyFormatter.formatRupiah(monthlyEarnings.toInt());
 
     final completedOrders = collectorProv.myOrders.where((o) => o.status == 'completed').toList();
-    final completedCount = completedOrders.length > 0 ? completedOrders.length * 4 : 72;
+    final completedCount = completedOrders.length;
     
     final double realWeightSum = completedOrders.fold(0.0, (sum, order) => sum + (order.weightKg ?? 0.0));
-    final String displayWeightText = realWeightSum > 0 ? '${(realWeightSum * 4).toStringAsFixed(1)} Kg' : '284.5 Kg';
+    final String displayWeightText = '${realWeightSum.toStringAsFixed(1)} Kg';
 
-    final double realHoursSum = completedOrders.length > 0 ? (completedOrders.length * 0.6) * 4 : 90.20;
+    final double realHoursSum = (completedOrders.length * 0.6);
     final String displayHoursText = '${realHoursSum.toStringAsFixed(2)} Jam';
 
     return Scaffold(

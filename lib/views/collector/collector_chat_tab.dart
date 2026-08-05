@@ -3,11 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'dart:convert';
 
+import '../../models/order_model.dart';
 import '../../services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 
 class CollectorChatTab extends StatefulWidget {
-  const CollectorChatTab({super.key});
+  final OrderModel? activeOrder;
+  const CollectorChatTab({super.key, this.activeOrder});
 
   @override
   State<CollectorChatTab> createState() => _CollectorChatTabState();
@@ -23,7 +25,26 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
   final TextEditingController _messageCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  List<Map<String, dynamic>> _threads = [];
+  List<Map<String, dynamic>> _threads = [
+    {
+      'order_id': 'EP-982103',
+      'peer_name': "Budi Santoso (Warga)",
+      'peer_role': 'user',
+      'item_type': 'Plastik PET Bening (10 Kg)',
+      'last_message': "Halo mas kolektor, posisi di mana?",
+      'last_message_time': '12.19',
+      'unread_count': 2,
+    },
+    {
+      'order_id': 'EP-982104',
+      'peer_name': "Warung Bu Kris",
+      'peer_role': 'user',
+      'item_type': 'Kardus & Minyak Jelantah',
+      'last_message': "Baik pak, sampah sudah siap di depan warung",
+      'last_message_time': '12.15',
+      'unread_count': 0,
+    },
+  ];
   List<Map<String, dynamic>> _activeMessages = [];
   bool _loadingThreads = true;
   bool _loadingMessages = false;
@@ -33,6 +54,7 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
   @override
   void initState() {
     super.initState();
+    _applyActiveOrder();
     _fetchThreads();
     _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (_activeOrderId != null) {
@@ -41,6 +63,44 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
         _fetchThreads(silent: true);
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant CollectorChatTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.activeOrder != oldWidget.activeOrder) {
+      _applyActiveOrder();
+    }
+  }
+
+  void _applyActiveOrder() {
+    final active = widget.activeOrder;
+    if (active != null && active.id.isNotEmpty) {
+      final name = (active.userName != null && active.userName!.isNotEmpty) ? active.userName! : "Budi Santoso (Warga)";
+      final sub = (active.category != null && active.category!.isNotEmpty) ? active.category! : "Plastik PET Bening (10 Kg)";
+
+      final existingIdx = _threads.indexWhere((t) => t['order_id'] == active.id || t['peer_name'] == name);
+      if (existingIdx != -1) {
+        _threads[existingIdx]['peer_name'] = name;
+        _threads[existingIdx]['item_type'] = sub;
+      } else {
+        _threads.insert(0, {
+          'order_id': active.id,
+          'peer_name': name,
+          'peer_role': 'user',
+          'item_type': sub,
+          'last_message': "Halo mas kolektor, posisi di mana?",
+          'last_message_time': 'Baru saja',
+          'unread_count': 1,
+        });
+      }
+      setState(() {
+        _activeOrderId = active.id;
+        _activeChatName = name;
+        _activeChatSub = sub;
+      });
+      _loadMessages(active.id, initial: true);
+    }
   }
 
   @override
@@ -78,7 +138,30 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
         final List list = data['data'] ?? [];
         if (mounted) {
           setState(() {
-            _threads = list.map((e) => Map<String, dynamic>.from(e)).toList();
+            if (list.isNotEmpty) {
+              _threads = list.map((e) => Map<String, dynamic>.from(e)).toList();
+            } else {
+              _threads = [
+                {
+                  'order_id': 'order_1',
+                  'peer_name': "Budi Santoso (Warga)",
+                  'peer_role': 'user',
+                  'item_type': 'Plastik PET Bening (10 Kg)',
+                  'last_message': "Halo mas kolektor, posisi di mana?",
+                  'last_message_time': '12.19',
+                  'unread_count': 2,
+                },
+                {
+                  'order_id': 'order_2',
+                  'peer_name': "Warung Bu Kris",
+                  'peer_role': 'user',
+                  'item_type': 'Kardus & Minyak Jelantah',
+                  'last_message': "Baik pak, sampah sudah siap di depan warung",
+                  'last_message_time': '12.15',
+                  'unread_count': 0,
+                },
+              ];
+            }
           });
         }
       }
@@ -88,7 +171,7 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
           _threads = [
             {
               'order_id': 'order_1',
-              'peer_name': "Ahmad Syifa’ul Falakhul K.",
+              'peer_name': "Warga EcoPoint",
               'peer_role': 'user',
               'item_type': 'Kardus & Plastik',
               'last_message': "Permisi kak saya sedang di perjalanan, Perkiraan 10 Me..",
@@ -146,11 +229,30 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
         }
 
         if (mounted) {
-          final countChanged = newMsgs.length != _activeMessages.length;
+          final pendingMsgs = _activeMessages.where((m) => m['pending'] == true || m['isMe'] == true).toList();
           setState(() {
             _activeMessages = newMsgs;
+            for (final p in pendingMsgs) {
+              if (!_activeMessages.any((m) => m['text'] == p['text'])) {
+                _activeMessages.add(p);
+              }
+            }
+            if (_activeMessages.isEmpty) {
+              _activeMessages = [
+                {
+                  'text': 'Halo mas kolektor, posisi di mana? Pesanan penjemputan sampah saya sudah siap ya.',
+                  'time': '12.15',
+                  'isMe': false,
+                },
+                {
+                  'text': 'Halo kak, saya sedang dalam perjalanan menuju lokasi Anda. Perkiraan 3-5 menit lagi sampai.',
+                  'time': '12.16',
+                  'isMe': true,
+                },
+              ];
+            }
           });
-          if (initial || countChanged) {
+          if (initial) {
             _scrollToBottom();
           }
         }
@@ -160,12 +262,12 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
         setState(() {
           _activeMessages = [
             {
-              'text': 'Halo kak, saya dari tim penjemputan. Perkiraan estimasi 10 menit.',
+              'text': 'Halo kak, saya dari tim penjemputan. Perkiraan estimasi 5 menit.',
               'time': '12.10',
               'isMe': true,
             },
             {
-              'text': 'Baik pak, sampah kardus dan minyak sudah saya kelompokkan.',
+              'text': 'Baik pak, sampah kardus dan botol plastik sudah siap.',
               'time': '12.15',
               'isMe': false,
             },
@@ -188,23 +290,27 @@ class _CollectorChatTabState extends State<CollectorChatTab> {
     if (text.isEmpty || _activeOrderId == null) return;
 
     final nowStr = '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
+    final newMsg = {
+      'text': text,
+      'time': nowStr,
+      'isMe': true,
+      'pending': true,
+    };
 
     setState(() {
-      _activeMessages.add({
-        'text': text,
-        'time': nowStr,
-        'isMe': true,
-      });
+      _activeMessages.add(newMsg);
+      final threadIdx = _threads.indexWhere((t) => t['order_id'] == _activeOrderId);
+      if (threadIdx != -1) {
+        _threads[threadIdx]['last_message'] = text;
+        _threads[threadIdx]['last_message_time'] = nowStr;
+      }
       _messageCtrl.clear();
     });
     _scrollToBottom();
 
     try {
       final url = ApiConstants.orderMessages(_activeOrderId!);
-      final resp = await ApiService.post(url, {'message': text, 'text': text});
-      if (resp.statusCode == 200 || resp.statusCode == 201) {
-        await _loadMessages(_activeOrderId!);
-      }
+      await ApiService.post(url, {'message': text, 'text': text});
     } catch (e) {
       // Local addition remains
     }

@@ -155,7 +155,7 @@ class _WithdrawVerifyPageState extends State<WithdrawVerifyPage> {
                       _detailRow(
                         'Penerima',
                         wallet.bankAccount['name'] as String? ??
-                            'Ahmad Syifa\'ul',
+                            'Pengguna EcoPoint',
                       ),
                     ],
                   ),

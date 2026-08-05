@@ -55,7 +55,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
       text: wallet.bankAccount['phone'] as String? ?? '0895341381130',
     );
     _accountNameController = TextEditingController(
-      text: wallet.bankAccount['name'] as String? ?? 'Ahmad Syifa\'ul',
+      text: wallet.bankAccount['name'] as String? ?? 'Pengguna EcoPoint',
     );
   }
 

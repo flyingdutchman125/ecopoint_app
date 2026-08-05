@@ -25,18 +25,22 @@ class PriceLockState {
   /// Maps alias names to canonical keys so Dashboard and AI Price Page share state
   String _normalizeKey(String rawName) {
     final lower = rawName.trim().toLowerCase();
-    if (lower.contains('kardus') || lower.contains('cardboard'))
+    if (lower.contains('kardus') || lower.contains('cardboard')) {
       return 'cardboard';
+    }
     if (lower.contains('logam') ||
         lower.contains('besi') ||
-        lower.contains('metal'))
+        lower.contains('metal')) {
       return 'metal';
-    if (lower.contains('plastik') || lower.contains('pet'))
+    }
+    if (lower.contains('plastik') || lower.contains('pet')) {
       return 'pet_plastic';
+    }
     if (lower.contains('minyak') ||
         lower.contains('jelantah') ||
-        lower.contains('cooking'))
+        lower.contains('cooking')) {
       return 'cooking_oil';
+    }
     return lower.replaceAll(RegExp(r'[^a-z0-9_]'), '_');
   }
 

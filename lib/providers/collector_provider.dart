@@ -181,6 +181,13 @@ class CollectorProvider with ChangeNotifier {
     }
   }
 
+  void addOrderToActive(OrderModel order) {
+    _myOrders.removeWhere((o) => o.id == order.id);
+    _myOrders.insert(0, order);
+    _nearbyOrders.removeWhere((o) => o.id == order.id);
+    notifyListeners();
+  }
+
   Future<bool> acceptOrder(String orderId) async {
     _isLoading = true;
     notifyListeners();
@@ -190,7 +197,13 @@ class CollectorProvider with ChangeNotifier {
         {},
       );
       if (res.statusCode == 200) {
-        await updateLocationAndFetchNearby();
+        final data = jsonDecode(res.body);
+        if (data['success'] == true && data['data'] != null) {
+          final accepted = OrderModel.fromJson(data['data']);
+          addOrderToActive(accepted);
+        } else {
+          await updateLocationAndFetchNearby();
+        }
         return true;
       }
       _error = 'Failed to accept order';

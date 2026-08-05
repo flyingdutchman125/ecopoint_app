@@ -1,6 +1,24 @@
 # EcoPoint App — Progress & Continuation Guide
 
-> **Last Updated**: 2026-08-03 06:12 UTC
+> **Last Updated**: 2026-08-05 12:40 UTC
+
+---
+
+## 🚀 Perubahan Terbaru (2026-08-05)
+
+### Perbaikan Login Akun Kolektor Baru (Role Collector Redirection) (2026-08-05)
+- **Problem**: Registrasi akun kolektor berhasil, namun saat login akun kolektor yang baru dibuat, pengguna diarahkan ke dashboard warga (`/user`) alih-alih dashboard kolektor (`/collector`).
+- **Penyebab**:
+  1. Pada backend API (`authController.js`), fungsi `login` mengembalikan objek `data.user` dari Supabase Auth yang memiliki properti `role: "authenticated"` (bukan role aplikasi `"collector"`).
+  2. Pada model Flutter (`UserModel.fromJson`), `parseRole()` membaca `json['role']` yang bernilai `"authenticated"` dan menetapkan `role = "authenticated"` (bukan `"collector"`). Karena tidak cocok dengan `"collector"` atau `"admin"`, aplikasi mengarahkan pengguna ke rute default (`/user`).
+- **Solusi**:
+  1. Di `authController.js`: Mengambil profil pengguna dari tabel `public.users` database Supabase saat `login`, dan mengembalikan properti `role: dbUser.role` (yaitu `"collector"`).
+  2. Di `authController.js`: Memastikan `name` disertakan di `user_metadata` saat registrasi.
+  3. Di `lib/models/user_model.dart`: Mengabaikan nilai status internal `"authenticated"` pada `parseRole()`, serta memeriksa `user_metadata.role` untuk memastikan role `"collector"`, `"user"`, atau `"admin"` dibaca secara presisi.
+- **Hasil Pengujian**:
+  - `scratch/test_api_flow.js` menguji registrasi dan login akun kolektor baru: **SUCCESS** (diterima `role: "collector"` dan berhasil diarahkan ke Collector Dashboard).
+- **Static Analysis**: `flutter analyze lib/` = **0 error**.
+- **APK Build & Hosting**: APK rilis split per ABI berhasil dikompilasi dan diunggah.
 
 ---
 
@@ -83,15 +101,13 @@ flyctl deploy
 
 ---
 
-## 📦 Link Download APK Terakhir (Production)
-
-> ⚠️ Link `tmpfiles.org` expire setelah beberapa jam.
+## 📦 Link Download APK Terakhir (Release)
 
 | Arsitektur | Ukuran | Link |
 |------------|--------|------|
-| ARM64-v8a (Recommended) | 19.7 MB | `https://tmpfiles.org/dl/wTweRlNuB6Rh/app-arm64-v8a-release.apk` |
-| ARMv7 | 17.4 MB | `https://tmpfiles.org/dl/w2wVRSNjBbkk/app-armeabi-v7a-release.apk` |
-| x86_64 (Emulator) | 21.0 MB | `build/app/outputs/flutter-apk/app-x86_64-release.apk` |
+| ARM64-v8a (Recommended) | 20.6 MB | https://litter.catbox.moe/hb8jy5.apk |
+| ARMv7 | 18.3 MB | https://litter.catbox.moe/5qa72n.apk |
+| x86_64 (Emulator) | 21.9 MB | `build/app/outputs/flutter-apk/app-x86_64-release.apk` |
 
 ### Perubahan 2026-08-03
 - **AdminProvider**: `fetchDashboardData()` pagination loop — ambil semua halaman user (`limit=1000`), bukan default 20

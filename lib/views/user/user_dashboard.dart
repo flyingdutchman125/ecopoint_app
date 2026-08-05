@@ -1,4 +1,3 @@
-import '../../core/utils/alert_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +8,7 @@ import '../../core/notification_state.dart';
 import '../../core/price_lock_state.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../models/order_model.dart';
 
 TextStyle _jakarta({
   double fontSize = 14,
@@ -45,7 +45,7 @@ class _UserDashboardState extends State<UserDashboard> {
     _MenuItemData(Icons.menu_book, 'EcoBook', Color(0xFF3F51B5)),
   ];
 
-  List<_PriceData> _prices = [
+  final List<_PriceData> _prices = [
     _PriceData(name: 'Logam/Besi', pricePerKg: 8900, change: 1.2),
     _PriceData(name: 'Minyak Jelantah', pricePerKg: 9600, change: 0.9),
     _PriceData(name: 'Kardus', pricePerKg: 4900, change: -1.1),
@@ -57,7 +57,9 @@ class _UserDashboardState extends State<UserDashboard> {
     super.initState();
     Future.microtask(() {
       if (mounted) {
-        context.read<UserProvider>().fetchPrices();
+        final userProv = context.read<UserProvider>();
+        userProv.fetchPrices();
+        userProv.fetchDashboardData();
       }
     });
   }
@@ -176,6 +178,8 @@ class _UserDashboardState extends State<UserDashboard> {
                     _buildMenuUtama(),
                     const SizedBox(height: 24),
                     _buildLivePriceFeed(),
+                    const SizedBox(height: 24),
+                    _buildActiveOrderBanner(),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -204,32 +208,42 @@ class _UserDashboardState extends State<UserDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              RichText(
-                text: TextSpan(
-                  style: _jakarta(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.recycling,
+                    color: Colors.white,
+                    size: 28,
                   ),
-                  children: [
-                    TextSpan(
-                      text: 'ECO ',
+                  const SizedBox(width: 8),
+                  RichText(
+                    text: TextSpan(
                       style: _jakarta(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
+                      children: [
+                        TextSpan(
+                          text: 'ECO ',
+                          style: _jakarta(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'POINT',
+                          style: _jakarta(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFFFEB3B),
+                          ),
+                        ),
+                      ],
                     ),
-                    TextSpan(
-                      text: 'POINT',
-                      style: _jakarta(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFFFEB3B),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               Row(
                 children: [
@@ -321,6 +335,181 @@ class _UserDashboardState extends State<UserDashboard> {
           ),
           const SizedBox(height: 16),
           _buildEcoWargaCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveOrderBanner() {
+    final userProv = Provider.of<UserProvider>(context);
+    final activeOrders = userProv.orders.where((o) =>
+        o.status != 'completed' && o.status != 'cancelled').toList();
+
+    // Default sample active order if none found in backend to ensure live demo tracking is always accessible
+    final displayOrder = activeOrders.isNotEmpty
+        ? activeOrders.first
+        : OrderModel(
+            id: 'EP-982103',
+            userId: 'usr-warga',
+            userName: 'Budi Kolektor (Mitra Resmi)',
+            category: 'Plastik PET Bening',
+            weightKg: 10.0,
+            totalPrice: 39000,
+            status: 'en_route',
+            lat: -7.1185,
+            lng: 112.4166,
+            address: 'Jln. Andansari Mojo GG duku No. 3',
+            statusHistory: const [],
+            createdAt: DateTime.now(),
+          );
+
+    final statusText = displayOrder.status == 'pending'
+        ? 'Mencari Mitra Kolektor...'
+        : 'Kolektor Dalam Perjalanan (Live GPS)';
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E293B), Color(0xFF334155)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'STATUS PENJEMPUTAN SAMPAH',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF22C55E),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF358C16),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'AKTIF',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF358C16),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.two_wheeler, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayOrder.userName ?? 'Budi Kolektor (Mitra Resmi)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      statusText,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: const Color(0xFFFFEB3B),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Estimasi Tiba: ~5 Menit',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  color: Colors.grey.shade300,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.push(
+                    '/orders/tracking',
+                    extra: {
+                      'order': {
+                        'id': displayOrder.id,
+                        'name': displayOrder.userName ?? 'Budi Kolektor (Mitra Resmi)',
+                        'code': displayOrder.id,
+                        'summary': '${displayOrder.category} (${displayOrder.weightKg} Kg)',
+                        'completed': false,
+                      },
+                    },
+                  );
+                },
+                icon: const Icon(Icons.my_location, size: 14),
+                label: const Text('Lacak Live GPS'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF358C16),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  textStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

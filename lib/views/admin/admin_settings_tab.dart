@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 
 class AdminSettingsTab extends StatelessWidget {
@@ -142,7 +143,12 @@ class AdminSettingsTab extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => authProv.logout(),
+                onPressed: () async {
+                  await authProv.logout();
+                  if (context.mounted) {
+                    context.go('/login');
+                  }
+                },
                 icon: const Icon(Icons.logout, color: Colors.red),
                 label: const Text(
                   'Keluar',

@@ -10,11 +10,46 @@ async function login(req, res, next) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return res.status(401).json({ success: false, message: error.message });
 
+    // Fetch user profile from public.users table to get full details (role, name, phone, etc.)
+    let dbUser = null;
+    try {
+      const { data: dbData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+      dbUser = dbData;
+    } catch (e) {
+      console.warn('Failed to fetch user profile from DB on login:', e.message || e);
+    }
+
+    const role = dbUser?.role || data.user.user_metadata?.role || 'user';
+    const name = dbUser?.name || data.user.user_metadata?.name || data.user.email?.split('@')[0];
+
+    const userProfile = {
+      id: data.user.id,
+      email: data.user.email,
+      name: name,
+      role: role,
+      phone: dbUser?.phone || data.user.user_metadata?.phone || null,
+      city: dbUser?.city || data.user.user_metadata?.city || null,
+      address: dbUser?.address || null,
+      subdistrict: dbUser?.subdistrict || null,
+      wallet_balance: dbUser?.wallet_balance ?? 0,
+      eco_points: dbUser?.eco_points ?? 0,
+      avatar_url: dbUser?.avatar_url || null,
+      user_metadata: {
+        ...data.user.user_metadata,
+        role: role,
+        name: name,
+      },
+    };
+
     res.json({
       success: true,
       data: {
         token: data.session.access_token,
-        user: data.user
+        user: userProfile
       }
     });
   } catch (error) { next(error); }
@@ -62,7 +97,7 @@ async function register(req, res, next) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { role: validRole, phone, city },
+      user_metadata: { role: validRole, phone, city, name },
     });
 
     if (adminRes.error) {
@@ -71,7 +106,7 @@ async function register(req, res, next) {
         email,
         password,
         options: {
-          data: { role: validRole, phone, city },
+          data: { role: validRole, phone, city, name },
         },
       });
       if (signupRes.error) {

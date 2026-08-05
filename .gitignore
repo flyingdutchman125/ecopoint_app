@@ -42,3 +42,12 @@ backend/.env
 backend/.env.local
 backend/mysql_data/
 
+# Scratch & Temporary
+scratch/
+backend-api/scratch/
+*.png
+Loading.png
+loading.png
+arch.md
+
+
